@@ -1,0 +1,12 @@
+{
+  "status": "Illustrative Chapter 5 assumptions; specify and freeze before final policy evaluation",
+  "parameters": {
+    "revenue_fraction": 0.2,
+    "cashflow_fraction": 0.5,
+    "cash_fraction": 0.1,
+    "risk_sensitivity": 10.0,
+    "increase_smoothing": 0.5,
+    "monthly_increase_cap": 0.1,
+    "increase_deadband": 0.02
+  }
+}

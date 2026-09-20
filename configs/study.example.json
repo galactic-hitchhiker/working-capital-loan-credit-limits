@@ -1,0 +1,21 @@
+{
+  "design_status": "draft",
+  "data_kind": "empirical",
+  "event_type": null,
+  "event_definition": null,
+  "horizon_days": null,
+  "start": null,
+  "end": null,
+  "tuning_start": null,
+  "calibration_start": null,
+  "selection_start": null,
+  "test_start": null,
+  "observed_as_of": null,
+  "features": ["current_ratio", "working_capital_to_assets", "return_on_average_assets", "log_assets"],
+  "max_balance_age_days": null,
+  "max_flow_age_days": null,
+  "min_class_count": 10,
+  "min_event_companies": 10,
+  "bootstrap_repeats": 500,
+  "seed": 42
+}

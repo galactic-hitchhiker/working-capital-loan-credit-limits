@@ -3,4 +3,9 @@ __pycache__/
 *.py[cod]
 .venv/
 dataset/
-
+results/.matplotlib/
+results/.cache/
+*.joblib
+results/
+Examples/
+docs/
