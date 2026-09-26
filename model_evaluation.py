@@ -99,7 +99,11 @@ def cluster_intervals(y, probability, companies, threshold, repeats, seed):
     """Resample entire companies. Does not model common calendar-time shocks."""
     rng = np.random.default_rng(seed)
     y, p, companies = np.asarray(y), np.asarray(probability), np.asarray(companies)
-    groups = [np.flatnonzero(companies == company) for company in np.unique(companies)]
+    # Build groups once without scanning the entire panel for every company.
+    order = np.argsort(companies, kind="stable")
+    sorted_companies = companies[order]
+    boundaries = np.flatnonzero(sorted_companies[1:] != sorted_companies[:-1]) + 1
+    groups = np.split(order, boundaries)
     values = {
         name: []
         for name in (

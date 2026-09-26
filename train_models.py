@@ -1,7 +1,7 @@
 """Fit, calibrate and compare Chapter 4 models with strictly chronological stages.
 
-No real-data model can be trained from the blank templates. Run the synthetic
-demo for a software check, then provide an audited panel for empirical analysis.
+The empirical SEC disclosure study uses empirical_sec.py and the fixed design
+in configs/study.sec_disclosure.json. Synthetic mode is only a software check.
 """
 
 import argparse
@@ -203,6 +203,7 @@ def run(config_path, panel_path, output, *, smoke=False):
                         **score,
                     )
                 )
+                print(f"  candidate {candidate_index + 1}: tuning AP={score['average_precision']:.6f}", flush=True)
                 # Fixed tuning rule: AP, then Brier, then candidate enumeration.
                 rank = (-score["average_precision"], score["brier"], candidate_index)
                 if best is None or rank < best[0]:

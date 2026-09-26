@@ -1,0 +1,18 @@
+{
+  "status": "Research scenario fixed before model fitting; no commercial validation",
+  "parameters": {
+    "revenue_fraction": 0.2,
+    "cashflow_fraction": 0.5,
+    "cash_fraction": 0.1,
+    "risk_sensitivity": 10.0,
+    "increase_smoothing": 0.5,
+    "monthly_increase_cap": 0.1,
+    "increase_deadband": 0.02
+  },
+  "assumptions": {
+    "cash_eligible_fraction": 1.0,
+    "cap_fraction_of_assets": 0.01,
+    "additional_debt_due_60_days": 0.0,
+    "outstanding_exposure": 0.0
+  }
+}

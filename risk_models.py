@@ -51,7 +51,7 @@ def estimator(name, parameters, seed):
             **parameters,
         )
     elif name == "random_forest":
-        classifier = RandomForestClassifier(random_state=seed, n_jobs=1, **parameters)
+        classifier = RandomForestClassifier(random_state=seed, n_jobs=4, **parameters)
     elif name == "xgboost":
         from xgboost import XGBClassifier
 
@@ -60,7 +60,7 @@ def estimator(name, parameters, seed):
             eval_metric="logloss",
             tree_method="hist",
             random_state=seed,
-            n_jobs=1,
+            n_jobs=4,
             **parameters,
         )
     else:
