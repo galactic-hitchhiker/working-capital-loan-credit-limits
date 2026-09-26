@@ -53,12 +53,18 @@ MONEY_FIELDS = (
 
 
 def replay(predictions, inputs, policy):
-    pmap = {}
+    """Join frozen predictions to monthly facility inputs and carry limits forward.
+
+    Unlike empirical scenarios, this register-based replay requires continuous
+    monthly reviews and explicit authorization in the inputs to reopen a facility.
+    Returns decision rows and the number of predictions without facility inputs.
+    """
+    predictions_by_month = {}
     for row in predictions:
         if not boolean(row["selected"]) or row["stage"] not in {"test", "policy"}:
             continue
         key = (row["company_id"], row["decision_date"])
-        if key in pmap:
+        if key in predictions_by_month:
             raise ValueError("Duplicate selected-model prediction")
         if date.fromisoformat(row["prediction_ready_on"]) > date.fromisoformat(
             row["decision_date"]
@@ -66,11 +72,11 @@ def replay(predictions, inputs, policy):
             raise ValueError(
                 "Policy prediction uses a model selected after the decision date"
             )
-        pmap[key] = row
+        predictions_by_month[key] = row
     groups, seen = defaultdict(list), set()
     for row in inputs:
         key = (row["company_id"], row["decision_date"])
-        if key in seen or key not in pmap:
+        if key in seen or key not in predictions_by_month:
             raise ValueError(
                 f"Duplicate decision or missing selected-model prediction: {key}"
             )
@@ -108,7 +114,7 @@ def replay(predictions, inputs, policy):
                 previous_limit = finite(
                     row["initial_limit"], "initial_limit", missing=True
                 )
-            p = pmap[(company, str(decision))]
+            prediction = predictions_by_month[(company, str(decision))]
             if (
                 not row["input_source"].strip()
                 or row["input_basis"] not in {"observed", "assumed"}
@@ -135,10 +141,10 @@ def replay(predictions, inputs, policy):
             numbers = {f: finite(row[f], f) for f in MONEY_FIELDS}
             ledger = (
                 row["currency"],
-                p["model"],
-                p["event_type"],
-                int(p["horizon_days"]),
-                p["data_kind"],
+                prediction["model"],
+                prediction["event_type"],
+                int(prediction["horizon_days"]),
+                prediction["data_kind"],
             )
             if previous_ledger is not None and ledger != previous_ledger:
                 raise ValueError(
@@ -148,7 +154,7 @@ def replay(predictions, inputs, policy):
             # timestamp alone does not permit a repeated smoothed increase.
             signature = (
                 tuple(numbers[f] for f in MONEY_FIELDS),
-                finite(p["probability"], "probability"),
+                finite(prediction["probability"], "probability"),
                 hard_stop,
                 row["assessment_status"],
             )
@@ -157,14 +163,14 @@ def replay(predictions, inputs, policy):
             )
             inputs_obj = PolicyInputs(
                 **numbers,
-                risk_probability=finite(p["probability"], "probability"),
+                risk_probability=finite(prediction["probability"], "probability"),
                 previous_limit=previous_limit,
                 information_changed=changed,
                 hard_stop=hard_stop,
                 currency=row["currency"],
-                risk_target=p["event_type"],
-                risk_horizon_days=int(p["horizon_days"]),
-                risk_is_illustrative=p["data_kind"] == "synthetic",
+                risk_target=prediction["event_type"],
+                risk_horizon_days=int(prediction["horizon_days"]),
+                risk_is_illustrative=prediction["data_kind"] == "synthetic",
             )
             result = determine_limit(inputs_obj, policy)
             delta = (
@@ -176,17 +182,19 @@ def replay(predictions, inputs, policy):
                 dict(
                     company_id=company,
                     decision_date=str(decision),
-                    data_kind=p["data_kind"],
+                    data_kind=prediction["data_kind"],
                     input_basis=row["input_basis"],
                     input_source=row["input_source"],
                     inputs_available_on=row["inputs_available_on"],
-                    model=p["model"],
+                    model=prediction["model"],
                     **asdict(inputs_obj),
                     **asdict(result),
                     limit_change=delta,
-                    relative_change=delta / previous_limit
-                    if previous_limit and delta is not None
-                    else None,
+                    relative_change=(
+                        delta / previous_limit
+                        if previous_limit and delta is not None
+                        else None
+                    ),
                 )
             )
             previous_date, previous_limit, previous_signature, previous_ledger = (
@@ -213,10 +221,11 @@ def replay(predictions, inputs, policy):
         raise ValueError(
             "Use separate policy runs for different currencies, models, targets, horizons or data kinds"
         )
-    return results, len(pmap) - len(seen)
+    return results, len(predictions_by_month) - len(seen)
 
 
 def run(predictions_path, input_path, policy_path, output):
+    """Validate input files, replay the policy and export decisions with an audit."""
     policy_config = json.loads(Path(policy_path).read_text())
     policy = PolicyConfig(**policy_config["parameters"])
     predictions = read_csv(
@@ -245,9 +254,9 @@ def run(predictions_path, input_path, policy_path, output):
         increases=sum(d > 0 for d in changes),
         decreases=sum(d < 0 for d in changes),
         unchanged=sum(d == 0 for d in changes),
-        mean_absolute_change=sum(abs(d) for d in changes) / len(changes)
-        if changes
-        else None,
+        mean_absolute_change=(
+            sum(abs(d) for d in changes) / len(changes) if changes else None
+        ),
         maximum_absolute_change=max(map(abs, changes)) if changes else None,
         exposure_above_limit_rows=sum(r["excess_exposure"] > 0 for r in results),
         unused_predictions=unused,

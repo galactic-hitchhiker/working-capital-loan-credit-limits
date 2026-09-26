@@ -17,6 +17,7 @@ from research_common import manifest, new_output, read_csv, write_csv, write_jso
 
 
 def scenarios(base):
+    """Yield the base first, then change exactly one coefficient per scenario."""
     yield "base", base
     for field, values in {
         "revenue_fraction": (0.1, 0.3),
@@ -32,6 +33,7 @@ def scenarios(base):
 
 
 def run(prediction_path, input_path, policy_path, output):
+    """Replay each alternative independently on identical predictions and inputs."""
     predictions, inputs = read_csv(prediction_path), read_csv(input_path, INPUT_FIELDS)
     base = PolicyConfig(**json.loads(Path(policy_path).read_text())["parameters"])
     output = new_output(output)
@@ -46,9 +48,9 @@ def run(prediction_path, input_path, policy_path, output):
                 data_kind=rows[0]["data_kind"],
                 currency=rows[0]["currency"],
                 mean_assigned_limit=sum(r["assigned_limit"] for r in rows) / len(rows),
-                mean_absolute_change=sum(abs(d) for d in changes) / len(changes)
-                if changes
-                else None,
+                mean_absolute_change=(
+                    sum(abs(d) for d in changes) / len(changes) if changes else None
+                ),
                 increases=sum(d > 0 for d in changes),
                 decreases=sum(d < 0 for d in changes),
                 exposure_above_limit_rows=sum(r["excess_exposure"] > 0 for r in rows),

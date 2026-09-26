@@ -16,7 +16,6 @@ from dataclasses import asdict, dataclass
 from datetime import date
 from pathlib import Path
 
-
 TAGS = {
     "assets": ("Assets",),
     "current_assets": ("AssetsCurrent",),
@@ -78,6 +77,7 @@ def eligible_facts(document, field: str, as_of: date):
 
 
 def latest_fact(document, field, as_of, *, annual=False, start=None, end=None):
+    """Resolve a period-matched fact using only filings available before as_of."""
     rows = list(eligible_facts(document, field, as_of))
     if annual:
         rows = [
@@ -108,12 +108,14 @@ def latest_fact(document, field, as_of, *, annual=False, start=None, end=None):
 
 
 def ratio(numerator, denominator):
+    """Leave a ratio missing when inputs are absent or its denominator is nonpositive."""
     if numerator is None or denominator is None or denominator <= 0:
         return None
     return numerator / denominator
 
 
 def snapshot(document, as_of: date):
+    """Extract annual-flow and balance-sheet predictors with auditable source facts."""
     balance = latest_fact(document, "assets", as_of)
     annual = latest_fact(document, "operating_cashflow", as_of, annual=True)
     facts = {"assets": balance, "operating_cashflow": annual}
@@ -139,8 +141,10 @@ def snapshot(document, as_of: date):
         opening_end = (date.fromisoformat(annual.start) - timedelta(days=1)).isoformat()
         opening = latest_fact(document, "assets", as_of, end=opening_end)
         closing = latest_fact(document, "assets", as_of, end=annual.end)
-    avg_assets = (opening.value + closing.value) / 2 if opening and closing else None
-    ca, cl, assets = (
+    average_assets = (
+        (opening.value + closing.value) / 2 if opening and closing else None
+    )
+    current_assets, current_liabilities, assets = (
         values["current_assets"],
         values["current_liabilities"],
         values["assets"],
@@ -152,20 +156,25 @@ def snapshot(document, as_of: date):
         "currency": "USD",
         "flow_basis": "last_reported_annual_not_TTM",
         "balance_period_end": balance.end if balance else None,
-        "balance_age_days": (as_of - date.fromisoformat(balance.end)).days
-        if balance
-        else None,
+        "balance_age_days": (
+            (as_of - date.fromisoformat(balance.end)).days if balance else None
+        ),
         "flow_period_start": annual.start if annual else None,
         "flow_period_end": annual.end if annual else None,
-        "flow_age_days": (as_of - date.fromisoformat(annual.end)).days
-        if annual
-        else None,
-        **values,
-        "current_ratio": ratio(ca, cl),
-        "working_capital_to_assets": ratio(
-            ca - cl if ca is not None and cl is not None else None, assets
+        "flow_age_days": (
+            (as_of - date.fromisoformat(annual.end)).days if annual else None
         ),
-        "return_on_average_assets": ratio(values["net_income"], avg_assets),
+        **values,
+        "current_ratio": ratio(current_assets, current_liabilities),
+        "working_capital_to_assets": ratio(
+            (
+                current_assets - current_liabilities
+                if current_assets is not None and current_liabilities is not None
+                else None
+            ),
+            assets,
+        ),
+        "return_on_average_assets": ratio(values["net_income"], average_assets),
         "log_assets": math.log(assets) if assets is not None and assets > 0 else None,
         "status": "financial_snapshot_only_no_event_label_or_credit_recommendation",
     }
@@ -249,9 +258,7 @@ def main():
             row["pilot_sector_screen"] = (
                 "excluded_finance_real_estate"
                 if sic.isdigit() and 6000 <= int(sic) <= 6999
-                else "candidate_nonfinancial"
-                if sic.isdigit()
-                else "unknown"
+                else "candidate_nonfinancial" if sic.isdigit() else "unknown"
             )
             row["current_tickers"] = ";".join(sub.get("tickers", []))
             for field in TAGS:
@@ -268,12 +275,12 @@ def main():
                     continue
                 items = str(f["items"]).replace(";", ",").replace(" ", ",").split(",")
                 if "1.03" in items:
-                    accn = f["accessionNumber"].replace("-", "")
+                    accession_without_dashes = f["accessionNumber"].replace("-", "")
                     events.append(
                         {
                             "cik": row["cik"],
                             **f,
-                            "source_url": f"https://www.sec.gov/Archives/edgar/data/{int(row['cik'])}/{accn}/{f['primaryDocument']}",
+                            "source_url": f"https://www.sec.gov/Archives/edgar/data/{int(row['cik'])}/{accession_without_dashes}/{f['primaryDocument']}",
                             "verified_event_date": "",
                             "verified": False,
                             "status": "item_1_03_candidate_only_manual_review_required",

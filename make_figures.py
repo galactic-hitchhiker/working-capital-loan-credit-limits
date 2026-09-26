@@ -14,6 +14,7 @@ from research_common import boolean, manifest, new_output, read_csv, write_json
 
 
 def figures(model_dir, output, policy_dir=None):
+    """Plot saved test metrics and optional policy paths, labeling synthetic runs."""
     model_dir = Path(model_dir)
     output = new_output(output)
     selection = json.loads((model_dir / "selection.json").read_text())

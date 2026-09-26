@@ -22,6 +22,7 @@ from research_common import (
 
 
 def predict(model_path, features_path, output):
+    """Score eligible dates with saved preprocessing, calibration and feature order."""
     bundle = joblib.load(model_path)
     name = bundle["selection"]["selected_model"]
     if name is None:
@@ -56,10 +57,11 @@ def predict(model_path, features_path, output):
         later.append(row)
     if not later:
         raise ValueError("No decision dates after model selection")
-    x = np.array(
+    # Reuse the saved feature order; never refit preprocessing on scoring rows.
+    predictors = np.array(
         [[finite(r[f], f, missing=True) for f in features] for r in later], dtype=float
     )
-    p = selected["calibrated"].predict_proba(x)[:, 1]
+    probabilities = selected["calibrated"].predict_proba(predictors)[:, 1]
     output = new_output(output)
     predictions = [
         dict(
@@ -75,7 +77,7 @@ def predict(model_path, features_path, output):
             stage="policy",
             prediction_ready_on=config["test_start"],
         )
-        for r, probability in zip(later, p)
+        for r, probability in zip(later, probabilities)
     ]
     write_csv(output / "policy_predictions.csv", predictions)
     write_json(

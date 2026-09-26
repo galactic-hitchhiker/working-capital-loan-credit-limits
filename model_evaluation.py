@@ -14,38 +14,48 @@ from sklearn.metrics import (
 
 
 def metrics(y, probability, threshold=0.5):
-    y, p = np.asarray(y), np.asarray(probability, dtype=float)
+    """Return probability scores and alert counts for binary outcome labels y.
+
+    Ranking scores are undefined here for a single-class sample. Brier error
+    still measures probability quality, independently of the alert threshold.
+    """
+    y, probabilities = np.asarray(y), np.asarray(probability, dtype=float)
     if (
         len(y) == 0
-        or y.shape != p.shape
-        or not np.isfinite(p).all()
-        or ((p < 0) | (p > 1)).any()
+        or y.shape != probabilities.shape
+        or not np.isfinite(probabilities).all()
+        or ((probabilities < 0) | (probabilities > 1)).any()
     ):
         raise ValueError("Invalid labels or predicted probabilities")
     if not set(np.unique(y)) <= {0, 1}:
         raise ValueError("Labels must be binary")
     two_classes = len(np.unique(y)) == 2
-    predicted = p >= threshold
-    tn, fp, fn, tp = confusion_matrix(y, predicted, labels=[0, 1]).ravel()
+    predicted = probabilities >= threshold
+    true_negative, false_positive, false_negative, true_positive = confusion_matrix(
+        y, predicted, labels=[0, 1]
+    ).ravel()
     return dict(
         rows=len(y),
         positives=int(y.sum()),
         event_share=float(y.mean()),
-        roc_auc=float(roc_auc_score(y, p)) if two_classes else None,
-        average_precision=float(average_precision_score(y, p)) if two_classes else None,
-        brier=float(brier_score_loss(y, p)),
+        roc_auc=float(roc_auc_score(y, probabilities)) if two_classes else None,
+        average_precision=(
+            float(average_precision_score(y, probabilities)) if two_classes else None
+        ),
+        brier=float(brier_score_loss(y, probabilities)),
         precision=float(precision_score(y, predicted, zero_division=0)),
         recall=float(recall_score(y, predicted, zero_division=0)),
         f1=float(f1_score(y, predicted, zero_division=0)),
         threshold=float(threshold),
-        true_negative=int(tn),
-        false_positive=int(fp),
-        false_negative=int(fn),
-        true_positive=int(tp),
+        true_negative=int(true_negative),
+        false_positive=int(false_positive),
+        false_negative=int(false_negative),
+        true_positive=int(true_positive),
     )
 
 
 def choose_threshold(y, probability):
+    """Maximize selection-period F1, then recall, then the threshold on ties."""
     if len(np.unique(y)) != 2:
         raise ValueError("Threshold selection requires both classes")
     precision, recall, thresholds = precision_recall_curve(y, probability)
@@ -61,6 +71,11 @@ def choose_threshold(y, probability):
 
 
 def select_model(scores, baseline_brier, event_share, simplicity):
+    """Require both ranking and probability gains; return None if none qualify.
+
+    Average precision must beat the selection event share, while Brier error
+    must beat the constant training-prevalence prediction on selection rows.
+    """
     eligible = [
         name
         for name, result in scores.items()
@@ -76,19 +91,21 @@ def select_model(scores, baseline_brier, event_share, simplicity):
 
 
 def reliability_bins(y, probability, bins=10):
-    y, p = np.asarray(y), np.asarray(probability)
-    assignments = np.minimum((p * bins).astype(int), bins - 1)
+    """Summarize nonempty, equal-width probability bins for calibration checks."""
+    y, probabilities = np.asarray(y), np.asarray(probability)
+    # Include probability 1.0 in the last bin instead of creating an extra bin.
+    assignments = np.minimum((probabilities * bins).astype(int), bins - 1)
     result = []
-    for b in range(bins):
-        mask = assignments == b
+    for bin_index in range(bins):
+        mask = assignments == bin_index
         if mask.any():
             result.append(
                 dict(
-                    bin=b,
-                    lower=b / bins,
-                    upper=(b + 1) / bins,
+                    bin=bin_index,
+                    lower=bin_index / bins,
+                    upper=(bin_index + 1) / bins,
                     rows=int(mask.sum()),
-                    mean_probability=float(p[mask].mean()),
+                    mean_probability=float(probabilities[mask].mean()),
                     event_share=float(y[mask].mean()),
                 )
             )
@@ -98,7 +115,11 @@ def reliability_bins(y, probability, bins=10):
 def cluster_intervals(y, probability, companies, threshold, repeats, seed):
     """Resample entire companies. Does not model common calendar-time shocks."""
     rng = np.random.default_rng(seed)
-    y, p, companies = np.asarray(y), np.asarray(probability), np.asarray(companies)
+    y, probabilities, companies = (
+        np.asarray(y),
+        np.asarray(probability),
+        np.asarray(companies),
+    )
     # Build groups once without scanning the entire panel for every company.
     order = np.argsort(companies, kind="stable")
     sorted_companies = companies[order]
@@ -117,23 +138,27 @@ def cluster_intervals(y, probability, companies, threshold, repeats, seed):
     }
     skipped = 0
     for _ in range(repeats):
+        # Sample companies with replacement, keeping all their monthly rows.
+        # Repeated draws intentionally repeat the same company's observations.
         indices = np.concatenate(
             [groups[j] for j in rng.integers(0, len(groups), len(groups))]
         )
         if len(np.unique(y[indices])) < 2:
             skipped += 1
             continue
-        result = metrics(y[indices], p[indices], threshold)
+        result = metrics(y[indices], probabilities[indices], threshold)
         for name in values:
             values[name].append(result[name])
     intervals = {
-        name: {
-            "lower_95": float(np.quantile(v, 0.025)),
-            "upper_95": float(np.quantile(v, 0.975)),
-        }
-        if v
-        else {"lower_95": None, "upper_95": None}
-        for name, v in values.items()
+        name: (
+            {
+                "lower_95": float(np.quantile(replicate_scores, 0.025)),
+                "upper_95": float(np.quantile(replicate_scores, 0.975)),
+            }
+            if replicate_scores
+            else {"lower_95": None, "upper_95": None}
+        )
+        for name, replicate_scores in values.items()
     }
     return {
         "intervals": intervals,

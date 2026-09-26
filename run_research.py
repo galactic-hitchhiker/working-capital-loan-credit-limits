@@ -11,6 +11,7 @@ import sys
 
 
 def environment():
+    """Preserve caller settings, using project-local plotting caches by default."""
     env = os.environ.copy()
     root = Path(__file__).resolve().parent
     env.setdefault("MPLCONFIGDIR", str(root / "results" / ".matplotlib"))

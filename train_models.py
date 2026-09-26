@@ -41,6 +41,7 @@ from temporal_validation import LabeledObservation, chronological_partition
 
 
 def prepare(panel_path, config):
+    """Validate the panel and return rows, predictors, labels, stage indices and audit."""
     rows = read_csv(panel_path, PANEL_FIELDS)
     if not rows:
         raise ValueError("No verified labeled rows in panel")
@@ -93,6 +94,7 @@ def prepare(panel_path, config):
         if key in lookup:
             raise ValueError("Duplicate company-month")
         lookup[key] = i
+    # Purge labels that would not yet be available when the next stage starts.
     parts = chronological_partition(
         observations,
         **{
@@ -151,10 +153,11 @@ def prepare(panel_path, config):
 
 
 def run(config_path, panel_path, output, *, smoke=False):
+    """Tune, refit, calibrate and select before evaluating the untouched test stage."""
     config = load_design(config_path)
     if smoke and config["data_kind"] != "synthetic":
         raise ValueError("Smoke mode is only available for synthetic data")
-    rows, x, y, idx, audit = prepare(panel_path, config)
+    rows, x, y, stage_indices, audit = prepare(panel_path, config)
     output = new_output(output)
     write_json(output / "design.json", config)
     write_json(output / "stage_audit.json", audit)
@@ -164,19 +167,18 @@ def run(config_path, panel_path, output, *, smoke=False):
             "decision_date": rows[j]["decision_date"],
             "stage": stage,
         }
-        for stage, js in idx.items()
-        for j in js
+        for stage, stage_rows in stage_indices.items()
+        for j in stage_rows
     ]
     write_csv(output / "stage_membership.csv", membership)
-    train, tune, cal, selection, test = (idx[s] for s in STAGES)
-    refit = np.concatenate([train, tune])
-    seed, thresholds, bundles, selection_scores, tuning_results = (
-        config["seed"],
-        {},
-        {},
-        {},
-        [],
-    )
+    train, tune, calibration, selection, test = (stage_indices[s] for s in STAGES)
+    # Only training and tuning observations may enter the final base-model fit.
+    refit_indices = np.concatenate([train, tune])
+    seed = config["seed"]
+    thresholds = {}
+    bundles = {}
+    selection_scores = {}
+    tuning_results = []
     # A documented constant benchmark estimated from the ORIGINAL training stage.
     prevalence = float(y[train].mean())
     base_selection = metrics(y[selection], np.full(len(selection), prevalence))
@@ -186,45 +188,56 @@ def run(config_path, panel_path, output, *, smoke=False):
         for name in MODEL_ORDER:
             print(f"Fitting {name} ({config['data_kind']})", flush=True)
             best = None
-            for candidate_index, spec in enumerate(candidates(name, smoke=smoke)):
+            for candidate_index, specification in enumerate(
+                candidates(name, smoke=smoke)
+            ):
                 model = fit(
-                    estimator(name, spec["parameters"], seed),
+                    estimator(name, specification["parameters"], seed),
                     x[train],
                     y[train],
-                    spec["weighting"],
+                    specification["weighting"],
                 )
                 score = metrics(y[tune], model.predict_proba(x[tune])[:, 1])
                 tuning_results.append(
                     dict(
                         model=name,
                         candidate=candidate_index,
-                        parameters=json.dumps(spec["parameters"], sort_keys=True),
-                        weighting=spec["weighting"],
+                        parameters=json.dumps(
+                            specification["parameters"], sort_keys=True
+                        ),
+                        weighting=specification["weighting"],
                         **score,
                     )
                 )
-                print(f"  candidate {candidate_index + 1}: tuning AP={score['average_precision']:.6f}", flush=True)
+                print(
+                    f"  candidate {candidate_index + 1}: tuning AP={score['average_precision']:.6f}",
+                    flush=True,
+                )
                 # Fixed tuning rule: AP, then Brier, then candidate enumeration.
                 rank = (-score["average_precision"], score["brier"], candidate_index)
                 if best is None or rank < best[0]:
-                    best = (rank, spec)
-            spec = best[1]
+                    best = (rank, specification)
+            specification = best[1]
+            # Start a fresh pipeline so preprocessing is refitted on these rows too.
             base = fit(
-                estimator(name, spec["parameters"], seed),
-                x[refit],
-                y[refit],
-                spec["weighting"],
+                estimator(name, specification["parameters"], seed),
+                x[refit_indices],
+                y[refit_indices],
+                specification["weighting"],
             )
+            # Freeze the classifier: calibration fits only the probability mapping
+            # on a later, separate period, without class weights.
             calibrated = CalibratedClassifierCV(FrozenEstimator(base), method="sigmoid")
-            calibrated.fit(x[cal], y[cal])
+            calibrated.fit(x[calibration], y[calibration])
             probability = calibrated.predict_proba(x[selection])[:, 1]
+            # The alert threshold is frozen here and reused for final-test metrics.
             threshold = choose_threshold(y[selection], probability)
             thresholds[name] = threshold
             selection_scores[name] = metrics(y[selection], probability, threshold)
             bundles[name] = dict(
                 base=base,
                 calibrated=calibrated,
-                specification=spec,
+                specification=specification,
                 threshold=threshold,
                 features=config["features"],
                 design=config,
@@ -237,9 +250,11 @@ def run(config_path, panel_path, output, *, smoke=False):
     )
     decision = dict(
         selected_model=chosen,
-        status="selected_on_selection_period"
-        if chosen
-        else "no_validated_predictive_improvement",
+        status=(
+            "selected_on_selection_period"
+            if chosen
+            else "no_validated_predictive_improvement"
+        ),
         data_kind=config["data_kind"],
         constant_training_prevalence=prevalence,
         baseline_selection_brier=base_selection["brier"],
@@ -257,21 +272,21 @@ def run(config_path, panel_path, output, *, smoke=False):
     for name in ("constant", *MODEL_ORDER):
         threshold = thresholds.get(name, 0.5)
         for stage in ("selection", "test"):
-            js = idx[stage]
-            p = (
-                np.full(len(js), prevalence)
+            stage_rows = stage_indices[stage]
+            probabilities = (
+                np.full(len(stage_rows), prevalence)
                 if name == "constant"
-                else bundles[name]["calibrated"].predict_proba(x[js])[:, 1]
+                else bundles[name]["calibrated"].predict_proba(x[stage_rows])[:, 1]
             )
             evaluations.append(
                 dict(
                     model=name,
                     stage=stage,
                     calibrated=name != "constant",
-                    **metrics(y[js], p, threshold),
+                    **metrics(y[stage_rows], probabilities, threshold),
                 )
             )
-            for j, probability in zip(js, p):
+            for j, probability in zip(stage_rows, probabilities):
                 predictions.append(
                     dict(
                         company_id=rows[j]["company_id"],
@@ -289,13 +304,13 @@ def run(config_path, panel_path, output, *, smoke=False):
                         prediction_ready_on=config["test_start"],
                     )
                 )
-            for bin_row in reliability_bins(y[js], p):
+            for bin_row in reliability_bins(y[stage_rows], probabilities):
                 reliability.append(dict(model=name, stage=stage, **bin_row))
             if stage == "test":
                 intervals[name] = cluster_intervals(
-                    y[js],
-                    p,
-                    [rows[j]["company_id"] for j in js],
+                    y[stage_rows],
+                    probabilities,
+                    [rows[j]["company_id"] for j in stage_rows],
                     threshold,
                     config["bootstrap_repeats"],
                     seed,
@@ -303,15 +318,17 @@ def run(config_path, panel_path, output, *, smoke=False):
         if name == "constant":
             continue
         base = bundles[name]["base"]
+        # Raw probabilities are diagnostics; they cannot replace the calibrated
+        # model after the predefined selection decision has been saved.
         for stage in ("selection", "test"):
-            js = idx[stage]
-            raw = base.predict_proba(x[js])[:, 1]
+            stage_rows = stage_indices[stage]
+            raw_probabilities = base.predict_proba(x[stage_rows])[:, 1]
             evaluations.append(
                 dict(
                     model=name,
                     stage=stage,
                     calibrated=False,
-                    **metrics(y[js], raw, 0.5),
+                    **metrics(y[stage_rows], raw_probabilities, 0.5),
                 )
             )
         if name.startswith("logistic"):
@@ -368,9 +385,11 @@ def run(config_path, panel_path, output, *, smoke=False):
             data_kind=config["data_kind"],
             smoke=smoke,
             selected_model=chosen,
-            status="synthetic_software_check_only"
-            if config["data_kind"] == "synthetic"
-            else "empirical_run",
+            status=(
+                "synthetic_software_check_only"
+                if config["data_kind"] == "synthetic"
+                else "empirical_run"
+            ),
             note="Four implemented financial predictors; no causal, realized-loss or private-company transfer claim",
         ),
     )

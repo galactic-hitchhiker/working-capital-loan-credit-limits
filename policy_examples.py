@@ -10,6 +10,7 @@ from credit_policy import PolicyConfig, PolicyInputs, determine_limit
 
 
 def examples():
+    """Change one aspect of a hypothetical borrower per case; cases are independent."""
     base = PolicyInputs(
         12_000_000,
         1_200_000,
@@ -56,16 +57,17 @@ def main():
         previous_limit=70_000,
     )
     sensitivity = []
-    for k in (5.0, 10.0, 20.0):
-        for q in (0.0, 0.01, 0.02, 0.05, 0.08, 0.10):
+    for risk_sensitivity in (5.0, 10.0, 20.0):
+        for risk_probability in (0.0, 0.01, 0.02, 0.05, 0.08, 0.10):
             result = determine_limit(
-                replace(base, risk_probability=q), PolicyConfig(risk_sensitivity=k)
+                replace(base, risk_probability=risk_probability),
+                PolicyConfig(risk_sensitivity=risk_sensitivity),
             )
             sensitivity.append(
                 {
                     "illustrative": True,
-                    "risk_sensitivity": k,
-                    "risk_probability": q,
+                    "risk_sensitivity": risk_sensitivity,
+                    "risk_probability": risk_probability,
                     **asdict(result),
                 }
             )

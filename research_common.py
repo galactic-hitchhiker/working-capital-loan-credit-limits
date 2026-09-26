@@ -19,6 +19,7 @@ STAGES = ("training", "tuning", "calibration", "selection", "test")
 
 
 def read_csv(path, required=()):
+    """Read string-valued rows, allowing a UTF-8 BOM and checking required columns."""
     with Path(path).open(newline="", encoding="utf-8-sig") as stream:
         reader = csv.DictReader(stream)
         missing = set(required) - set(reader.fieldnames or [])
@@ -31,6 +32,7 @@ def read_csv(path, required=()):
 
 
 def write_csv(path, rows, fields=None):
+    """Write rows in the supplied column order, or infer it from the first row."""
     rows = list(rows)
     fields = list(fields or (rows[0] if rows else []))
     if not fields:
@@ -58,6 +60,7 @@ def boolean(value):
 
 
 def finite(value, name, *, missing=False):
+    """Parse a finite number; optionally preserve empty inputs as None."""
     if value in (None, "") and missing:
         return None
     try:
@@ -70,6 +73,7 @@ def finite(value, name, *, missing=False):
 
 
 def cik(value):
+    """Normalize an SEC Central Index Key to its ten-digit filename representation."""
     value = str(value).strip()
     if not value.isdigit() or not 0 < int(value) < 10**10:
         raise ValueError(f"Invalid CIK: {value!r}")
@@ -77,6 +81,7 @@ def cik(value):
 
 
 def months(start, end):
+    """Yield every month start in the inclusive date range."""
     if start.day != 1 or end.day != 1 or end < start:
         raise ValueError("Monthly dates must be increasing month starts")
     while start <= end:
@@ -93,6 +98,7 @@ def file_hash(path):
 
 
 def new_output(path):
+    """Prepare an empty run directory without overwriting previous research outputs."""
     path = Path(path)
     if path.exists() and any(path.iterdir()):
         raise ValueError(
@@ -103,6 +109,7 @@ def new_output(path):
 
 
 def manifest(paths, **details):
+    """Record input/code hashes and environment versions to identify a research run."""
     packages = {}
     for name in ("numpy", "scipy", "scikit-learn", "xgboost", "matplotlib", "joblib"):
         try:
@@ -121,6 +128,7 @@ def manifest(paths, **details):
 
 
 def load_design(path):
+    """Validate the fixed target, chronology and predictor contract before a run."""
     config = json.loads(Path(path).read_text())
     if config.get("design_status") != "fixed":
         raise ValueError(

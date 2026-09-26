@@ -72,6 +72,7 @@ PANEL_FIELDS = (
 
 
 def evidence(universe_path, event_path, coverage_path, config):
+    """Load reviewed registers and reject inconsistent or unsupported evidence."""
     universe, events, coverage = {}, defaultdict(list), {}
     for row in read_csv(universe_path, UNIVERSE_FIELDS):
         key = cik(row["company_id"])
@@ -119,6 +120,7 @@ def evidence(universe_path, event_path, coverage_path, config):
 
 
 def outcome(company, decision, event_rows, coverage_row, config):
+    """Return a verified label, inclusion/exclusion reason, event ID and source."""
     if any(r["review_status"] == "pending" for r in event_rows):
         return None, "unresolved_event", "", ""
     confirmed = [r for r in event_rows if r["review_status"] == "confirmed"]
@@ -155,6 +157,7 @@ def outcome(company, decision, event_rows, coverage_row, config):
 
 
 def build(config_path, dataset, universe_path, event_path, coverage_path, output):
+    """Join point-in-time financials to separately verified outcome evidence."""
     config = load_design(config_path)
     if config["data_kind"] != "empirical":
         raise ValueError("SEC panel construction requires data_kind=empirical")
@@ -183,7 +186,7 @@ def build(config_path, dataset, universe_path, event_path, coverage_path, output
                 if not eligible_from <= decision <= eligible_through:
                     counts["outside_eligibility"] += 1
                     continue
-                values, prov = snapshot(document, decision)
+                values, source_facts = snapshot(document, decision)
                 if (
                     values["balance_age_days"] is None
                     or values["flow_age_days"] is None
@@ -197,7 +200,7 @@ def build(config_path, dataset, universe_path, event_path, coverage_path, output
                     continue
                 available = max(
                     date.fromisoformat(v["filed"]) + timedelta(days=1)
-                    for v in prov.values()
+                    for v in source_facts.values()
                     if v
                 )
                 feature_rows.append(
@@ -214,7 +217,7 @@ def build(config_path, dataset, universe_path, event_path, coverage_path, output
                         {
                             "company_id": company,
                             "decision_date": str(decision),
-                            "facts": prov,
+                            "facts": source_facts,
                         }
                     )
                     + "\n"

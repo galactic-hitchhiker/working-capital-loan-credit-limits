@@ -21,6 +21,7 @@ from train_models import run as train
 
 
 def fixture(output, companies_per_cohort=100):
+    """Write reproducible synthetic histories that exercise every chronological stage."""
     output = Path(output)
     config = dict(
         design_status="fixed",

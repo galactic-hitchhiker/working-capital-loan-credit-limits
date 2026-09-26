@@ -11,6 +11,8 @@ from datetime import date, timedelta
 
 @dataclass(frozen=True)
 class LabeledObservation:
+    """A company-month outcome with its horizon and first usable label date."""
+
     company_id: str
     decision_date: date
     horizon_end: date
@@ -96,6 +98,7 @@ def chronological_partition(
             or row.label_available_on <= row.horizon_end
         ):
             raise ValueError("Invalid label timing or outcome")
+        # Count crossed boundaries to locate the decision's chronological stage.
         stage = sum(row.decision_date >= b for b in boundaries)
         cutoff = boundaries[stage] if stage < 4 else observed_as_of
         if row.label_available_on >= cutoff:

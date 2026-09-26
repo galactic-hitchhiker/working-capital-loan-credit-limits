@@ -21,6 +21,8 @@ def nonnegative(name: str, value: float) -> None:
 
 @dataclass(frozen=True)
 class PolicyConfig:
+    """Research coefficients and monthly increase controls, expressed as fractions."""
+
     revenue_fraction: float = 0.20
     cashflow_fraction: float = 0.50
     cash_fraction: float = 0.10
@@ -46,6 +48,8 @@ class PolicyConfig:
 
 @dataclass(frozen=True)
 class PolicyInputs:
+    """One review's financial amounts, risk estimate and prior facility state."""
+
     revenue_annual: float
     operating_cashflow_annual: float
     eligible_cash: float
@@ -92,6 +96,8 @@ class PolicyInputs:
 
 @dataclass(frozen=True)
 class PolicyResult:
+    """Capacity calculation, assigned exposure limit and decision explanations."""
+
     revenue_cap: float
     cashflow_cash_cap: float
     capacity: float
@@ -117,14 +123,17 @@ def determine_limit(x: PolicyInputs, c: PolicyConfig = PolicyConfig()) -> Policy
     take effect immediately. Without a documented information change, increases
     are held. Zero-limit accounts require a fresh initial assessment (None).
     """
+    # One sixth of an annual flow approximates the policy's two-month window.
     revenue_cap = c.revenue_fraction * x.revenue_annual / 6.0
     cashflow_cash_cap = (
         c.cashflow_fraction * max(x.operating_cashflow_annual, 0) / 6.0
         + c.cash_fraction * x.eligible_cash
     )
+    # Use the tighter capacity estimate and deduct additional payments only once.
     capacity = max(
         0.0, min(revenue_cap, cashflow_cash_cap) - x.external_debt_service_60d
     )
+    # This is a policy haircut, not an expected-loss or default-probability model.
     multiplier = exp(-c.risk_sensitivity * x.risk_probability)
     adjusted = capacity * multiplier
     raw = min(x.hard_cap, adjusted)
@@ -132,6 +141,7 @@ def determine_limit(x: PolicyInputs, c: PolicyConfig = PolicyConfig()) -> Policy
     if capacity == 0:
         binding = "zero_capacity"
     previous = x.previous_limit
+    # Order matters: stops and reductions bypass all controls on increases.
     if x.hard_stop:
         raw = assigned = 0.0
         reason = binding = "hard_stop"
@@ -148,6 +158,7 @@ def determine_limit(x: PolicyInputs, c: PolicyConfig = PolicyConfig()) -> Policy
     elif raw - previous <= c.increase_deadband * previous:
         assigned, reason = previous, "increase_below_deadband"
     else:
+        # An increase must satisfy the current raw limit, smoothing and growth cap.
         assigned = min(
             raw,
             previous + c.increase_smoothing * (raw - previous),
