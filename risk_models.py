@@ -24,14 +24,20 @@ def candidates(name, *, smoke=False):
         ]
     elif name == "random_forest":
         grid = [
-            dict(
-                max_depth=max_depth, min_samples_leaf=min_leaf_samples, n_estimators=300
-            )
+            {
+                "max_depth": max_depth,
+                "min_samples_leaf": min_leaf_samples,
+                "n_estimators": 300,
+            }
             for max_depth, min_leaf_samples in product((3, None), (5, 20))
         ]
     elif name == "xgboost":
         grid = [
-            dict(max_depth=max_depth, learning_rate=learning_rate, n_estimators=200)
+            {
+                "max_depth": max_depth,
+                "learning_rate": learning_rate,
+                "n_estimators": 200,
+            }
             for max_depth, learning_rate in product((2, 4), (0.05, 0.1))
         ]
     else:

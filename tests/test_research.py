@@ -213,6 +213,7 @@ class SecTests(unittest.TestCase):
         self.assertIsNone(row["revenue"])
         self.assertEqual(row["current_ratio"], 2)
         self.assertAlmostEqual(row["return_on_average_assets"], 0.1)
+        self.assertAlmostEqual(row["operating_cashflow_to_average_assets"], 10 / 90)
         self.assertIsNotNone(prov["opening_assets_for_profitability"])
 
     def test_nonfinite_fact_is_skipped(self):

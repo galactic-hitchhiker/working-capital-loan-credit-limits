@@ -132,8 +132,8 @@ def snapshot(document, as_of: date):
             else None
         )
     values = {key: fact.value if fact else None for key, fact in facts.items()}
-    # A flow-based profitability ratio needs period-matched assets, not a newer
-    # balance sheet. Require exactly the day before the annual period began.
+    # Flow-to-assets ratios need period-matched assets, not a newer balance
+    # sheet. Require exactly the day before the annual period began.
     from datetime import timedelta
 
     opening = closing = None
@@ -175,6 +175,9 @@ def snapshot(document, as_of: date):
             assets,
         ),
         "return_on_average_assets": ratio(values["net_income"], average_assets),
+        "operating_cashflow_to_average_assets": ratio(
+            values["operating_cashflow"], average_assets
+        ),
         "log_assets": math.log(assets) if assets is not None and assets > 0 else None,
         "status": "financial_snapshot_only_no_event_label_or_credit_recommendation",
     }

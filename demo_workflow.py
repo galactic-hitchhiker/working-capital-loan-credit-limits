@@ -57,6 +57,9 @@ def fixture(output, companies_per_cohort=100):
                     current_ratio=max(0.01, 2 - 0.6 * state + rng.gauss(0, 0.1)),
                     working_capital_to_assets=0.15 - 0.15 * state + rng.gauss(0, 0.02),
                     return_on_average_assets=0.06 - 0.08 * state + rng.gauss(0, 0.01),
+                    operating_cashflow_to_average_assets=(
+                        0.08 - 0.07 * state + rng.gauss(0, 0.01)
+                    ),
                     log_assets=18 - 0.2 * state + rng.gauss(0, 1),
                 )
                 # Independent feature missingness exercises training-only imputation.

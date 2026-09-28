@@ -106,8 +106,8 @@ class FactIndex:
             facts[field] = (
                 self.get(field, start=annual.start, end=annual.end) if annual else None
             )
-        # Profitability uses assets at the annual flow's start and end, even if
-        # a newer balance sheet is already available for liquidity predictors.
+        # Flow-to-assets ratios use assets at the annual flow's start and end,
+        # even if a newer balance sheet is available for liquidity predictors.
         opening = closing = None
         if annual:
             opening = self.get(
@@ -148,6 +148,9 @@ class FactIndex:
                 assets,
             ),
             return_on_average_assets=ratio(values["net_income"], average_assets),
+            operating_cashflow_to_average_assets=ratio(
+                values["operating_cashflow"], average_assets
+            ),
             log_assets=math.log(assets) if assets is not None and assets > 0 else None,
             status="financial_snapshot_only_no_event_label_or_credit_recommendation",
         )

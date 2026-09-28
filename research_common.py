@@ -13,6 +13,7 @@ FEATURES = (
     "current_ratio",
     "working_capital_to_assets",
     "return_on_average_assets",
+    "operating_cashflow_to_average_assets",
     "log_assets",
 )
 STAGES = ("training", "tuning", "calibration", "selection", "test")
