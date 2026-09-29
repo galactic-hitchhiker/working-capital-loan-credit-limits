@@ -12,6 +12,7 @@ from credit_policy import (
     expected_loss_amount,
 )
 from sec_data import filing_rows, latest_fact, snapshot
+from sec_point_in_time import FactIndex
 from temporal_validation import chronological_partition, make_label
 
 
@@ -202,6 +203,7 @@ class SecTests(unittest.TestCase):
                 "Assets": [fact(100), fact(80, end="2023-12-31")],
                 "AssetsCurrent": [fact(50)],
                 "LiabilitiesCurrent": [fact(25)],
+                "CashAndCashEquivalentsAtCarryingValue": [fact(20)],
                 "NetCashProvidedByUsedInOperatingActivities": [
                     fact(10, start="2024-01-01")
                 ],
@@ -212,9 +214,69 @@ class SecTests(unittest.TestCase):
         row, prov = snapshot(d, date(2025, 3, 1))
         self.assertIsNone(row["revenue"])
         self.assertEqual(row["current_ratio"], 2)
+        self.assertAlmostEqual(row["cash_and_equivalents_to_assets"], 0.2)
+        self.assertIsNone(row["cash_only_to_assets"])
         self.assertAlmostEqual(row["return_on_average_assets"], 0.1)
         self.assertAlmostEqual(row["operating_cashflow_to_average_assets"], 10 / 90)
         self.assertIsNotNone(prov["opening_assets_for_profitability"])
+
+    def test_cash_is_reconstructed_from_matching_components(self):
+        d = document(
+            {
+                "Assets": [fact(100)],
+                "Cash": [fact(12)],
+                "CashEquivalentsAtCarryingValue": [fact(8)],
+            }
+        )
+        row, prov = snapshot(d, date(2025, 3, 1))
+        self.assertAlmostEqual(row["cash_and_equivalents_to_assets"], 0.2)
+        self.assertAlmostEqual(row["cash_only_to_assets"], 0.12)
+        self.assertEqual(prov["cash_derivation"]["basis"], "cash_plus_equivalents")
+
+        indexed_row, indexed_prov = FactIndex(d, date(2025, 3, 1)).snapshot(
+            date(2025, 3, 1)
+        )
+        self.assertEqual(
+            indexed_row["cash_and_equivalents_to_assets"],
+            row["cash_and_equivalents_to_assets"],
+        )
+        self.assertEqual(
+            indexed_row["cash_only_to_assets"], row["cash_only_to_assets"]
+        )
+        self.assertEqual(
+            indexed_prov["cash_derivation"]["basis"], "cash_plus_equivalents"
+        )
+
+    def test_cash_is_reconstructed_by_removing_restricted_cash(self):
+        d = document(
+            {
+                "Assets": [fact(100)],
+                "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents": [
+                    fact(25)
+                ],
+                "RestrictedCashAndCashEquivalents": [fact(5)],
+            }
+        )
+        row, prov = snapshot(d, date(2025, 3, 1))
+        self.assertAlmostEqual(row["cash_and_equivalents_to_assets"], 0.2)
+        self.assertEqual(
+            prov["cash_derivation"]["basis"], "combined_minus_restricted"
+        )
+
+    def test_cash_components_from_different_filings_are_not_combined(self):
+        cash = fact(12)
+        equivalent = fact(8)
+        equivalent["accn"] = "different-accession"
+        d = document(
+            {
+                "Assets": [fact(100)],
+                "Cash": [cash],
+                "CashEquivalentsAtCarryingValue": [equivalent],
+            }
+        )
+        row, prov = snapshot(d, date(2025, 3, 1))
+        self.assertIsNone(row["cash_and_equivalents_to_assets"])
+        self.assertIsNone(prov["cash_derivation"])
 
     def test_nonfinite_fact_is_skipped(self):
         d = document({"Assets": [fact(float("nan"))]})

@@ -8,7 +8,13 @@ import math
 from dataclasses import asdict
 from datetime import date, timedelta
 
-from sec_data import TAGS, eligible_facts, ratio
+from sec_data import (
+    CASH_COMPONENT_TAGS,
+    TAGS,
+    eligible_facts,
+    ratio,
+    resolve_cash_and_equivalents,
+)
 
 
 class FactIndex:
@@ -23,7 +29,7 @@ class FactIndex:
         self.document = document
         self.pending, self.position, self.known = {}, {}, {}
         self.current = None
-        for field in TAGS:
+        for field in (*TAGS, *CASH_COMPONENT_TAGS):
             annual = field in {"revenue", "operating_cashflow", "net_income"}
             facts = list(
                 eligible_facts(document, field, last_decision + timedelta(days=1))
@@ -93,15 +99,25 @@ class FactIndex:
         # ties between facts that agree on the period and value.
         if len({(f.start, f.value) for f in facts}) != 1:
             return None
-        return min(facts, key=lambda f: (TAGS[field].index(f.tag), f.accession))
+        tags = TAGS.get(field, CASH_COMPONENT_TAGS.get(field))
+        return min(facts, key=lambda f: (tags.index(f.tag), f.accession))
 
     def snapshot(self, decision):
         """Return period-matched financial values and the source facts behind them."""
         self.advance(decision)
         balance, annual = self.get("assets"), self.get("operating_cashflow")
         facts = {"assets": balance, "operating_cashflow": annual}
-        for field in ("current_assets", "current_liabilities", "cash"):
+        for field in ("current_assets", "current_liabilities"):
             facts[field] = self.get(field, end=balance.end) if balance else None
+        cash_value, cash_basis, cash_sources = (
+            resolve_cash_and_equivalents(self.get, balance.end)
+            if balance
+            else (None, "missing", {})
+        )
+        facts["cash_only"] = (
+            self.get("cash_only", end=balance.end) if balance else None
+        )
+        facts["cash"] = cash_sources.get("cash")
         for field in ("revenue", "net_income"):
             facts[field] = (
                 self.get(field, start=annual.start, end=annual.end) if annual else None
@@ -118,6 +134,7 @@ class FactIndex:
             (opening.value + closing.value) / 2 if opening and closing else None
         )
         values = {k: v.value if v else None for k, v in facts.items()}
+        values["cash"] = cash_value
         current_assets, current_liabilities, assets = (
             values["current_assets"],
             values["current_liabilities"],
@@ -139,6 +156,8 @@ class FactIndex:
                 (decision - date.fromisoformat(annual.end)).days if annual else None
             ),
             current_ratio=ratio(current_assets, current_liabilities),
+            cash_only_to_assets=ratio(values["cash_only"], assets),
+            cash_and_equivalents_to_assets=ratio(values["cash"], assets),
             working_capital_to_assets=ratio(
                 (
                     current_assets - current_liabilities
@@ -156,4 +175,16 @@ class FactIndex:
         )
         facts["opening_assets_for_profitability"] = opening
         facts["closing_assets_for_profitability"] = closing
-        return values, {k: asdict(v) if v else None for k, v in facts.items()}
+        provenance = {k: asdict(v) if v else None for k, v in facts.items()}
+        provenance["cash_derivation"] = (
+            {
+                "basis": cash_basis,
+                "filed": max(fact.filed for fact in cash_sources.values()),
+                "sources": {
+                    key: asdict(fact) for key, fact in cash_sources.items()
+                },
+            }
+            if cash_sources
+            else None
+        )
+        return values, provenance

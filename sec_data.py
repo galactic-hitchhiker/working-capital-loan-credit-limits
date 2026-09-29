@@ -30,6 +30,20 @@ TAGS = {
     "operating_cashflow": ("NetCashProvidedByUsedInOperatingActivities",),
     "net_income": ("NetIncomeLoss",),
 }
+# These concepts are used only to reconstruct cash and cash equivalents when the
+# directly reported total is absent. Keeping them separate from TAGS prevents
+# intermediate accounting values from becoming model predictors by accident.
+CASH_COMPONENT_TAGS = {
+    "cash_only": ("Cash",),
+    "cash_equivalents_only": ("CashEquivalentsAtCarryingValue",),
+    "cash_including_restricted": (
+        "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents",
+    ),
+    "restricted_cash_and_equivalents": ("RestrictedCashAndCashEquivalents",),
+    "restricted_cash": ("RestrictedCash",),
+    "restricted_cash_current": ("RestrictedCashCurrent",),
+    "restricted_cash_noncurrent": ("RestrictedCashNoncurrent",),
+}
 FORMS = {"10-K", "10-K/A", "10-Q", "10-Q/A"}
 
 
@@ -45,7 +59,10 @@ class Fact:
 
 def eligible_facts(document, field: str, as_of: date):
     """Never use a fiscal-year label or a frame as an availability date."""
-    for tag in TAGS[field]:
+    tags = TAGS.get(field, CASH_COMPONENT_TAGS.get(field))
+    if tags is None:
+        raise KeyError(field)
+    for tag in tags:
         for r in (
             document.get("facts", {})
             .get("us-gaap", {})
@@ -104,7 +121,51 @@ def latest_fact(document, field, as_of, *, annual=False, start=None, end=None):
     # Conflicting USD totals for one period are flagged missing rather than chosen.
     if len({(r.start, r.value) for r in rows}) != 1:
         return None
-    return min(rows, key=lambda r: (TAGS[field].index(r.tag), r.accession))
+    tags = TAGS.get(field, CASH_COMPONENT_TAGS.get(field))
+    return min(rows, key=lambda r: (tags.index(r.tag), r.accession))
+
+
+def resolve_cash_and_equivalents(get_fact, end):
+    """Return a consistently defined cash total and auditable derivation details.
+
+    Components must come from the same filing accession. This avoids combining
+    values from different amendments or filing vintages for the same period.
+    """
+    direct = get_fact("cash", end=end)
+    if direct:
+        return direct.value, "direct", {"cash": direct}
+
+    cash = get_fact("cash_only", end=end)
+    equivalents = get_fact("cash_equivalents_only", end=end)
+    if cash and equivalents and cash.accession == equivalents.accession:
+        return (
+            cash.value + equivalents.value,
+            "cash_plus_equivalents",
+            {"cash_only": cash, "cash_equivalents_only": equivalents},
+        )
+
+    combined = get_fact("cash_including_restricted", end=end)
+    if not combined:
+        return None, "missing", {}
+
+    restricted_candidates = [
+        ("restricted_cash_and_equivalents",),
+        ("restricted_cash",),
+        ("restricted_cash_current", "restricted_cash_noncurrent"),
+    ]
+    for fields in restricted_candidates:
+        restricted = [get_fact(field, end=end) for field in fields]
+        if not all(restricted) or any(
+            fact.accession != combined.accession for fact in restricted
+        ):
+            continue
+        unrestricted = combined.value - sum(fact.value for fact in restricted)
+        if unrestricted < 0:
+            continue
+        sources = {"cash_including_restricted": combined}
+        sources.update(zip(fields, restricted))
+        return unrestricted, "combined_minus_restricted", sources
+    return None, "missing", {}
 
 
 def ratio(numerator, denominator):
@@ -119,10 +180,26 @@ def snapshot(document, as_of: date):
     balance = latest_fact(document, "assets", as_of)
     annual = latest_fact(document, "operating_cashflow", as_of, annual=True)
     facts = {"assets": balance, "operating_cashflow": annual}
-    for field in ("current_assets", "current_liabilities", "cash"):
+    for field in ("current_assets", "current_liabilities"):
         facts[field] = (
             latest_fact(document, field, as_of, end=balance.end) if balance else None
         )
+    cash_value, cash_basis, cash_sources = (
+        resolve_cash_and_equivalents(
+            lambda field, **kwargs: latest_fact(document, field, as_of, **kwargs),
+            balance.end,
+        )
+        if balance
+        else (None, "missing", {})
+    )
+    # Keep the narrower Cash concept separate from reconstructed cash and cash
+    # equivalents so a study can choose one accounting definition explicitly.
+    facts["cash_only"] = (
+        latest_fact(document, "cash_only", as_of, end=balance.end)
+        if balance
+        else None
+    )
+    facts["cash"] = cash_sources.get("cash")
     for field in ("revenue", "net_income"):
         facts[field] = (
             latest_fact(
@@ -132,6 +209,7 @@ def snapshot(document, as_of: date):
             else None
         )
     values = {key: fact.value if fact else None for key, fact in facts.items()}
+    values["cash"] = cash_value
     # Flow-to-assets ratios need period-matched assets, not a newer balance
     # sheet. Require exactly the day before the annual period began.
     from datetime import timedelta
@@ -166,6 +244,8 @@ def snapshot(document, as_of: date):
         ),
         **values,
         "current_ratio": ratio(current_assets, current_liabilities),
+        "cash_only_to_assets": ratio(values["cash_only"], assets),
+        "cash_and_equivalents_to_assets": ratio(values["cash"], assets),
         "working_capital_to_assets": ratio(
             (
                 current_assets - current_liabilities
@@ -182,6 +262,17 @@ def snapshot(document, as_of: date):
         "status": "financial_snapshot_only_no_event_label_or_credit_recommendation",
     }
     provenance = {key: asdict(fact) if fact else None for key, fact in facts.items()}
+    provenance["cash_derivation"] = (
+        {
+            "basis": cash_basis,
+            # Panel builders use top-level provenance filing dates to determine
+            # when a feature first became available.
+            "filed": max(fact.filed for fact in cash_sources.values()),
+            "sources": {key: asdict(fact) for key, fact in cash_sources.items()},
+        }
+        if cash_sources
+        else None
+    )
     provenance["opening_assets_for_profitability"] = (
         asdict(opening) if opening else None
     )

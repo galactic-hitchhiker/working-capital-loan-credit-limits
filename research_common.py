@@ -11,6 +11,8 @@ from pathlib import Path
 
 FEATURES = (
     "current_ratio",
+    "cash_only_to_assets",
+    "cash_and_equivalents_to_assets",
     "working_capital_to_assets",
     "return_on_average_assets",
     "operating_cashflow_to_average_assets",

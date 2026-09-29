@@ -11,7 +11,7 @@
   "selection_start": null,
   "test_start": null,
   "observed_as_of": null,
-  "features": ["current_ratio", "working_capital_to_assets", "return_on_average_assets", "operating_cashflow_to_average_assets", "log_assets"],
+  "features": ["current_ratio", "cash_only_to_assets", "cash_and_equivalents_to_assets", "working_capital_to_assets", "return_on_average_assets", "operating_cashflow_to_average_assets", "log_assets"],
   "max_balance_age_days": null,
   "max_flow_age_days": null,
   "min_class_count": 10,
