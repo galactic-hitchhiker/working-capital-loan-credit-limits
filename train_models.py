@@ -39,6 +39,16 @@ from research_common import (
 from risk_models import MODEL_ORDER, candidates, estimator, fit
 from temporal_validation import LabeledObservation, chronological_partition
 
+CALIBRATION_ORDER = ("identity", "sigmoid")
+
+
+def select_calibration(scores):
+    """Choose the lowest-Brier mapping, preferring raw probabilities on a tie."""
+    return min(
+        CALIBRATION_ORDER,
+        key=lambda method: (scores[method]["brier"], CALIBRATION_ORDER.index(method)),
+    )
+
 
 def prepare(panel_path, config):
     """Validate the panel and return rows, predictors, labels, stage indices and audit."""
@@ -176,6 +186,8 @@ def run(config_path, panel_path, output, *, smoke=False):
     refit_indices = np.concatenate([train, tune])
     seed = config["seed"]
     thresholds = {}
+    calibration_methods = {}
+    calibration_scores = {}
     bundles = {}
     selection_scores = {}
     tuning_results = []
@@ -225,18 +237,35 @@ def run(config_path, panel_path, output, *, smoke=False):
                 y[refit_indices],
                 specification["weighting"],
             )
-            # Freeze the classifier: calibration fits only the probability mapping
-            # on a later, separate period, without class weights.
-            calibrated = CalibratedClassifierCV(FrozenEstimator(base), method="sigmoid")
-            calibrated.fit(x[calibration], y[calibration])
-            probability = calibrated.predict_proba(x[selection])[:, 1]
+            # Fit sigmoid calibration on its separate period, then let the
+            # selection stage choose it or the untouched raw probabilities.
+            sigmoid = CalibratedClassifierCV(FrozenEstimator(base), method="sigmoid")
+            sigmoid.fit(x[calibration], y[calibration])
+            calibration_models = {"identity": base, "sigmoid": sigmoid}
+            candidate_probabilities = {
+                method: model.predict_proba(x[selection])[:, 1]
+                for method, model in calibration_models.items()
+            }
+            method_scores = {
+                method: metrics(y[selection], probabilities)
+                for method, probabilities in candidate_probabilities.items()
+            }
+            calibration_method = select_calibration(method_scores)
+            probability = candidate_probabilities[calibration_method]
+            predictor = calibration_models[calibration_method]
             # The alert threshold is frozen here and reused for final-test metrics.
             threshold = choose_threshold(y[selection], probability)
             thresholds[name] = threshold
+            calibration_methods[name] = calibration_method
+            calibration_scores[name] = method_scores
             selection_scores[name] = metrics(y[selection], probability, threshold)
             bundles[name] = dict(
                 base=base,
-                calibrated=calibrated,
+                # Retain this key for scoring compatibility. It now contains the
+                # selected probability mapping, which may be the raw base model.
+                calibrated=predictor,
+                sigmoid=sigmoid,
+                calibration_method=calibration_method,
                 specification=specification,
                 threshold=threshold,
                 features=config["features"],
@@ -260,7 +289,10 @@ def run(config_path, panel_path, output, *, smoke=False):
         baseline_selection_brier=base_selection["brier"],
         selection_event_share=float(y[selection].mean()),
         thresholds=thresholds,
+        calibration_methods=calibration_methods,
+        calibration_scores=calibration_scores,
         selection_scores=selection_scores,
+        calibration_rule="Lowest selection-period Brier; identity/raw probabilities on exact tie",
         selection_rule="AP > selection event share and Brier < training-prevalence baseline; lowest Brier; simpler on exact tie",
     )
     # Persist selection BEFORE generating any final-test model predictions.
@@ -282,7 +314,13 @@ def run(config_path, panel_path, output, *, smoke=False):
                 dict(
                     model=name,
                     stage=stage,
-                    calibrated=name != "constant",
+                    calibrated=(
+                        name != "constant"
+                        and calibration_methods[name] == "sigmoid"
+                    ),
+                    calibration_method=(
+                        "constant" if name == "constant" else calibration_methods[name]
+                    ),
                     **metrics(y[stage_rows], probabilities, threshold),
                 )
             )
@@ -318,19 +356,21 @@ def run(config_path, panel_path, output, *, smoke=False):
         if name == "constant":
             continue
         base = bundles[name]["base"]
-        # Raw probabilities are diagnostics; they cannot replace the calibrated
-        # model after the predefined selection decision has been saved.
-        for stage in ("selection", "test"):
-            stage_rows = stage_indices[stage]
-            raw_probabilities = base.predict_proba(x[stage_rows])[:, 1]
-            evaluations.append(
-                dict(
-                    model=name,
-                    stage=stage,
-                    calibrated=False,
-                    **metrics(y[stage_rows], raw_probabilities, 0.5),
+        # When sigmoid wins, retain raw probabilities as diagnostics. When
+        # identity wins, the primary evaluation above already contains them.
+        if calibration_methods[name] != "identity":
+            for stage in ("selection", "test"):
+                stage_rows = stage_indices[stage]
+                raw_probabilities = base.predict_proba(x[stage_rows])[:, 1]
+                evaluations.append(
+                    dict(
+                        model=name,
+                        stage=stage,
+                        calibrated=False,
+                        calibration_method="identity_diagnostic",
+                        **metrics(y[stage_rows], raw_probabilities, 0.5),
+                    )
                 )
-            )
         if name.startswith("logistic"):
             feature_names = base.named_steps["imputer"].get_feature_names_out(
                 config["features"]

@@ -12,7 +12,7 @@
   "selection_start": "2020-01-01",
   "test_start": "2023-01-01",
   "observed_as_of": "2026-09-07",
-  "features": ["current_ratio", "cash_only_to_assets", "cash_and_equivalents_to_assets", "working_capital_to_assets", "return_on_average_assets", "operating_cashflow_to_average_assets", "log_assets"],
+  "features": ["current_ratio", "cash_and_equivalents_to_assets", "working_capital_to_assets", "return_on_average_assets", "operating_cashflow_to_average_assets", "log_assets"],
   "max_balance_age_days": 180,
   "max_flow_age_days": 540,
   "min_class_count": 10,

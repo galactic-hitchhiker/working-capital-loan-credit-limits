@@ -22,7 +22,7 @@ try:
         cluster_intervals,
     )
     from risk_models import estimator, fit
-    from train_models import prepare
+    from train_models import prepare, select_calibration
 
     HAS_ML = True
 except ModuleNotFoundError:
@@ -344,6 +344,20 @@ class ModelTests(unittest.TestCase):
         )
         self.assertIsNone(
             select_model(scores, 0.01, 0.1, ["simple", "complex", "ineligible"])
+        )
+
+    def test_calibration_selection_uses_brier_and_prefers_identity_on_tie(self):
+        self.assertEqual(
+            select_calibration(
+                {"identity": {"brier": 0.1}, "sigmoid": {"brier": 0.2}}
+            ),
+            "identity",
+        )
+        self.assertEqual(
+            select_calibration(
+                {"identity": {"brier": 0.1}, "sigmoid": {"brier": 0.1}}
+            ),
+            "identity",
         )
 
     def test_median_and_scaling_fit_only_on_training(self):
