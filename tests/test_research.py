@@ -201,6 +201,7 @@ class SecTests(unittest.TestCase):
         d = document(
             {
                 "Assets": [fact(100), fact(80, end="2023-12-31")],
+                "Liabilities": [fact(60), fact(50, end="2023-12-31")],
                 "AssetsCurrent": [fact(50)],
                 "LiabilitiesCurrent": [fact(25)],
                 "CashAndCashEquivalentsAtCarryingValue": [fact(20)],
@@ -215,10 +216,49 @@ class SecTests(unittest.TestCase):
         self.assertIsNone(row["revenue"])
         self.assertEqual(row["current_ratio"], 2)
         self.assertAlmostEqual(row["cash_and_equivalents_to_assets"], 0.2)
+        self.assertAlmostEqual(row["liabilities_to_assets"], 0.6)
+        self.assertAlmostEqual(row["assets_growth_12m"], 0.25)
+        self.assertAlmostEqual(row["liabilities_to_assets_change_12m"], -0.025)
         self.assertIsNone(row["cash_only_to_assets"])
         self.assertAlmostEqual(row["return_on_average_assets"], 0.1)
         self.assertAlmostEqual(row["operating_cashflow_to_average_assets"], 10 / 90)
+        self.assertAlmostEqual(
+            row["operating_cashflow_to_average_liabilities"], 10 / 55
+        )
+        self.assertEqual(row["negative_net_income"], 0)
+        self.assertEqual(row["negative_operating_cashflow"], 0)
         self.assertIsNotNone(prov["opening_assets_for_profitability"])
+        indexed_row, _ = FactIndex(d, date(2025, 3, 1)).snapshot(date(2025, 3, 1))
+        self.assertEqual(
+            indexed_row["liabilities_to_assets"], row["liabilities_to_assets"]
+        )
+        self.assertEqual(
+            indexed_row["operating_cashflow_to_average_liabilities"],
+            row["operating_cashflow_to_average_liabilities"],
+        )
+        self.assertEqual(indexed_row["assets_growth_12m"], row["assets_growth_12m"])
+        self.assertEqual(
+            indexed_row["liabilities_to_assets_change_12m"],
+            row["liabilities_to_assets_change_12m"],
+        )
+
+    def test_negative_flow_indicators_preserve_missingness(self):
+        negative = document(
+            {
+                "Assets": [fact(100), fact(80, end="2023-12-31")],
+                "NetCashProvidedByUsedInOperatingActivities": [
+                    fact(-10, start="2024-01-01")
+                ],
+                "NetIncomeLoss": [fact(-5, start="2024-01-01")],
+            }
+        )
+        row, _ = snapshot(negative, date(2025, 3, 1))
+        self.assertEqual(row["negative_net_income"], 1)
+        self.assertEqual(row["negative_operating_cashflow"], 1)
+
+        missing, _ = snapshot(document({"Assets": [fact(100)]}), date(2025, 3, 1))
+        self.assertIsNone(missing["negative_net_income"])
+        self.assertIsNone(missing["negative_operating_cashflow"])
 
     def test_cash_is_reconstructed_from_matching_components(self):
         d = document(

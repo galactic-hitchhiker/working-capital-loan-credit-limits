@@ -58,10 +58,24 @@ def fixture(output, companies_per_cohort=100):
                     cash_and_equivalents_to_assets=max(
                         0.0, 0.16 - 0.045 * state + rng.gauss(0, 0.01)
                     ),
+                    liabilities_to_assets=max(
+                        0.01, 0.45 + 0.10 * state + rng.gauss(0, 0.02)
+                    ),
+                    assets_growth_12m=0.04 - 0.03 * state + rng.gauss(0, 0.02),
+                    liabilities_to_assets_change_12m=(
+                        0.025 * state + rng.gauss(0, 0.01)
+                    ),
                     working_capital_to_assets=0.15 - 0.15 * state + rng.gauss(0, 0.02),
                     return_on_average_assets=0.06 - 0.08 * state + rng.gauss(0, 0.01),
                     operating_cashflow_to_average_assets=(
                         0.08 - 0.07 * state + rng.gauss(0, 0.01)
+                    ),
+                    operating_cashflow_to_average_liabilities=(
+                        0.16 - 0.12 * state + rng.gauss(0, 0.02)
+                    ),
+                    negative_net_income=int(state + rng.gauss(0, 0.4) > 0.8),
+                    negative_operating_cashflow=int(
+                        state + rng.gauss(0, 0.4) > 1.0
                     ),
                     log_assets=18 - 0.2 * state + rng.gauss(0, 1),
                 )

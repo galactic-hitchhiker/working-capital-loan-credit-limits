@@ -102,12 +102,29 @@ class FactIndex:
         tags = TAGS.get(field, CASH_COMPONENT_TAGS.get(field))
         return min(facts, key=lambda f: (tags.index(f.tag), f.accession))
 
+    def get_prior_year(self, field, current_end):
+        """Return the closest comparable instant fact 330–400 days earlier."""
+        current = date.fromisoformat(current_end)
+        ends = sorted(
+            (
+                end
+                for end in self.known[field]
+                if 330 <= (current - date.fromisoformat(end)).days <= 400
+            ),
+            reverse=True,
+        )
+        for end in ends:
+            fact = self.get(field, end=end)
+            if fact:
+                return fact
+        return None
+
     def snapshot(self, decision):
         """Return period-matched financial values and the source facts behind them."""
         self.advance(decision)
         balance, annual = self.get("assets"), self.get("operating_cashflow")
         facts = {"assets": balance, "operating_cashflow": annual}
-        for field in ("current_assets", "current_liabilities"):
+        for field in ("liabilities", "current_assets", "current_liabilities"):
             facts[field] = self.get(field, end=balance.end) if balance else None
         cash_value, cash_basis, cash_sources = (
             resolve_cash_and_equivalents(self.get, balance.end)
@@ -118,20 +135,32 @@ class FactIndex:
             self.get("cash_only", end=balance.end) if balance else None
         )
         facts["cash"] = cash_sources.get("cash")
+        prior_assets = (
+            self.get_prior_year("assets", balance.end) if balance else None
+        )
+        prior_liabilities = (
+            self.get("liabilities", end=prior_assets.end) if prior_assets else None
+        )
         for field in ("revenue", "net_income"):
             facts[field] = (
                 self.get(field, start=annual.start, end=annual.end) if annual else None
             )
         # Flow-to-assets ratios use assets at the annual flow's start and end,
         # even if a newer balance sheet is available for liquidity predictors.
-        opening = closing = None
+        opening = closing = opening_liabilities = closing_liabilities = None
         if annual:
-            opening = self.get(
-                "assets", end=str(date.fromisoformat(annual.start) - timedelta(days=1))
-            )
+            opening_end = str(date.fromisoformat(annual.start) - timedelta(days=1))
+            opening = self.get("assets", end=opening_end)
             closing = self.get("assets", end=annual.end)
+            opening_liabilities = self.get("liabilities", end=opening_end)
+            closing_liabilities = self.get("liabilities", end=annual.end)
         average_assets = (
             (opening.value + closing.value) / 2 if opening and closing else None
+        )
+        average_liabilities = (
+            (opening_liabilities.value + closing_liabilities.value) / 2
+            if opening_liabilities and closing_liabilities
+            else None
         )
         values = {k: v.value if v else None for k, v in facts.items()}
         values["cash"] = cash_value
@@ -139,6 +168,11 @@ class FactIndex:
             values["current_assets"],
             values["current_liabilities"],
             values["assets"],
+        )
+        current_leverage = ratio(values["liabilities"], assets)
+        prior_leverage = ratio(
+            prior_liabilities.value if prior_liabilities else None,
+            prior_assets.value if prior_assets else None,
         )
         values.update(
             cik=str(self.document["cik"]).zfill(10),
@@ -158,6 +192,20 @@ class FactIndex:
             current_ratio=ratio(current_assets, current_liabilities),
             cash_only_to_assets=ratio(values["cash_only"], assets),
             cash_and_equivalents_to_assets=ratio(values["cash"], assets),
+            liabilities_to_assets=current_leverage,
+            assets_growth_12m=ratio(
+                (
+                    assets - prior_assets.value
+                    if assets is not None and prior_assets
+                    else None
+                ),
+                prior_assets.value if prior_assets else None,
+            ),
+            liabilities_to_assets_change_12m=(
+                current_leverage - prior_leverage
+                if current_leverage is not None and prior_leverage is not None
+                else None
+            ),
             working_capital_to_assets=ratio(
                 (
                     current_assets - current_liabilities
@@ -170,11 +218,28 @@ class FactIndex:
             operating_cashflow_to_average_assets=ratio(
                 values["operating_cashflow"], average_assets
             ),
+            operating_cashflow_to_average_liabilities=ratio(
+                values["operating_cashflow"], average_liabilities
+            ),
+            negative_net_income=(
+                int(values["net_income"] < 0)
+                if values["net_income"] is not None
+                else None
+            ),
+            negative_operating_cashflow=(
+                int(values["operating_cashflow"] < 0)
+                if values["operating_cashflow"] is not None
+                else None
+            ),
             log_assets=math.log(assets) if assets is not None and assets > 0 else None,
             status="financial_snapshot_only_no_event_label_or_credit_recommendation",
         )
         facts["opening_assets_for_profitability"] = opening
         facts["closing_assets_for_profitability"] = closing
+        facts["opening_liabilities_for_cashflow_coverage"] = opening_liabilities
+        facts["closing_liabilities_for_cashflow_coverage"] = closing_liabilities
+        facts["prior_assets_for_12m_change"] = prior_assets
+        facts["prior_liabilities_for_12m_change"] = prior_liabilities
         provenance = {k: asdict(v) if v else None for k, v in facts.items()}
         provenance["cash_derivation"] = (
             {

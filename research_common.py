@@ -12,9 +12,15 @@ from pathlib import Path
 FEATURES = (
     "current_ratio",
     "cash_and_equivalents_to_assets",
+    "liabilities_to_assets",
+    "assets_growth_12m",
+    "liabilities_to_assets_change_12m",
     "working_capital_to_assets",
     "return_on_average_assets",
     "operating_cashflow_to_average_assets",
+    "operating_cashflow_to_average_liabilities",
+    "negative_net_income",
+    "negative_operating_cashflow",
     "log_assets",
 )
 STAGES = ("training", "tuning", "calibration", "selection", "test")

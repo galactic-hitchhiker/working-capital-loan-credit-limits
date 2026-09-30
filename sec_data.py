@@ -18,6 +18,7 @@ from pathlib import Path
 
 TAGS = {
     "assets": ("Assets",),
+    "liabilities": ("Liabilities",),
     "current_assets": ("AssetsCurrent",),
     "current_liabilities": ("LiabilitiesCurrent",),
     "cash": ("CashAndCashEquivalentsAtCarryingValue",),
@@ -125,6 +126,25 @@ def latest_fact(document, field, as_of, *, annual=False, start=None, end=None):
     return min(rows, key=lambda r: (tags.index(r.tag), r.accession))
 
 
+def prior_year_fact(document, field, as_of, current_end):
+    """Find the closest comparable instant fact 330–400 days earlier."""
+    current = date.fromisoformat(current_end)
+    ends = sorted(
+        {
+            fact.end
+            for fact in eligible_facts(document, field, as_of)
+            if fact.start is None
+            and 330 <= (current - date.fromisoformat(fact.end)).days <= 400
+        },
+        reverse=True,
+    )
+    for end in ends:
+        fact = latest_fact(document, field, as_of, end=end)
+        if fact:
+            return fact
+    return None
+
+
 def resolve_cash_and_equivalents(get_fact, end):
     """Return a consistently defined cash total and auditable derivation details.
 
@@ -180,7 +200,7 @@ def snapshot(document, as_of: date):
     balance = latest_fact(document, "assets", as_of)
     annual = latest_fact(document, "operating_cashflow", as_of, annual=True)
     facts = {"assets": balance, "operating_cashflow": annual}
-    for field in ("current_assets", "current_liabilities"):
+    for field in ("liabilities", "current_assets", "current_liabilities"):
         facts[field] = (
             latest_fact(document, field, as_of, end=balance.end) if balance else None
         )
@@ -200,6 +220,14 @@ def snapshot(document, as_of: date):
         else None
     )
     facts["cash"] = cash_sources.get("cash")
+    prior_assets = (
+        prior_year_fact(document, "assets", as_of, balance.end) if balance else None
+    )
+    prior_liabilities = (
+        latest_fact(document, "liabilities", as_of, end=prior_assets.end)
+        if prior_assets
+        else None
+    )
     for field in ("revenue", "net_income"):
         facts[field] = (
             latest_fact(
@@ -214,18 +242,34 @@ def snapshot(document, as_of: date):
     # sheet. Require exactly the day before the annual period began.
     from datetime import timedelta
 
-    opening = closing = None
+    opening = closing = opening_liabilities = closing_liabilities = None
     if annual:
         opening_end = (date.fromisoformat(annual.start) - timedelta(days=1)).isoformat()
         opening = latest_fact(document, "assets", as_of, end=opening_end)
         closing = latest_fact(document, "assets", as_of, end=annual.end)
+        opening_liabilities = latest_fact(
+            document, "liabilities", as_of, end=opening_end
+        )
+        closing_liabilities = latest_fact(
+            document, "liabilities", as_of, end=annual.end
+        )
     average_assets = (
         (opening.value + closing.value) / 2 if opening and closing else None
+    )
+    average_liabilities = (
+        (opening_liabilities.value + closing_liabilities.value) / 2
+        if opening_liabilities and closing_liabilities
+        else None
     )
     current_assets, current_liabilities, assets = (
         values["current_assets"],
         values["current_liabilities"],
         values["assets"],
+    )
+    current_leverage = ratio(values["liabilities"], assets)
+    prior_leverage = ratio(
+        prior_liabilities.value if prior_liabilities else None,
+        prior_assets.value if prior_assets else None,
     )
     result = {
         "cik": str(document.get("cik", "")).zfill(10),
@@ -246,6 +290,16 @@ def snapshot(document, as_of: date):
         "current_ratio": ratio(current_assets, current_liabilities),
         "cash_only_to_assets": ratio(values["cash_only"], assets),
         "cash_and_equivalents_to_assets": ratio(values["cash"], assets),
+        "liabilities_to_assets": current_leverage,
+        "assets_growth_12m": ratio(
+            assets - prior_assets.value if assets is not None and prior_assets else None,
+            prior_assets.value if prior_assets else None,
+        ),
+        "liabilities_to_assets_change_12m": (
+            current_leverage - prior_leverage
+            if current_leverage is not None and prior_leverage is not None
+            else None
+        ),
         "working_capital_to_assets": ratio(
             (
                 current_assets - current_liabilities
@@ -257,6 +311,17 @@ def snapshot(document, as_of: date):
         "return_on_average_assets": ratio(values["net_income"], average_assets),
         "operating_cashflow_to_average_assets": ratio(
             values["operating_cashflow"], average_assets
+        ),
+        "operating_cashflow_to_average_liabilities": ratio(
+            values["operating_cashflow"], average_liabilities
+        ),
+        "negative_net_income": (
+            int(values["net_income"] < 0) if values["net_income"] is not None else None
+        ),
+        "negative_operating_cashflow": (
+            int(values["operating_cashflow"] < 0)
+            if values["operating_cashflow"] is not None
+            else None
         ),
         "log_assets": math.log(assets) if assets is not None and assets > 0 else None,
         "status": "financial_snapshot_only_no_event_label_or_credit_recommendation",
@@ -278,6 +343,18 @@ def snapshot(document, as_of: date):
     )
     provenance["closing_assets_for_profitability"] = (
         asdict(closing) if closing else None
+    )
+    provenance["opening_liabilities_for_cashflow_coverage"] = (
+        asdict(opening_liabilities) if opening_liabilities else None
+    )
+    provenance["closing_liabilities_for_cashflow_coverage"] = (
+        asdict(closing_liabilities) if closing_liabilities else None
+    )
+    provenance["prior_assets_for_12m_change"] = (
+        asdict(prior_assets) if prior_assets else None
+    )
+    provenance["prior_liabilities_for_12m_change"] = (
+        asdict(prior_liabilities) if prior_liabilities else None
     )
     return result, provenance
 
