@@ -19,6 +19,7 @@ from pathlib import Path
 TAGS = {
     "assets": ("Assets",),
     "liabilities": ("Liabilities",),
+    "liabilities_noncurrent": ("LiabilitiesNoncurrent",),
     "current_assets": ("AssetsCurrent",),
     "current_liabilities": ("LiabilitiesCurrent",),
     "cash": ("CashAndCashEquivalentsAtCarryingValue",),
@@ -188,6 +189,40 @@ def resolve_cash_and_equivalents(get_fact, end):
     return None, "missing", {}
 
 
+def resolve_liabilities(get_fact, end):
+    """Use total liabilities or reconstruct it from exact classified totals."""
+    direct = get_fact("liabilities", end=end)
+    if direct:
+        return direct, "direct", {"liabilities": direct}
+
+    current = get_fact("current_liabilities", end=end)
+    noncurrent = get_fact("liabilities_noncurrent", end=end)
+    if (
+        current
+        and noncurrent
+        and current.accession == noncurrent.accession
+        and current.value >= 0
+        and noncurrent.value >= 0
+    ):
+        combined = Fact(
+            current.value + noncurrent.value,
+            "LiabilitiesCurrent+LiabilitiesNoncurrent",
+            None,
+            end,
+            max(current.filed, noncurrent.filed),
+            current.accession,
+        )
+        return (
+            combined,
+            "current_plus_noncurrent",
+            {
+                "current_liabilities": current,
+                "liabilities_noncurrent": noncurrent,
+            },
+        )
+    return None, "missing", {}
+
+
 def ratio(numerator, denominator):
     """Leave a ratio missing when inputs are absent or its denominator is nonpositive."""
     if numerator is None or denominator is None or denominator <= 0:
@@ -200,10 +235,23 @@ def snapshot(document, as_of: date):
     balance = latest_fact(document, "assets", as_of)
     annual = latest_fact(document, "operating_cashflow", as_of, annual=True)
     facts = {"assets": balance, "operating_cashflow": annual}
-    for field in ("liabilities", "current_assets", "current_liabilities"):
+    for field in (
+        "current_assets",
+        "current_liabilities",
+        "liabilities_noncurrent",
+    ):
         facts[field] = (
             latest_fact(document, field, as_of, end=balance.end) if balance else None
         )
+    liabilities, liabilities_basis, liabilities_sources = (
+        resolve_liabilities(
+            lambda field, **kwargs: latest_fact(document, field, as_of, **kwargs),
+            balance.end,
+        )
+        if balance
+        else (None, "missing", {})
+    )
+    facts["liabilities"] = liabilities
     cash_value, cash_basis, cash_sources = (
         resolve_cash_and_equivalents(
             lambda field, **kwargs: latest_fact(document, field, as_of, **kwargs),
@@ -224,7 +272,10 @@ def snapshot(document, as_of: date):
         prior_year_fact(document, "assets", as_of, balance.end) if balance else None
     )
     prior_liabilities = (
-        latest_fact(document, "liabilities", as_of, end=prior_assets.end)
+        resolve_liabilities(
+            lambda field, **kwargs: latest_fact(document, field, as_of, **kwargs),
+            prior_assets.end,
+        )[0]
         if prior_assets
         else None
     )
@@ -247,12 +298,14 @@ def snapshot(document, as_of: date):
         opening_end = (date.fromisoformat(annual.start) - timedelta(days=1)).isoformat()
         opening = latest_fact(document, "assets", as_of, end=opening_end)
         closing = latest_fact(document, "assets", as_of, end=annual.end)
-        opening_liabilities = latest_fact(
-            document, "liabilities", as_of, end=opening_end
-        )
-        closing_liabilities = latest_fact(
-            document, "liabilities", as_of, end=annual.end
-        )
+        opening_liabilities = resolve_liabilities(
+            lambda field, **kwargs: latest_fact(document, field, as_of, **kwargs),
+            opening_end,
+        )[0]
+        closing_liabilities = resolve_liabilities(
+            lambda field, **kwargs: latest_fact(document, field, as_of, **kwargs),
+            annual.end,
+        )[0]
     average_assets = (
         (opening.value + closing.value) / 2 if opening and closing else None
     )
@@ -336,6 +389,17 @@ def snapshot(document, as_of: date):
             "sources": {key: asdict(fact) for key, fact in cash_sources.items()},
         }
         if cash_sources
+        else None
+    )
+    provenance["liabilities_derivation"] = (
+        {
+            "basis": liabilities_basis,
+            "filed": max(fact.filed for fact in liabilities_sources.values()),
+            "sources": {
+                key: asdict(fact) for key, fact in liabilities_sources.items()
+            },
+        }
+        if liabilities_sources
         else None
     )
     provenance["opening_assets_for_profitability"] = (

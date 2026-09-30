@@ -260,6 +260,57 @@ class SecTests(unittest.TestCase):
         self.assertIsNone(missing["negative_net_income"])
         self.assertIsNone(missing["negative_operating_cashflow"])
 
+    def test_liabilities_are_reconstructed_from_classified_totals(self):
+        d = document(
+            {
+                "Assets": [fact(100), fact(80, end="2023-12-31")],
+                "LiabilitiesCurrent": [
+                    fact(25),
+                    fact(20, end="2023-12-31"),
+                ],
+                "LiabilitiesNoncurrent": [
+                    fact(35),
+                    fact(30, end="2023-12-31"),
+                ],
+                "NetCashProvidedByUsedInOperatingActivities": [
+                    fact(10, start="2024-01-01")
+                ],
+            }
+        )
+        row, provenance = snapshot(d, date(2025, 3, 1))
+        self.assertAlmostEqual(row["liabilities_to_assets"], 0.6)
+        self.assertAlmostEqual(row["liabilities_to_assets_change_12m"], -0.025)
+        self.assertAlmostEqual(
+            row["operating_cashflow_to_average_liabilities"], 10 / 55
+        )
+        self.assertEqual(
+            provenance["liabilities_derivation"]["basis"],
+            "current_plus_noncurrent",
+        )
+
+        indexed_row, indexed_provenance = FactIndex(
+            d, date(2025, 3, 1)
+        ).snapshot(date(2025, 3, 1))
+        self.assertEqual(indexed_row["liabilities_to_assets"], 0.6)
+        self.assertEqual(
+            indexed_provenance["liabilities_derivation"]["basis"],
+            "current_plus_noncurrent",
+        )
+
+    def test_liability_components_from_different_filings_are_not_combined(self):
+        noncurrent = fact(35)
+        noncurrent["accn"] = "different-accession"
+        d = document(
+            {
+                "Assets": [fact(100)],
+                "LiabilitiesCurrent": [fact(25)],
+                "LiabilitiesNoncurrent": [noncurrent],
+            }
+        )
+        row, provenance = snapshot(d, date(2025, 3, 1))
+        self.assertIsNone(row["liabilities_to_assets"])
+        self.assertIsNone(provenance["liabilities_derivation"])
+
     def test_cash_is_reconstructed_from_matching_components(self):
         d = document(
             {

@@ -33,7 +33,7 @@ The thesis reports extreme accounting ratios and other sample limitations. It do
 | configs/policy.sec_disclosure.json | Policy coefficients and scenario assumptions |
 | empirical_report.py | Descriptive statistics and PNG/PDF research figures |
 | export_thesis_evidence.py | Small evidence copies and generated Appendices C/D |
-| tests/ | 75 checks, including real-history extraction equivalence |
+| tests/ | 77 checks, including real-history extraction equivalence |
 | docs/ | Complete thesis draft, figures, evidence and instructions |
 
 Full results are in results/empirical_inventory/, results/empirical_panel/, results/empirical_models/ and results/empirical_policy/. Final reports are in results/empirical_descriptive_final/, results/empirical_model_figures_final/ and results/empirical_policy_figures_final/. Small evidence files are copied to docs/tables/.

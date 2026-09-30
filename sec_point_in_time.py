@@ -14,6 +14,7 @@ from sec_data import (
     eligible_facts,
     ratio,
     resolve_cash_and_equivalents,
+    resolve_liabilities,
 )
 
 
@@ -124,8 +125,18 @@ class FactIndex:
         self.advance(decision)
         balance, annual = self.get("assets"), self.get("operating_cashflow")
         facts = {"assets": balance, "operating_cashflow": annual}
-        for field in ("liabilities", "current_assets", "current_liabilities"):
+        for field in (
+            "current_assets",
+            "current_liabilities",
+            "liabilities_noncurrent",
+        ):
             facts[field] = self.get(field, end=balance.end) if balance else None
+        liabilities, liabilities_basis, liabilities_sources = (
+            resolve_liabilities(self.get, balance.end)
+            if balance
+            else (None, "missing", {})
+        )
+        facts["liabilities"] = liabilities
         cash_value, cash_basis, cash_sources = (
             resolve_cash_and_equivalents(self.get, balance.end)
             if balance
@@ -139,7 +150,9 @@ class FactIndex:
             self.get_prior_year("assets", balance.end) if balance else None
         )
         prior_liabilities = (
-            self.get("liabilities", end=prior_assets.end) if prior_assets else None
+            resolve_liabilities(self.get, prior_assets.end)[0]
+            if prior_assets
+            else None
         )
         for field in ("revenue", "net_income"):
             facts[field] = (
@@ -152,8 +165,8 @@ class FactIndex:
             opening_end = str(date.fromisoformat(annual.start) - timedelta(days=1))
             opening = self.get("assets", end=opening_end)
             closing = self.get("assets", end=annual.end)
-            opening_liabilities = self.get("liabilities", end=opening_end)
-            closing_liabilities = self.get("liabilities", end=annual.end)
+            opening_liabilities = resolve_liabilities(self.get, opening_end)[0]
+            closing_liabilities = resolve_liabilities(self.get, annual.end)[0]
         average_assets = (
             (opening.value + closing.value) / 2 if opening and closing else None
         )
@@ -250,6 +263,20 @@ class FactIndex:
                 },
             }
             if cash_sources
+            else None
+        )
+        provenance["liabilities_derivation"] = (
+            {
+                "basis": liabilities_basis,
+                "filed": max(
+                    fact.filed for fact in liabilities_sources.values()
+                ),
+                "sources": {
+                    key: asdict(fact)
+                    for key, fact in liabilities_sources.items()
+                },
+            }
+            if liabilities_sources
             else None
         )
         return values, provenance
