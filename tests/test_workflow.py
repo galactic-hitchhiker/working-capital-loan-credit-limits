@@ -22,7 +22,7 @@ try:
         cluster_intervals,
     )
     from risk_models import estimator, fit
-    from train_models import prepare, select_calibration
+    from train_models import prepare, rolling_tuning_folds, select_calibration
 
     HAS_ML = True
 except ModuleNotFoundError:
@@ -359,6 +359,21 @@ class ModelTests(unittest.TestCase):
             ),
             "identity",
         )
+
+    def test_rolling_tuning_uses_only_labels_available_at_fold_start(self):
+        rows = [
+            {"decision_date": "2016-06-01", "label_available_on": "2016-09-01"},
+            {"decision_date": "2016-12-01", "label_available_on": "2017-02-01"},
+            {"decision_date": "2017-06-01", "label_available_on": "2017-09-01"},
+            {"decision_date": "2017-12-01", "label_available_on": "2018-02-01"},
+            {"decision_date": "2018-06-01", "label_available_on": "2018-09-01"},
+        ]
+        folds = rolling_tuning_folds(rows, np.array([0, 1]), np.array([2, 3, 4]))
+        self.assertEqual([fold["validation_year"] for fold in folds], [2017, 2018])
+        np.testing.assert_array_equal(folds[0]["fit_indices"], [0])
+        np.testing.assert_array_equal(folds[0]["validation_indices"], [2, 3])
+        np.testing.assert_array_equal(folds[1]["fit_indices"], [0, 1, 2])
+        np.testing.assert_array_equal(folds[1]["validation_indices"], [4])
 
     def test_median_and_scaling_fit_only_on_training(self):
         x = np.array(

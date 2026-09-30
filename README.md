@@ -33,7 +33,7 @@ The thesis reports extreme accounting ratios and other sample limitations. It do
 | configs/policy.sec_disclosure.json | Policy coefficients and scenario assumptions |
 | empirical_report.py | Descriptive statistics and PNG/PDF research figures |
 | export_thesis_evidence.py | Small evidence copies and generated Appendices C/D |
-| tests/ | 77 checks, including real-history extraction equivalence |
+| tests/ | 78 checks, including real-history extraction equivalence |
 | docs/ | Complete thesis draft, figures, evidence and instructions |
 
 Full results are in results/empirical_inventory/, results/empirical_panel/, results/empirical_models/ and results/empirical_policy/. Final reports are in results/empirical_descriptive_final/, results/empirical_model_figures_final/ and results/empirical_policy_figures_final/. Small evidence files are copied to docs/tables/.
@@ -168,7 +168,7 @@ the synthetic software demonstration.
 The command performs the chronological workflow defined in the study config:
 
 1. Training estimates preprocessing and model parameters.
-2. Tuning chooses hyperparameters and class weighting.
+2. Tuning uses expanding annual folds to choose hyperparameters and class weighting. The first fold fits through 2016 and validates 2017; the second adds labels available by January 2018 and validates 2018.
 3. The final base model is refitted on training plus tuning observations.
 4. Calibration fits the probability mapping on the later calibration period.
 5. Selection chooses the model and freezes its alert threshold.
@@ -185,7 +185,8 @@ and XGBoost. Its main outputs are:
 
 - `selection.json`: selected model, frozen thresholds and selection metrics;
 - `evaluation.csv`: selection and untouched-test metrics;
-- `tuning_scores.csv`: every candidate evaluated on the tuning period;
+- `tuning_scores.csv`: annual-fold summaries for every candidate;
+- `tuning_fold_scores.csv`: each candidate's metrics in each validation year;
 - `stage_audit.json`: chronological sample counts and winsorization limits;
 - `winsorization.json`: an easy-to-review copy of the frozen limits;
 - `models.joblib`: fitted pipelines, calibration objects and selection state;

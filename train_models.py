@@ -50,6 +50,44 @@ def select_calibration(scores):
     )
 
 
+def rolling_tuning_folds(rows, training_indices, tuning_indices):
+    """Build expanding annual folds without using labels unavailable at fold start."""
+    years = sorted(
+        {date.fromisoformat(rows[j]["decision_date"]).year for j in tuning_indices}
+    )
+    folds = []
+    for year in years:
+        fold_start = date(year, 1, 1)
+        available_history = np.array(
+            [
+                j
+                for j in np.concatenate([training_indices, tuning_indices])
+                if date.fromisoformat(rows[j]["decision_date"]) < fold_start
+                and date.fromisoformat(rows[j]["label_available_on"]) < fold_start
+            ],
+            dtype=int,
+        )
+        validation_indices = np.array(
+            [
+                j
+                for j in tuning_indices
+                if date.fromisoformat(rows[j]["decision_date"]).year == year
+            ],
+            dtype=int,
+        )
+        if len(validation_indices):
+            folds.append(
+                {
+                    "validation_year": year,
+                    "fit_indices": available_history,
+                    "validation_indices": validation_indices,
+                }
+            )
+    if not folds:
+        raise ValueError("No annual tuning folds could be constructed")
+    return folds
+
+
 def prepare(panel_path, config):
     """Validate the panel and return rows, predictors, labels, stage indices and audit."""
     rows = read_csv(panel_path, PANEL_FIELDS)
@@ -170,7 +208,6 @@ def run(config_path, panel_path, output, *, smoke=False):
     rows, x, y, stage_indices, audit = prepare(panel_path, config)
     output = new_output(output)
     write_json(output / "design.json", config)
-    write_json(output / "stage_audit.json", audit)
     membership = [
         {
             "company_id": rows[j]["company_id"],
@@ -182,6 +219,37 @@ def run(config_path, panel_path, output, *, smoke=False):
     ]
     write_csv(output / "stage_membership.csv", membership)
     train, tune, calibration, selection, test = (stage_indices[s] for s in STAGES)
+    tuning_folds = rolling_tuning_folds(rows, train, tune)
+    for fold in tuning_folds:
+        validation_indices = fold["validation_indices"]
+        positives = int(y[validation_indices].sum())
+        event_companies = {
+            rows[j]["company_id"] for j in validation_indices if y[j] == 1
+        }
+        if min(positives, len(validation_indices) - positives) < config[
+            "min_class_count"
+        ]:
+            raise ValueError(
+                f"tuning fold {fold['validation_year']}: too few positive or negative labels"
+            )
+        if len(event_companies) < config["min_event_companies"]:
+            raise ValueError(
+                f"tuning fold {fold['validation_year']}: too few event companies"
+            )
+    audit["rolling_tuning"] = {
+        "ranking_rule": "highest mean annual AP lift; then highest mean annual Brier skill; then fixed candidate order",
+        "folds": [
+            {
+                "validation_year": fold["validation_year"],
+                "fit_rows": len(fold["fit_indices"]),
+                "fit_positives": int(y[fold["fit_indices"]].sum()),
+                "validation_rows": len(fold["validation_indices"]),
+                "validation_positives": int(y[fold["validation_indices"]].sum()),
+            }
+            for fold in tuning_folds
+        ],
+    }
+    write_json(output / "stage_audit.json", audit)
     # Only training and tuning observations may enter the final base-model fit.
     refit_indices = np.concatenate([train, tune])
     seed = config["seed"]
@@ -191,6 +259,7 @@ def run(config_path, panel_path, output, *, smoke=False):
     bundles = {}
     selection_scores = {}
     tuning_results = []
+    tuning_fold_results = []
     # A documented constant benchmark estimated from the ORIGINAL training stage.
     prevalence = float(y[train].mean())
     base_selection = metrics(y[selection], np.full(len(selection), prevalence))
@@ -203,30 +272,91 @@ def run(config_path, panel_path, output, *, smoke=False):
             for candidate_index, specification in enumerate(
                 candidates(name, smoke=smoke)
             ):
-                model = fit(
-                    estimator(name, specification["parameters"], seed),
-                    x[train],
-                    y[train],
-                    specification["weighting"],
+                fold_scores = []
+                for fold in tuning_folds:
+                    fit_indices = fold["fit_indices"]
+                    validation_indices = fold["validation_indices"]
+                    model = fit(
+                        estimator(name, specification["parameters"], seed),
+                        x[fit_indices],
+                        y[fit_indices],
+                        specification["weighting"],
+                    )
+                    score = metrics(
+                        y[validation_indices],
+                        model.predict_proba(x[validation_indices])[:, 1],
+                    )
+                    fold_prevalence = float(y[fit_indices].mean())
+                    baseline = metrics(
+                        y[validation_indices],
+                        np.full(len(validation_indices), fold_prevalence),
+                    )
+                    ap_lift = score["average_precision"] / score["event_share"]
+                    brier_skill = 1 - score["brier"] / baseline["brier"]
+                    fold_scores.append(
+                        {
+                            "ap_lift": ap_lift,
+                            "brier_skill": brier_skill,
+                            **score,
+                        }
+                    )
+                    tuning_fold_results.append(
+                        dict(
+                            model=name,
+                            candidate=candidate_index,
+                            validation_year=fold["validation_year"],
+                            fit_rows=len(fit_indices),
+                            fit_positives=int(y[fit_indices].sum()),
+                            baseline_brier=baseline["brier"],
+                            ap_lift=ap_lift,
+                            brier_skill=brier_skill,
+                            parameters=json.dumps(
+                                specification["parameters"], sort_keys=True
+                            ),
+                            weighting=specification["weighting"],
+                            **score,
+                        )
+                    )
+                mean_ap_lift = float(
+                    np.mean([score["ap_lift"] for score in fold_scores])
                 )
-                score = metrics(y[tune], model.predict_proba(x[tune])[:, 1])
+                mean_brier_skill = float(
+                    np.mean([score["brier_skill"] for score in fold_scores])
+                )
                 tuning_results.append(
                     dict(
                         model=name,
                         candidate=candidate_index,
+                        folds=len(fold_scores),
                         parameters=json.dumps(
                             specification["parameters"], sort_keys=True
                         ),
                         weighting=specification["weighting"],
-                        **score,
+                        mean_roc_auc=float(
+                            np.mean([score["roc_auc"] for score in fold_scores])
+                        ),
+                        mean_average_precision=float(
+                            np.mean(
+                                [score["average_precision"] for score in fold_scores]
+                            )
+                        ),
+                        mean_ap_lift=mean_ap_lift,
+                        minimum_ap_lift=float(
+                            np.min([score["ap_lift"] for score in fold_scores])
+                        ),
+                        mean_brier=float(
+                            np.mean([score["brier"] for score in fold_scores])
+                        ),
+                        mean_brier_skill=mean_brier_skill,
                     )
                 )
                 print(
-                    f"  candidate {candidate_index + 1}: tuning AP={score['average_precision']:.6f}",
+                    f"  candidate {candidate_index + 1}: "
+                    f"mean annual AP lift={mean_ap_lift:.3f}, "
+                    f"Brier skill={mean_brier_skill:.4f}",
                     flush=True,
                 )
-                # Fixed tuning rule: AP, then Brier, then candidate enumeration.
-                rank = (-score["average_precision"], score["brier"], candidate_index)
+                rank = (-mean_ap_lift, -mean_brier_skill, candidate_index)
                 if best is None or rank < best[0]:
                     best = (rank, specification)
             specification = best[1]
@@ -298,6 +428,7 @@ def run(config_path, panel_path, output, *, smoke=False):
     # Persist selection BEFORE generating any final-test model predictions.
     write_json(output / "selection.json", decision)
     write_csv(output / "tuning_scores.csv", tuning_results)
+    write_csv(output / "tuning_fold_scores.csv", tuning_fold_results)
     joblib.dump({"models": bundles, "selection": decision}, output / "models.joblib")
     evaluations, predictions, reliability, intervals = [], [], [], {}
     coefficients, importance = [], []
