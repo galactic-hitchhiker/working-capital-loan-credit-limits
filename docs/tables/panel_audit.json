@@ -1,0 +1,91 @@
+{
+  "data_kind": "empirical",
+  "target": "first_sec_item_1_03_disclosure",
+  "candidate_companies": 10881,
+  "included_companies": 9075,
+  "distinct_positive_events": 472,
+  "counts": {
+    "missing_or_stale_financials": 335246,
+    "feature_rows": 609829,
+    "labeled_rows": 588111,
+    "positive_rows": 875,
+    "outside_observed_reporting_life": 1013505,
+    "post_first_disclosure": 15481,
+    "issuer_followup_censoring": 6237
+  },
+  "annual_counts": {
+    "2011": {
+      "rows": 10324,
+      "positives": 10
+    },
+    "2012": {
+      "rows": 39910,
+      "positives": 38
+    },
+    "2013": {
+      "rows": 49198,
+      "positives": 45
+    },
+    "2014": {
+      "rows": 46105,
+      "positives": 57
+    },
+    "2015": {
+      "rows": 37554,
+      "positives": 50
+    },
+    "2016": {
+      "rows": 30456,
+      "positives": 58
+    },
+    "2017": {
+      "rows": 27391,
+      "positives": 44
+    },
+    "2018": {
+      "rows": 33750,
+      "positives": 52
+    },
+    "2019": {
+      "rows": 41742,
+      "positives": 71
+    },
+    "2020": {
+      "rows": 42945,
+      "positives": 114
+    },
+    "2021": {
+      "rows": 44151,
+      "positives": 11
+    },
+    "2022": {
+      "rows": 48408,
+      "positives": 37
+    },
+    "2023": {
+      "rows": 48496,
+      "positives": 114
+    },
+    "2024": {
+      "rows": 45039,
+      "positives": 114
+    },
+    "2025": {
+      "rows": 42642,
+      "positives": 60
+    }
+  },
+  "missing_predictors": {
+    "liabilities_to_assets": 104608,
+    "liabilities_to_assets_change_12m": 136913,
+    "operating_cashflow_to_average_liabilities": 108599,
+    "assets_growth_12m": 27654,
+    "return_on_average_assets": 38911,
+    "operating_cashflow_to_average_assets": 6006,
+    "cash_and_equivalents_to_assets": 52849,
+    "negative_net_income": 33573,
+    "current_ratio": 28767,
+    "working_capital_to_assets": 28649
+  },
+  "limitation": "Current SIC screen; first recorded disclosure is not verified bankruptcy onset; negative labels concern reporting only"
+}

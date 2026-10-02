@@ -8,5 +8,4 @@ results/.cache/
 *.joblib
 results/
 Examples/
-docs/
 results_*/

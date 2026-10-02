@@ -38,6 +38,7 @@ def export(args):
             "stage_audit.json",
             "selection.json",
             "tuning_scores.csv",
+            "tuning_fold_scores.csv",
             "metrics.csv",
             "bootstrap_intervals.json",
             "coefficients.csv",
@@ -89,24 +90,49 @@ def export(args):
             )
     write_csv(tables / "source_crosswalk.csv", crosswalk)
     scores = read_csv(args.models / "metrics.csv")
+    selection = json.loads((args.models / "selection.json").read_text())
+    selected_model = selection["selected_model"]
     intervals = json.loads((args.models / "bootstrap_intervals.json").read_text())
     appendix_c = "# Appendix C: Supplementary Empirical Results\n\n"
-    appendix_c += "These tables are generated from the completed real-data run. Probabilities and metrics are decimal fractions unless marked as percentages. No model passed the selection rule.\n\n"
-    appendix_c += "## C.1 Test probability error before and after calibration\n\n"
-    appendix_c += md_table(
-        ["Model", "Raw Brier", "Calibrated Brier"],
-        [
+    appendix_c += (
+        "These tables are generated from the completed real-data run. "
+        "Probabilities and metrics are decimal fractions unless marked as percentages. "
+        f"The selection rule accepted {selected_model.replace('_', ' ')}.\n\n"
+    )
+    appendix_c += "## C.1 Held-out probability error for raw and selected mappings\n\n"
+
+    def test_score(model, method):
+        return next(
+            r
+            for r in scores
+            if r["model"] == model
+            and r["stage"] == "test"
+            and r["calibration_method"] == method
+        )
+
+    mapping_rows = []
+    for name in ("logistic", "logistic_l2", "random_forest", "xgboost"):
+        method = selection["calibration_methods"][name]
+        selected = test_score(name, method)
+        raw = selected if method == "identity" else test_score(name, "identity_diagnostic")
+        mapping_rows.append(
             [
                 name,
-                *(
-                    f"{float(next(r for r in scores if r['model']==name and r['stage']=='test' and r['calibrated']==flag)['brier']):.8f}"
-                    for flag in ("False", "True")
-                ),
+                f"{float(raw['brier']):.8f}",
+                method,
+                f"{float(selected['brier']):.8f}",
             ]
-            for name in ("logistic", "logistic_l2", "random_forest", "xgboost")
-        ],
+        )
+    appendix_c += md_table(
+        ["Model", "Raw Brier", "Selected mapping", "Selected Brier"],
+        mapping_rows,
     )
-    appendix_c += "\nRaw threshold metrics use 0.5; calibrated threshold metrics use the frozen selection threshold. Probability metrics do not depend on that threshold. Calibration worsens the forest's Brier score in this experiment.\n\n"
+    appendix_c += (
+        "\nRaw diagnostic threshold metrics use 0.5; selected mappings use the frozen "
+        "selection threshold. Probability metrics do not depend on that threshold. "
+        "Sigmoid calibration worsened the forest's selection-period Brier score, so "
+        "the workflow retained its raw identity mapping.\n\n"
+    )
     appendix_c += "## C.2 Company-cluster 95% percentile intervals\n\n"
     appendix_c += md_table(
         ["Model", "ROC-AUC interval", "Average-precision interval", "Brier interval"],
@@ -122,7 +148,7 @@ def export(args):
         ],
     )
     appendix_c += "\nAll models use 500 valid bootstrap repetitions. These intervals condition on fitted models and omit shared time shocks and model-selection uncertainty. They are not paired confidence intervals for model differences.\n\n"
-    appendix_c += "## C.3 Test event detection at frozen thresholds\n\n"
+    appendix_c += "## C.3 Held-out event detection at frozen thresholds\n\n"
     appendix_c += md_table(
         [
             "Model",
@@ -169,9 +195,15 @@ def export(args):
             for r in read_csv(args.policy / "policy_sensitivity.csv")
         ],
     )
-    appendix_c += "\nThe base and capacity-only scenarios share monthly safeguards. The independent unsmoothed formula can reopen after zero, while the base cannot do so automatically. Exploratory model mappings are not validated policy choices. Additional-debt and cash cases are assumptions, not observed borrower obligations.\n\n"
+    appendix_c += (
+        "\nThe base scenario uses the selected random-forest disclosure probability. "
+        "The base and capacity-only scenarios share monthly safeguards. The independent "
+        "unsmoothed formula can reopen after zero, while the base cannot do so automatically. "
+        "Other model mappings are comparisons. Additional-debt, cash, exposure and cap "
+        "values remain assumptions rather than observed facility terms.\n\n"
+    )
     appendix_c += "## C.6 Evidence files\n\nFull local paths and hashes are in tables/source_crosswalk.csv. Small evidence copies are in tables/. Complete row-level predictions and policy histories remain under results/. File references: metrics.csv, bootstrap_intervals.json, annual_test_metrics.csv, event_detection.csv, feature_summary.csv, feature_correlations.csv, sector_summary.csv, policy_sensitivity.csv.\n"
-    (docs / "appendix_c.md").write_text(appendix_c)
+    (docs / "13_appendix_c.md").write_text(appendix_c)
     appendix_d = "# Appendix D: Hypothetical Worked Policy Examples\n\n"
     appendix_d += "These examples support Chapter 5 and are separate from the empirical results. The borrower, probabilities and facility amounts are hypothetical. Each row changes the original example independently; the rows are not a time sequence.\n\n"
     appendix_d += md_table(
@@ -203,7 +235,7 @@ def export(args):
     appendix_d += "\nThe base uses annual revenue of USD 12 million, operating cash flow of USD 1.2 million, eligible cash of USD 500,000, additional principal due of USD 50,000, a 2% illustrative event probability and a USD 150,000 cap. The previous limit is USD 70,000 and outstanding exposure is USD 60,000.\n\n"
     appendix_d += "Risk stress raises the probability to 8%; cash-flow stress halves operating cash flow; the lower-cap case sets the cap to USD 40,000. The information case holds the previous limit, and the hard stop sets the assigned limit to zero. Neither a lower limit nor a hard stop removes outstanding exposure.\n\n"
     appendix_d += "The separate sensitivity.csv contains 18 combinations of risk probability and risk sensitivity for this hypothetical borrower. It is not the empirical policy_sensitivity.csv. File references: policy_examples.py, credit_policy.py, worked_examples.csv, sensitivity.csv.\n"
-    (docs / "appendix_d.md").write_text(appendix_d)
+    (docs / "14_appendix_d.md").write_text(appendix_d)
     write_json(
         tables / "release_manifest.json",
         manifest(

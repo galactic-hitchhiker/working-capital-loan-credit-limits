@@ -1,0 +1,43 @@
+{
+  "cases": [
+    {
+      "company_id": "0000320193",
+      "entity_name": "Apple Inc.",
+      "rows": 36,
+      "first_month": "2023-01-01",
+      "last_month": "2025-12-01",
+      "initial_limit": 3527550000.0,
+      "final_limit": 3452370000.0,
+      "first_hard_stop": "",
+      "initial_probability": 0.014359260346978677,
+      "selection_basis": "Apple reference case, or longest observed pre-hard-stop path; illustrative post hoc cases"
+    },
+    {
+      "company_id": "0001539029",
+      "entity_name": "Clearside Biomedical, Inc.",
+      "rows": 36,
+      "first_month": "2023-01-01",
+      "last_month": "2025-12-01",
+      "initial_limit": 556850.0,
+      "final_limit": 0.0,
+      "first_hard_stop": "2025-12-01",
+      "initial_probability": 0.0013139796782617162,
+      "selection_basis": "Apple reference case, or longest observed pre-hard-stop path; illustrative post hoc cases"
+    },
+    {
+      "company_id": "0001220754",
+      "entity_name": "ModivCare Inc",
+      "rows": 33,
+      "first_month": "2023-01-01",
+      "last_month": "2025-09-01",
+      "initial_limit": 19898450.0,
+      "final_limit": 0.0,
+      "first_hard_stop": "2025-09-01",
+      "initial_probability": 0.00015346472995218409,
+      "selection_basis": "Apple reference case, or longest observed pre-hard-stop path; illustrative post hoc cases"
+    }
+  ],
+  "fixed_above_current_preliminary_rows": 19129,
+  "fixed_above_current_preliminary_share": 0.19191564500270883,
+  "rows": 99674
+}

@@ -1,0 +1,40 @@
+{
+  "companyfacts_files": 20335,
+  "inventoried_companies": 20335,
+  "screen_counts": {
+    "candidate": 10881,
+    "no_domestic_periodic_filings": 4982,
+    "finance_insurance_real_estate": 4232,
+    "incomplete_archives": 12,
+    "unknown_sic": 228
+  },
+  "disclosure_records": 1915,
+  "candidate_first_disclosures_by_year": {
+    "2004": 11,
+    "2005": 20,
+    "2006": 15,
+    "2007": 9,
+    "2008": 15,
+    "2009": 35,
+    "2010": 9,
+    "2011": 28,
+    "2012": 46,
+    "2013": 48,
+    "2014": 41,
+    "2015": 50,
+    "2016": 96,
+    "2017": 50,
+    "2018": 47,
+    "2019": 54,
+    "2020": 81,
+    "2021": 12,
+    "2022": 23,
+    "2023": 77,
+    "2024": 74,
+    "2025": 43,
+    "2026": 24
+  },
+  "cutoff": "2026-09-07",
+  "errors": [],
+  "target_note": "Observed disclosure dates only; includes receivership and reorganization disclosures, not verified default dates"
+}

@@ -96,7 +96,9 @@ def data_report(panel, output):
             predictors=stats,
             quality_flags=dict(
                 negative_current_ratio_rows=int(np.sum(x[:, 0] < 0)),
-                assets_below_10000_rows=int(np.sum(x[:, 3] < np.log(10000))),
+                assets_below_10000_rows=int(
+                    np.sum(x[:, FEATURES.index("log_assets")] < np.log(10000))
+                ),
             ),
             annual={k: dict(v) for k, v in sorted(annual.items())},
         ),
@@ -219,7 +221,7 @@ def model_report(models, output):
         xlabel="Recall",
         ylabel="Precision",
         ylim=(0, 0.25),
-        title="Test precision–recall (precision axis 0–25%)",
+        title="Held-out precision–recall (precision axis 0–25%)",
     )
     axes[0].legend(fontsize=8)
     upper = max(axes[1].get_xlim()[1], axes[1].get_ylim()[1])
@@ -227,9 +229,9 @@ def model_report(models, output):
     axes[1].set(
         xlabel="Mean predicted probability (%)",
         ylabel="Observed event share (%)",
-        title="Test reliability by probability quantile",
+        title="Held-out reliability by probability quantile",
     )
-    fig.suptitle("Frozen models, real SEC test observations, 2023–2025")
+    fig.suptitle("Frozen models, held-out SEC observations, 2023–2025")
     save(fig, output, "model_diagnostics")
     write_csv(output / "annual_test_metrics.csv", annual)
     write_csv(output / "event_detection.csv", events)
@@ -252,6 +254,14 @@ def model_report(models, output):
 def policy_report(policy, output):
     """Plot illustrative company paths and summarize the saved policy scenarios."""
     output = new_output(output)
+    audit = json.loads((Path(policy) / "policy_audit.json").read_text())
+    selected_model = audit["selected_model"]
+    base_label = (
+        f"Selected {selected_model.replace('_', ' ')}"
+        if selected_model
+        else "Constant-probability fallback"
+    )
+    comparison_model = "xgboost" if selected_model != "xgboost" else "random_forest"
     rows = read_csv(Path(policy) / "comparison_paths.csv")
     groups = defaultdict(list)
     for r in rows:
@@ -281,9 +291,12 @@ def policy_report(policy, output):
         company_rows = groups[company]
         dates = np.array([np.datetime64(r["decision_date"]) for r in company_rows])
         for key, label in [
-            ("assigned_limit", "Fallback policy"),
+            ("assigned_limit", base_label),
             ("capacity_only_limit", "Capacity only"),
-            ("exploratory_xgboost_limit", "Unvalidated XGBoost mapping"),
+            (
+                f"exploratory_{comparison_model}_limit",
+                f"{comparison_model.replace('_', ' ').title()} comparison",
+            ),
         ]:
             ax.plot(dates, [float(r[key]) / 1e6 for r in company_rows], label=label)
         known = [r for r in company_rows if r["known_disclosure"] == "True"]
@@ -341,7 +354,7 @@ def policy_report(policy, output):
             "additional_debt_assets_0.005",
             "cap_assets_0.005",
             "cap_assets_0.02",
-            "exploratory_xgboost",
+            f"exploratory_{comparison_model}",
         }
     ]
     fig, ax = plt.subplots(figsize=(9, 5), constrained_layout=True)

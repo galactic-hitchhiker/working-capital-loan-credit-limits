@@ -383,7 +383,7 @@ def run(config_path, panel_path, output, *, smoke=False):
             calibration_method = select_calibration(method_scores)
             probability = candidate_probabilities[calibration_method]
             predictor = calibration_models[calibration_method]
-            # The alert threshold is frozen here and reused for final-test metrics.
+            # Freeze the alert threshold here for the held-out evaluation.
             threshold = choose_threshold(y[selection], probability)
             thresholds[name] = threshold
             calibration_methods[name] = calibration_method
@@ -425,7 +425,7 @@ def run(config_path, panel_path, output, *, smoke=False):
         calibration_rule="Lowest selection-period Brier; identity/raw probabilities on exact tie",
         selection_rule="AP > selection event share and Brier < training-prevalence baseline; lowest Brier; simpler on exact tie",
     )
-    # Persist selection BEFORE generating any final-test model predictions.
+    # Persist selection before generating any held-out model predictions.
     write_json(output / "selection.json", decision)
     write_csv(output / "tuning_scores.csv", tuning_results)
     write_csv(output / "tuning_fold_scores.csv", tuning_fold_results)
@@ -517,7 +517,7 @@ def run(config_path, panel_path, output, *, smoke=False):
                         scale="one standard deviation after imputation; before calibration",
                     )
                 )
-    # Interpretation on SELECTION only; final-test errors are left as reporting.
+    # Interpret on selection only; held-out errors remain reporting evidence.
     if chosen:
         result = permutation_importance(
             bundles[chosen]["calibrated"],
@@ -561,7 +561,10 @@ def run(config_path, panel_path, output, *, smoke=False):
                 if config["data_kind"] == "synthetic"
                 else "empirical_run"
             ),
-            note="Four implemented financial predictors; no causal, realized-loss or private-company transfer claim",
+            note=(
+                f"{len(config['features'])} configured financial predictors; "
+                "no causal, realized-loss or private-company transfer claim"
+            ),
         ),
     )
     return decision

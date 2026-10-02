@@ -1,0 +1,4 @@
+company_id,entity_name,rows,first_month,last_month,initial_limit,final_limit,first_hard_stop,initial_probability,selection_basis
+0000320193,Apple Inc.,36,2023-01-01,2025-12-01,3527550000.0,3452370000.0,,0.014359260346978677,"Apple reference case, or longest observed pre-hard-stop path; illustrative post hoc cases"
+0001539029,"Clearside Biomedical, Inc.",36,2023-01-01,2025-12-01,556850.0,0.0,2025-12-01,0.0013139796782617162,"Apple reference case, or longest observed pre-hard-stop path; illustrative post hoc cases"
+0001220754,ModivCare Inc,33,2023-01-01,2025-09-01,19898450.0,0.0,2025-09-01,0.00015346472995218409,"Apple reference case, or longest observed pre-hard-stop path; illustrative post hoc cases"

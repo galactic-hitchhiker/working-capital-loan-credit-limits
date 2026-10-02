@@ -1,0 +1,6 @@
+model,event_companies,detected_event_companies,event_company_recall,threshold
+constant,160,0,0.0,0.5
+logistic,160,2,0.0125,0.02420391384230523
+logistic_l2,160,2,0.0125,0.023949259204994595
+random_forest,160,24,0.15,0.04101026206517106
+xgboost,160,32,0.2,0.033275521401626346

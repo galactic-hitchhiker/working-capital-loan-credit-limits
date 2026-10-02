@@ -1,0 +1,13 @@
+model,feature,mean_brier_increase,std
+random_forest,current_ratio,9.57659158405729e-06,1.0594953822521591e-06
+random_forest,cash_and_equivalents_to_assets,1.7466829442644612e-07,4.1590991204618153e-07
+random_forest,liabilities_to_assets,6.537906422325796e-06,8.408793510442309e-07
+random_forest,assets_growth_12m,1.6458800174441972e-05,2.099506744821689e-06
+random_forest,liabilities_to_assets_change_12m,6.032722655863187e-06,1.32083170311497e-06
+random_forest,working_capital_to_assets,3.101076857003078e-05,2.18036714999213e-06
+random_forest,return_on_average_assets,3.6471075495204432e-06,6.581039853633453e-07
+random_forest,operating_cashflow_to_average_assets,3.0037607639439534e-06,8.383777799574198e-07
+random_forest,operating_cashflow_to_average_liabilities,2.5006535984976395e-06,5.221283948856894e-07
+random_forest,negative_net_income,1.652761767557899e-06,7.510155628981072e-07
+random_forest,negative_operating_cashflow,5.861484011711262e-07,3.9995274715435867e-07
+random_forest,log_assets,0.00028102949574855437,4.652460119952167e-06
