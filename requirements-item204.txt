@@ -1,0 +1,4 @@
+# Additional dependencies for the standalone Item 2.04 filing reviewer.
+beautifulsoup4==4.13.4
+soupsieve==2.7
+typing_extensions==4.14.0

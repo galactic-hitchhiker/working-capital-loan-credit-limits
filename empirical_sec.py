@@ -105,28 +105,28 @@ def inventory(dataset, output, cutoff):
                 else:
                     exclusion = "candidate"
                 counts[exclusion] += 1
-                row = dict(
-                    company_id=company,
-                    entity_name=submissions.get("name", ""),
-                    sic=sic,
-                    sic_description=submissions.get("sicDescription", ""),
-                    current_tickers=";".join(submissions.get("tickers", [])),
-                    screen=exclusion,
-                    first_periodic=periodic[0] if periodic else "",
-                    last_issuer_filing=issuer[-1] if issuer else "",
-                    periodic_filings=len(periodic),
-                    issuer_dates=json.dumps(issuer),
-                    issuer_filings=len(issuer),
-                    missing_archives=len(missing),
-                    archive_count_mismatches=len(count_mismatches),
-                    first_disclosure_date=(
+                row = {
+                    "company_id": company,
+                    "entity_name": submissions.get("name", ""),
+                    "sic": sic,
+                    "sic_description": submissions.get("sicDescription", ""),
+                    "current_tickers": ";".join(submissions.get("tickers", [])),
+                    "screen": exclusion,
+                    "first_periodic": periodic[0] if periodic else "",
+                    "last_issuer_filing": issuer[-1] if issuer else "",
+                    "periodic_filings": len(periodic),
+                    "issuer_dates": json.dumps(issuer),
+                    "issuer_filings": len(issuer),
+                    "missing_archives": len(missing),
+                    "archive_count_mismatches": len(count_mismatches),
+                    "first_disclosure_date": (
                         disclosures[0]["filingDate"] if disclosures else ""
                     ),
-                    first_disclosure_accession=(
+                    "first_disclosure_accession": (
                         disclosures[0]["accessionNumber"] if disclosures else ""
                     ),
-                    disclosure_records=len(disclosures),
-                )
+                    "disclosure_records": len(disclosures),
+                }
                 rows.append(row)
                 if disclosures and exclusion == "candidate":
                     years[row["first_disclosure_date"][:4]] += 1
@@ -142,21 +142,21 @@ def inventory(dataset, output, cutoff):
                         )
                     )
             except (OSError, ValueError, KeyError, TypeError) as exc:
-                errors.append(dict(company_id=company, error=str(exc)))
+                errors.append({"company_id": company, "error": str(exc)})
             if n % 1000 == 0:
                 print(f"Inventory: {n}/{len(paths)} companies", flush=True)
     write_csv(output / "issuer_inventory.csv", rows)
     write_csv(output / "disclosure_events.csv", events)
-    report = dict(
-        companyfacts_files=len(paths),
-        inventoried_companies=len(rows),
-        screen_counts=dict(counts),
-        disclosure_records=len(events),
-        candidate_first_disclosures_by_year=dict(sorted(years.items())),
-        cutoff=str(cutoff),
-        errors=errors,
-        target_note="Observed disclosure dates only; includes receivership and reorganization disclosures, not verified default dates",
-    )
+    report = {
+        "companyfacts_files": len(paths),
+        "inventoried_companies": len(rows),
+        "screen_counts": dict(counts),
+        "disclosure_records": len(events),
+        "candidate_first_disclosures_by_year": dict(sorted(years.items())),
+        "cutoff": str(cutoff),
+        "errors": errors,
+        "target_note": "Observed disclosure dates only; includes receivership and reorganization disclosures, not verified default dates",
+    }
     write_json(output / "inventory_audit.json", report)
     write_json(
         output / "manifest.json",
@@ -234,9 +234,10 @@ def panel(dataset, inventory_dir, config_path, output):
         (output / "feature_provenance.jsonl").open("w") as provenance,
         (output / "companyfacts_hashes.jsonl").open("w") as hashes,
     ):
-        panel_writer, feature_writer = csv.DictWriter(
-            panel_stream, fieldnames=panel_fields
-        ), csv.DictWriter(feature_stream, fieldnames=feature_fields)
+        panel_writer, feature_writer = (
+            csv.DictWriter(panel_stream, fieldnames=panel_fields),
+            csv.DictWriter(feature_stream, fieldnames=feature_fields),
+        )
         panel_writer.writeheader()
         feature_writer.writeheader()
         for n, issuer in enumerate(issuers, 1):
