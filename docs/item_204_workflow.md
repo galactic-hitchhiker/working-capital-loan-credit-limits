@@ -14,7 +14,7 @@ SEC_USER_AGENT='Your Name your.email@example.com' \
   --output-dir results/item_204_pipeline
 ```
 
-Ollama and `qwen3.5:9b` are the defaults. Rule outputs and HTML are stored under
+Ollama and `gemma3:12b` are the defaults. Rule outputs and HTML are stored under
 `rules/`; merged final decisions and the organized review cache are under `final/`.
 The top-level `workflow_audit.json` records hashes and final counts. Reruns reuse
 downloaded HTML and successful LLM decisions. Use `--retry-fallbacks` after fixing
@@ -93,10 +93,14 @@ All enrichment code is in `mcf/enrichment/item204/`. Run commands from the repos
 | `classify.py` | SEC discovery, HTML download/cache, and regex classification |
 | `reviewers/common.py` | Shared conservative prompt, quote validation, resume cache, and exports |
 | `reviewers/openai.py` | OpenAI Responses API reviewer; needs `OPENAI_API_KEY` |
-| `reviewers/ollama.py` | Local Ollama reviewer; default `qwen3.5:9b`, no API key |
+| `reviewers/ollama.py` | Local Ollama reviewer; default `gemma3:12b`, no API key |
 | `requirements.txt` | Beautiful Soup dependencies for both reviewers |
 
-Start the Ollama app (or run `ollama serve` if no server is running). You have already pulled `qwen3.5:9b`; no additional model download is needed.
+Pull the default model once with `ollama pull gemma3:12b`, then start the Ollama
+app (or run `ollama serve` if no server is running). Pass `--model MODEL_NAME` to
+use another installed model. Because the model name is part of the review cache
+key, changing models preserves earlier decisions and creates a separate set of
+cached decisions.
 
 Check local files without inference:
 
@@ -194,8 +198,8 @@ After a provider failure has been corrected, retry unresolved decisions with:
 
 ```bash
 .venv/bin/python -m mcf.enrichment.item204.reviewers.ollama \
-  --model gemma3:4b \
-  --output-dir results/item_204_gemma4b_1_review \
+  --model gemma3:12b \
+  --output-dir results/item_204_gemma12b_review \
   --retry-fallbacks
 ```
 

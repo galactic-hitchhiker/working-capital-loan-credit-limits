@@ -18,7 +18,7 @@ from .common import (
 )
 from .common import run as run_reviews
 
-DEFAULT_MODEL = "qwen3.5:9b"
+DEFAULT_MODEL = "gemma3:12b"
 
 
 def check_context(text, num_ctx):

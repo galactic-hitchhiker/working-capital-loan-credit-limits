@@ -175,12 +175,22 @@ SEC_USER_AGENT='Your Name your.email@example.com' \
   --output-dir results/payment_default_proxy
 ```
 
-This defaults to local Ollama with `qwen3.5:9b`.
+This defaults to local Ollama with `gemma3:12b`. Pull the model once before the
+first run:
+
+```sh
+ollama pull gemma3:12b
+```
+
+Use `--model MODEL_NAME` to select another installed Ollama model. Review cache
+keys include the model name, so existing decisions produced by another model are
+preserved and `gemma3:12b` creates its own cached decisions.
 
 ### Run Item 2.04 enrichment separately
 
 The enrichment workflow downloads or reuses filing HTML, applies the deterministic
-rules, and sends only `MANUAL_REVIEW` cases to Ollama:
+rules, and sends only `MANUAL_REVIEW` cases to Ollama. It also defaults to
+`gemma3:12b`:
 
 ```sh
 SEC_USER_AGENT='Your Name your.email@example.com' \

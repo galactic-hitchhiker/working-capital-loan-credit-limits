@@ -10,6 +10,8 @@ SEC_USER_AGENT='Your Name your.email@example.com' \
 ```
 
 This runs deterministic classification first and sends only unresolved cases to
-the LLM. Default local model: `qwen3.5:9b`. Ollama must be running.
+the LLM. The default local model is `gemma3:12b`. Install it with
+`ollama pull gemma3:12b`, then ensure Ollama is running. Use `--model MODEL_NAME`
+to override it with another installed model.
 
 See [the workflow](../../../docs/item_204_workflow.md) for discovery, OpenAI review, outputs, and conservative label rules.

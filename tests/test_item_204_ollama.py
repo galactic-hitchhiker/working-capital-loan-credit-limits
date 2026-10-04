@@ -25,7 +25,7 @@ class OllamaReviewTests(unittest.TestCase):
                    return_value=BytesIO(json.dumps(payload).encode())) as call:
             review, metadata = request_review('The issuer failed to pay interest.', DEFAULT_MODEL)
         body = json.loads(call.call_args.args[0].data)
-        self.assertEqual(body['model'], 'qwen3.5:9b')
+        self.assertEqual(body['model'], 'gemma3:12b')
         self.assertFalse(body['stream'])
         self.assertFalse(body['think'])
         self.assertEqual(body['format']['type'], 'object')
