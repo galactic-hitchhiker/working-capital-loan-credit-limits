@@ -1,6 +1,6 @@
 """Check conservative event evidence and isolation of the filing section."""
 import unittest
-from classify_item_204 import classify_item_204, extract_item_204, has_item, matches
+from item204_enrichment.classify import classify_item_204, extract_item_204, has_item, matches
 
 
 class Item204Tests(unittest.TestCase):
@@ -71,6 +71,14 @@ class Item204Tests(unittest.TestCase):
             with self.subTest(text=text):
                 self.assertEqual(classify_item_204(text), 'QUALIFIED_DEFAULT')
 
+    def test_month_may_is_not_hypothetical(self):
+        self.assertEqual(
+            classify_item_204(
+                'On May 5, 2023, the Company failed to make payment of principal and interest.'
+            ),
+            'QUALIFIED_DEFAULT',
+        )
+
     def test_unrelated_payment_word_does_not_qualify(self):
         self.assertEqual(classify_item_204(
             'The company failed to make a filing concerning interest payments.'
@@ -88,7 +96,7 @@ class Item204Tests(unittest.TestCase):
         try:
             import bs4
         except ImportError:
-            self.skipTest('Install requirements-item204.txt for HTML parser tests')
+            self.skipTest('Install item204_enrichment/requirements.txt for HTML parser tests')
         html = '<p>Item 1.01 The company failed to pay.</p><p>Item 2.04 ' + 'A covenant breach occurred. ' * 8 + '</p><p>Item 9.01 Exhibits</p>'
         text, status = extract_item_204(html)
         self.assertEqual(status, 'isolated_item_section')

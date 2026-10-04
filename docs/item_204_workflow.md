@@ -1,20 +1,20 @@
 # Item 2.04 candidate-event review
 
-`classify_item_204.py` is separate from the current Item 1.03 inventory and model pipeline. It scans every main CIK submission file and its referenced historical archives, finds exact Item 2.04 filings in 8-K/8-K/A records, downloads primary-document HTML, and extracts the Item 2.04 narrative with Beautiful Soup.
+`item204_enrichment/classify.py` is separate from the current Item 1.03 inventory and model pipeline. It scans every main CIK submission file and its referenced historical archives, finds exact Item 2.04 filings in 8-K/8-K/A records, downloads primary-document HTML, and extracts the Item 2.04 narrative with Beautiful Soup.
 
 ## Install and run
 
 ```sh
-.venv/bin/python -m pip install -r requirements-item204.txt
+.venv/bin/python -m pip install -r item204_enrichment/requirements.txt
 
 # Metadata-only inventory: no network requests.
-.venv/bin/python classify_item_204.py \
+.venv/bin/python -m item204_enrichment.classify \
   --submissions ../dataset/submissions \
   --output-dir results/item_204_review \
   --start 2011-01-01 --cutoff 2026-09-07 --discover-only
 
 # First inspect a small downloaded pilot.
-.venv/bin/python classify_item_204.py \
+.venv/bin/python -m item204_enrichment.classify \
   --submissions ../dataset/submissions \
   --output-dir results/item_204_review \
   --start 2011-01-01 --cutoff 2026-09-07 \
@@ -45,3 +45,104 @@ Before changing labels, manually validate precision across classes and years, re
 Item 2.04 includes triggering events that materially accelerate or increase financial obligations, which can extend beyond missed payments. Source: [SEC Form 8-K](https://www.sec.gov/files/form8-k.pdf).
 
 Payment-failure verbs now require a financial object directly after them. Newlines and semicolons do not split event evidence away from a conditional clause. Disputed or alleged events require manual review. Explicit nonpayment (for example, “did not pay interest”) remains positive evidence; this differs from denying that a default occurred.
+
+## Local Ollama review (recommended setup for your machine)
+
+All enrichment code is in `item204_enrichment/`. Run commands from the repository root using `-m`:
+
+| File | Purpose |
+| --- | --- |
+| `classify.py` | SEC discovery, HTML download/cache, and regex classification |
+| `review_common.py` | Shared conservative prompt, quote validation, resume cache, and exports |
+| `review_openai.py` | OpenAI Responses API reviewer; needs `OPENAI_API_KEY` |
+| `review_ollama.py` | Local Ollama reviewer; default `qwen3.5:9b`, no API key |
+| `requirements.txt` | Beautiful Soup dependencies for both reviewers |
+
+Start the Ollama app (or run `ollama serve` if no server is running). You have already pulled `qwen3.5:9b`; no additional model download is needed.
+
+Check local files without inference:
+
+```bash
+.venv/bin/python -m item204_enrichment.review_ollama --dry-run
+```
+
+Review a pilot with your default model:
+
+```bash
+.venv/bin/python -m item204_enrichment.review_ollama --limit 20
+```
+
+Remove `--limit 20` to review all remaining eligible cases. Repeating a limited run reuses successful reviews and advances through new cases. Invalid model answers remain manual and are retried on subsequent runs. Full runs can take substantial time on local hardware.
+
+Ollama reads the same `results/item_204_review/classifications.jsonl` and cached `html/` directory as OpenAI. Its separate output directory is **`results/item_204_ollama_review/`**, containing merged JSONL/CSV, `audit.json`, and the `reviews/` decision store. Every terminal decision is saved as an individual JSON file there, including conservative fallback decisions. Each file contains the filing identifiers, status, model/provider settings, explanation, evidence, and input scope. An explicit `--limit` deferral is not stored because no decision was made. The original classifier and OpenAI results are preserved. No SEC downloads or external model API requests occur; the default endpoint is `http://localhost:11434/api/chat`. Only local HTTP endpoints are accepted.
+
+Generation uses JSON schema, temperature 0, thinking disabled, 32,768 context tokens, and a 4,096-token output budget. Missing/invalid/incomplete evidence stays `MANUAL_REVIEW`. `--think` enables thinking, but it can be slower and exhaust the output budget. A conservative byte-based budget prevents oversized inputs from being silently truncated; it may skip filings that would fit under exact tokenization. The default `--max-chars` is 24,000. To allow longer filings, increase both limits if your RAM permits:
+
+```bash
+.venv/bin/python -m item204_enrichment.review_ollama \
+  --limit 20 --num-ctx 65536 --max-chars 50000
+```
+
+The reviewer no longer silently skips oversized inputs. When the full filing exceeds `--max-chars`, it sends the previously extracted Item 2.04 narrative instead and records `llm_input_scope: item_204_extract`. If even that text exceeds the configured context budget, it emits an explicit conservative `MANUAL_REVIEW` result with `fallback_context_budget`. `--timeout 600` is the default per-request timeout in seconds; increase it if your computer generates slowly. Model settings are included in Ollama cache keys. If you replace the weights behind the same model tag, use a fresh `--output-dir` to avoid reusing reviews generated by the earlier weights.
+
+The provider uses Ollama's [chat API](https://docs.ollama.com/api/chat) and [structured outputs](https://docs.ollama.com/capabilities/structured-outputs). Validate a manually reviewed sample before using LLM labels in the study.
+
+## Additional LLM review of unresolved filings
+
+`item204_enrichment/review_openai.py` reads only `MANUAL_REVIEW` records from the original JSONL and uses already downloaded HTML. It never fetches SEC documents. Beautiful Soup extracts the full visible filing, allowing the model to follow internal references from Item 2.04. External exhibits are not fetched. Large filings are skipped, not truncated.
+
+Use an OpenAI API model available to your account that supports Responses structured outputs. The model is explicitly supplied for reproducibility. Install `item204_enrichment/requirements.txt` if needed; no additional SDK is required.
+
+First inspect cached inputs without making API calls:
+
+```bash
+.venv/bin/python -m item204_enrichment.review_openai --model YOUR_MODEL --dry-run
+```
+
+Set `OPENAI_API_KEY` in your shell environment securely, then review a pilot:
+
+```bash
+.venv/bin/python -m item204_enrichment.review_openai --model YOUR_MODEL --limit 20
+```
+
+Omit `--limit` to process all remaining cases. The limit counts new API attempts, including failures; cached reviews do not consume it. This sends public filing text to OpenAI and incurs API charges. Do not run multiple processes against the same output directory.
+
+Outputs are separate under `results/item_204_llm_review/`:
+
+- `classifications.jsonl`: all original records, with LLM decisions and provenance added for reviewed manual cases.
+- `classifications.csv`: concise merged labels and review status.
+- `reviews/`: resumable review cache keyed by filing HTML hash, requested model, prompt, schema, and version. Each response records exact supporting quotes, explanation, event type, model, usage, and timestamp.
+- `audit.json`: input hash, counts, API attempts, and configuration.
+
+The label is `QUALIFIED_DEFAULT` to match the existing classifier (rather than `QUALIFY_DEFAULT`). Only high-certainty answers with verbatim evidence can receive `QUALIFIED_DEFAULT` or `NON_DEFAULT`. Payment failure, acceleration, and enforcement are recorded separately. Generic defaults, disputed claims, unavailable references, invalid quotes, errors, and uncertainty stay `MANUAL_REVIEW`. A historical event that was later cured can qualify; inspect the explanation for timing. LLM certainty is not a calibrated probability, and quote verification does not establish semantic correctness. Manually validate a sample before adding these candidate labels to the study target.
+
+Original classifications, inventory, panel, and model outputs are preserved. Reruns rebuild the separate merged outputs and reuse successful reviews; errors are retried. Changing the model, prompt, or HTML produces a new cache entry. Prefer a pinned model snapshot when available. A dry run rebuilds its output with original labels, so use a separate `--output-dir` if preserving an earlier reviewed export.
+
+API implementation follows the [official Structured Outputs guide](https://developers.openai.com/api/docs/guides/structured-outputs).
+
+### Limits, missing files, and API failures
+
+`--limit 20` permits at most 20 new API attempts per run. `deferred_limit` means an eligible filing is waiting for the next run; it is not an error. Successful cached reviews are reused, so repeated runs advance through the remaining filings.
+
+When cached HTML is absent or lacks an Item 2.04 heading, the reviewer uses `item_204_text` saved by the original classifier. Check `llm_input_scope` to distinguish a full filing from the extracted narrative. If neither source exists, it writes `fallback_missing_input` with an explicit conservative `MANUAL_REVIEW` explanation. The reviewer intentionally does not download missing filings. Recover missing files using the original downloader with the same date filters and a valid SEC user agent, then rerun LLM review if full-filing context is required.
+
+On an HTTP rejection, the script records the API's error code/message and stops further API requests for that run. The first rejected record is `api_error`; other eligible records are `deferred_api_failure`. Completed reviews are still exported and cached. HTTP 429 can indicate exhausted quota (`insufficient_quota`) or temporary rate limits. Resolve billing/project quota for the former; wait and retry for the latter. Authentication/model/request errors also require correction before rerunning. Details are in `audit.json` under `api_stop_reason` and in the CSV `llm_error` column. No automatic retry loop consumes the pilot allowance.
+
+See the [official API error guide](https://developers.openai.com/api/docs/guides/error-codes).
+
+### SEC context and per-review logging
+
+Both providers receive an explicit, paraphrased definition of Form 8-K Item 2.04 from the [SEC form](https://www.sec.gov/files/form8-k.pdf), plus examples that distinguish missed payments, realized acceleration, and hypothetical/technical events. Item 2.04 is broader than the study's qualifying-default definition; its presence alone must not produce a positive label. The prompt asks for issuer attribution, payment timing/grace periods, and any cure or waiver to be reflected in the explanation.
+
+The console prints a start message before inference, then one compact line with the validated classification, event type, and certainty after each completed review. Full explanations and verbatim evidence are appended immediately to `review_log.jsonl` in the provider's output directory. On later runs, an existing decision for the same filing, provider, and model is loaded from `reviews/` without another model call and without a duplicate log entry. Legacy review files are recognized by their stored HTML hash. Use `--retry-fallbacks` to retry only decisions marked `fallback: true`; successful cached reviews remain untouched, and a successful retry replaces its fallback file. Use `--refresh` only when you intentionally want to rerun every stored decision. The two flags cannot be combined. Logs contain decision explanations, not hidden thinking output. Missing/failed reviews remain visible in the classifications exports and audit.
+
+After a provider failure has been corrected, retry unresolved decisions with:
+
+```bash
+.venv/bin/python -m item204_enrichment.review_ollama \
+  --model gemma3:4b \
+  --output-dir results/item_204_gemma4b_1_review \
+  --retry-fallbacks
+```
+
+The current prompt/version (`item204-llm-v3-explicit-outcomes`) changes cache keys, so older reviews are regenerated on the next run. Earlier cached files remain intact. Every attempted filing now produces a one-line console/log outcome. Provider, validation, context, and missing-input failures become explicit conservative `MANUAL_REVIEW` records rather than disappearing. Model-added ellipses in evidence are accepted only when the remaining fragments can be mapped back to an exact source passage; unsupported quotes are discarded, and a resolved label still requires at least one verified quote. Test the new prompt with a small pilot before a full run.

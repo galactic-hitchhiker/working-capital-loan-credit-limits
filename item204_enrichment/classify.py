@@ -20,7 +20,7 @@ from urllib.request import Request, urlopen
 
 from sec_data import filing_rows
 
-RULE_VERSION = "item204-v4-payment-context"
+RULE_VERSION = "item204-v5-modal-may"
 # Payment failures must name a financial payment, rather than, for example,
 # "failed to make a filing". Acceleration and enforcement are separate events.
 PAYMENT_DEFAULT = (
@@ -54,7 +54,10 @@ NEGATIVE = [
     r"\bvoluntary prepayment\b", r"\bconversion price\b",
 ]
 HYPOTHETICAL = [
-    r"\b(?:may|might|could|would|will|shall)\b",
+    # A bare case-insensitive ``may`` also matches the month in filing dates.
+    # Require modal language after "may" while retaining the other auxiliaries.
+    r"\bmay\s+(?:be|have|constitute|cause|result|occur|trigger|accelerate|increase|become|lead|require|exercise|seek|declare|commence)\b",
+    r"\b(?:might|could|would|will|shall)\b",
     r"\bin the event (?:of|that)\b", r"\bupon the occurrence of\b",
     r"\bif\b", r"\b(?:risk|possibility) of\b",
 ]
