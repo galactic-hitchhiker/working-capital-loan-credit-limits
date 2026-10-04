@@ -1,8 +1,8 @@
-"""Build a REAL SEC filing-disclosure target from the supplied local dataset.
+"""Build point-in-time SEC disclosure targets from the supplied local dataset.
 
-The target is first observed 8-K/8-K/A Item 1.03 DISCLOSURE, not legal bankruptcy
-onset or payment default. The user selected this target on 2026-09-21. Nothing in
-this module converts a missing filing into a verified absence of legal default.
+The original target is the first Item 1.03 disclosure. An optional composite adds
+conservatively qualified Item 2.04 filings as a payment-default disclosure proxy.
+Neither target establishes the legal or contractual date of payment default.
 """
 
 import argparse
@@ -30,7 +30,10 @@ from mcf.data.point_in_time import FactIndex
 
 PERIODIC = {"10-K", "10-K/A", "10-Q", "10-Q/A"}
 ISSUER_FORMS = PERIODIC | {"8-K", "8-K/A"}
-TARGET = "first_sec_item_1_03_disclosure"
+ITEM_103_TARGET = "first_sec_item_1_03_disclosure"
+PAYMENT_DEFAULT_PROXY_TARGET = "first_sec_payment_default_disclosure_proxy"
+TARGET = ITEM_103_TARGET  # Backwards-compatible name for the original study target.
+SUPPORTED_TARGETS = {ITEM_103_TARGET, PAYMENT_DEFAULT_PROXY_TARGET}
 
 
 def item_103(value):
@@ -38,11 +41,114 @@ def item_103(value):
     return "1.03" in str(value).replace(";", ",").replace(" ", ",").split(",")
 
 
-def inventory(dataset, output, cutoff):
-    """Audit local filing histories, screen issuers and record observed disclosures."""
+def item_204(value):
+    """Match the exact Item 2.04 token across SEC item separators."""
+    return "2.04" in str(value).replace(";", ",").replace(" ", ",").split(",")
+
+
+def load_item_204_results(path):
+    """Load final rule-plus-LLM decisions keyed by CIK and accession number."""
+    if path is None:
+        return {}, None
+    path = Path(path)
+    source = path / "classifications.jsonl" if path.is_dir() else path
+    if not source.is_file():
+        raise ValueError(f"Item 2.04 classifications do not exist: {source}")
+    records = {}
+    for line_number, line in enumerate(source.read_text().splitlines(), 1):
+        if not line.strip():
+            continue
+        row = json.loads(line)
+        company = str(row.get("company_id", ""))
+        accession = str(row.get("accessionNumber", ""))
+        classification = row.get("classification")
+        if (
+            not company.isdigit()
+            or len(company) != 10
+            or not accession
+            or classification
+            not in {"QUALIFIED_DEFAULT", "NON_DEFAULT", "MANUAL_REVIEW"}
+        ):
+            raise ValueError(f"Invalid Item 2.04 result at line {line_number}")
+        key = (company, accession)
+        if key in records:
+            raise ValueError(f"Duplicate Item 2.04 result: {company} {accession}")
+        records[key] = row
+    return records, source
+
+
+def combine_disclosures(company, filings, item_204_results):
+    """Combine Item 1.03 with qualified 2.04 and retain unresolved 2.04 dates.
+
+    Missing Item 2.04 results are unresolved rather than assumed negative. A filing
+    containing Item 1.03 is already a positive composite event, even if its Item
+    2.04 narrative remains unresolved.
+    """
+    events = {}
+    unresolved = []
+    stats = Counter()
+    for filing in filings:
+        if filing["form"] not in {"8-K", "8-K/A"}:
+            continue
+        accession = filing["accessionNumber"]
+        has_103 = item_103(filing["items"])
+        has_204 = item_204(filing["items"])
+        review = item_204_results.get((company, accession)) if has_204 else None
+        classification = review.get("classification") if review else None
+        if has_204:
+            if review is None:
+                stats["item_204_missing_review"] += 1
+            else:
+                if review.get("filingDate") not in {None, "", filing["filingDate"]}:
+                    raise ValueError(
+                        f"Item 2.04 filing-date mismatch: {company} {accession}"
+                    )
+                stats[f"item_204_{classification.lower()}"] += 1
+            if not has_103 and classification not in {
+                "QUALIFIED_DEFAULT",
+                "NON_DEFAULT",
+            }:
+                unresolved.append(filing)
+        if not has_103 and classification != "QUALIFIED_DEFAULT":
+            continue
+        component = (
+            "ITEM_1_03_AND_QUALIFIED_ITEM_2_04"
+            if has_103 and classification == "QUALIFIED_DEFAULT"
+            else "ITEM_1_03"
+            if has_103
+            else "QUALIFIED_ITEM_2_04"
+        )
+        llm_review = (review or {}).get("llm_review", {}).get("review", {})
+        events[accession] = dict(
+            filing,
+            target=PAYMENT_DEFAULT_PROXY_TARGET,
+            event_component=component,
+            item_204_classification=classification or "",
+            item_204_event_type=llm_review.get("event_type", ""),
+            item_204_payment_evidence=bool(
+                (review or {}).get("payment_default_evidence")
+                or llm_review.get("event_type") == "PAYMENT_FAILURE"
+            ),
+            item_204_review_status=(review or {}).get("llm_status", "rule_only"),
+        )
+    ordering = lambda row: (row["filingDate"], row["accessionNumber"])
+    return sorted(events.values(), key=ordering), sorted(unresolved, key=ordering), stats
+
+
+def inventory(dataset, output, cutoff, item_204_results_path=None):
+    """Audit filing histories and record Item 1.03 or composite proxy events."""
+    item_204_results, item_204_source = load_item_204_results(
+        item_204_results_path
+    )
+    target = (
+        PAYMENT_DEFAULT_PROXY_TARGET
+        if item_204_results_path is not None
+        else ITEM_103_TARGET
+    )
     output = new_output(output)
     paths = sorted((Path(dataset) / "companyfacts").glob("CIK*.json"))
     rows, events, errors, counts, years = [], [], [], Counter(), Counter()
+    item_204_counts = Counter()
     with (output / "source_hashes.jsonl").open("w") as hashes:
         for n, facts_path in enumerate(paths, 1):
             company = facts_path.stem[3:]
@@ -82,14 +188,30 @@ def inventory(dataset, output, cutoff):
                 issuer = sorted(
                     {f["filingDate"] for f in dated if f["form"] in ISSUER_FORMS}
                 )
-                disclosures = sorted(
-                    [
-                        f
-                        for f in dated
-                        if f["form"] in {"8-K", "8-K/A"} and item_103(f["items"])
-                    ],
-                    key=lambda f: (f["filingDate"], f["accessionNumber"]),
-                )
+                if target == PAYMENT_DEFAULT_PROXY_TARGET:
+                    disclosures, unresolved_204, company_204_counts = combine_disclosures(
+                        company, dated, item_204_results
+                    )
+                    item_204_counts.update(company_204_counts)
+                else:
+                    disclosures = sorted(
+                        [
+                            dict(
+                                f,
+                                target=ITEM_103_TARGET,
+                                event_component="ITEM_1_03",
+                                item_204_classification="",
+                                item_204_event_type="",
+                                item_204_payment_evidence=False,
+                                item_204_review_status="",
+                            )
+                            for f in dated
+                            if f["form"] in {"8-K", "8-K/A"}
+                            and item_103(f["items"])
+                        ],
+                        key=lambda f: (f["filingDate"], f["accessionNumber"]),
+                    )
+                    unresolved_204 = []
                 # SIC is current metadata; this screen does not reconstruct
                 # historical industry membership or listing eligibility.
                 sic = str(submissions.get("sic", ""))
@@ -126,6 +248,15 @@ def inventory(dataset, output, cutoff):
                         disclosures[0]["accessionNumber"] if disclosures else ""
                     ),
                     "disclosure_records": len(disclosures),
+                    "first_unresolved_item_204_date": (
+                        unresolved_204[0]["filingDate"] if unresolved_204 else ""
+                    ),
+                    "first_unresolved_item_204_accession": (
+                        unresolved_204[0]["accessionNumber"]
+                        if unresolved_204
+                        else ""
+                    ),
+                    "unresolved_item_204_records": len(unresolved_204),
                 }
                 rows.append(row)
                 if disclosures and exclusion == "candidate":
@@ -152,16 +283,25 @@ def inventory(dataset, output, cutoff):
         "inventoried_companies": len(rows),
         "screen_counts": dict(counts),
         "disclosure_records": len(events),
+        "target": target,
+        "item_204_results": str(item_204_source) if item_204_source else None,
+        "item_204_counts": dict(item_204_counts),
         "candidate_first_disclosures_by_year": dict(sorted(years.items())),
         "cutoff": str(cutoff),
         "errors": errors,
-        "target_note": "Observed disclosure dates only; includes receivership and reorganization disclosures, not verified default dates",
+        "target_note": (
+            "First Item 1.03 or conservatively qualified Item 2.04 filing; a "
+            "payment-default disclosure proxy, not a verified contractual default date"
+            if target == PAYMENT_DEFAULT_PROXY_TARGET
+            else "Observed Item 1.03 disclosure dates only; includes receivership "
+            "and reorganization disclosures, not verified default dates"
+        ),
     }
     write_json(output / "inventory_audit.json", report)
     write_json(
         output / "manifest.json",
         manifest(
-            [],
+            [item_204_source] if item_204_source else [],
             data_kind="empirical",
             **report,
             source_hash_list_sha256=file_hash(output / "source_hashes.jsonl"),
@@ -170,7 +310,14 @@ def inventory(dataset, output, cutoff):
     return report
 
 
-def disclosure_label(decision, event_date, last_issuer_date, horizon_days, cutoff):
+def disclosure_label(
+    decision,
+    event_date,
+    last_issuer_date,
+    horizon_days,
+    cutoff,
+    unresolved_date=None,
+):
     """Observed reporting event; right-censor negative windows after issuer follow-up.
 
     Event labels are retained once the disclosure itself is observed, even if the
@@ -178,12 +325,22 @@ def disclosure_label(decision, event_date, last_issuer_date, horizon_days, cutof
     after their horizon. Both wait until the full horizon has elapsed before use.
     """
     horizon = decision + timedelta(days=horizon_days)
-    if event_date is not None and event_date <= decision:
+    first_known_or_unresolved = min(
+        (value for value in (event_date, unresolved_date) if value is not None),
+        default=None,
+    )
+    if first_known_or_unresolved is not None and first_known_or_unresolved <= decision:
+        if unresolved_date is not None and unresolved_date == first_known_or_unresolved:
+            return None, "post_unresolved_item_204"
         return None, "post_first_disclosure"
     if horizon + timedelta(days=1) >= cutoff:
         return None, "cutoff_censoring"
-    if event_date is not None and event_date <= horizon:
+    if event_date is not None and event_date <= horizon and (
+        unresolved_date is None or event_date <= unresolved_date
+    ):
         return 1, "observed_disclosure"
+    if unresolved_date is not None and unresolved_date <= horizon:
+        return None, "unresolved_item_204_in_window"
     if last_issuer_date < horizon:
         return None, "issuer_followup_censoring"
     return 0, "no_recorded_disclosure_in_observed_window"
@@ -192,14 +349,22 @@ def disclosure_label(decision, event_date, last_issuer_date, horizon_days, cutof
 def panel(dataset, inventory_dir, config_path, output):
     """Write monthly predictors, disclosure labels, source provenance and exclusions."""
     config = load_design(config_path)
-    if config["data_kind"] != "empirical" or config["event_type"] != TARGET:
-        raise ValueError("This builder is only for the real SEC disclosure target")
+    target = config["event_type"]
+    if config["data_kind"] != "empirical" or target not in SUPPORTED_TARGETS:
+        raise ValueError("Unsupported empirical SEC disclosure target")
     output = new_output(output)
     dates = list(
         months(date.fromisoformat(config["start"]), date.fromisoformat(config["end"]))
     )
     cutoff = date.fromisoformat(config["observed_as_of"])
     inventory_path = Path(inventory_dir) / "issuer_inventory.csv"
+    inventory_audit_path = Path(inventory_dir) / "inventory_audit.json"
+    inventory_audit = json.loads(inventory_audit_path.read_text())
+    inventory_target = inventory_audit.get("target", ITEM_103_TARGET)
+    if inventory_target != target:
+        raise ValueError(
+            f"Inventory target {inventory_target!r} does not match design {target!r}"
+        )
     issuers = [r for r in read_csv(inventory_path) if r["screen"] == "candidate"]
     counts, companies, event_ids, year_counts, missing = (
         Counter(),
@@ -256,6 +421,11 @@ def panel(dataset, inventory_dir, config_path, output):
                 if issuer["first_disclosure_date"]
                 else None
             )
+            unresolved = (
+                date.fromisoformat(issuer.get("first_unresolved_item_204_date", ""))
+                if issuer.get("first_unresolved_item_204_date", "")
+                else None
+            )
             for decision in dates:
                 if decision <= first or decision > last:
                     counts["outside_observed_reporting_life"] += 1
@@ -310,7 +480,12 @@ def panel(dataset, inventory_dir, config_path, output):
                     + "\n"
                 )
                 label, reason = disclosure_label(
-                    decision, event, last, config["horizon_days"], cutoff
+                    decision,
+                    event,
+                    last,
+                    config["horizon_days"],
+                    cutoff,
+                    unresolved,
                 )
                 if label is None:
                     counts[reason] += 1
@@ -329,13 +504,13 @@ def panel(dataset, inventory_dir, config_path, output):
                 if label_available >= cutoff:
                     counts["late_coverage_confirmation"] += 1
                     continue
-                event_id = f"{company}:{TARGET}:{event}" if label else ""
+                event_id = f"{company}:{target}:{event}" if label else ""
                 source = f"dataset/submissions/CIK{company}.json and referenced historical files"
                 record = dict(
                     company_id=company,
                     decision_date=str(decision),
                     data_kind="empirical",
-                    event_type=TARGET,
+                    event_type=target,
                     horizon_days=config["horizon_days"],
                     horizon_end=str(end),
                     label_available_on=str(label_available),
@@ -377,21 +552,28 @@ def panel(dataset, inventory_dir, config_path, output):
                 )
     report = dict(
         data_kind="empirical",
-        target=TARGET,
+        target=target,
         candidate_companies=len(issuers),
         included_companies=len(companies),
         distinct_positive_events=len(event_ids),
         counts=dict(counts),
         annual_counts={k: dict(v) for k, v in sorted(year_counts.items())},
         missing_predictors=dict(missing),
-        limitation="Current SIC screen; first recorded disclosure is not verified bankruptcy onset; negative labels concern reporting only",
+        limitation=(
+            "Current SIC screen; the composite is a payment-default disclosure "
+            "proxy rather than verified contractual default. Unresolved Item 2.04 "
+            "filings censor affected windows; negative labels concern reporting only."
+            if target == PAYMENT_DEFAULT_PROXY_TARGET
+            else "Current SIC screen; first recorded disclosure is not verified "
+            "bankruptcy onset; negative labels concern reporting only"
+        ),
     )
     write_json(output / "panel_audit.json", report)
     write_json(output / "design.json", config)
     write_json(
         output / "manifest.json",
         manifest(
-            [config_path, inventory_path],
+            [config_path, inventory_path, inventory_audit_path],
             panel_sha256=file_hash(output / "panel.csv"),
             companyfacts_hash_list_sha256=file_hash(
                 output / "companyfacts_hashes.jsonl"
@@ -410,12 +592,27 @@ def main():
     parser.add_argument("--cutoff", type=date.fromisoformat, default=date(2026, 9, 7))
     parser.add_argument("--inventory", type=Path)
     parser.add_argument("--config", type=Path)
+    parser.add_argument(
+        "--item-204-results",
+        type=Path,
+        help=(
+            "Final rule-plus-LLM Item 2.04 directory or classifications.jsonl; "
+            "enables the composite payment-default disclosure proxy"
+        ),
+    )
     args = parser.parse_args()
     if args.action == "inventory":
-        result = inventory(args.dataset, args.output_dir, args.cutoff)
+        result = inventory(
+            args.dataset,
+            args.output_dir,
+            args.cutoff,
+            args.item_204_results,
+        )
     else:
         if args.inventory is None or args.config is None:
             parser.error("panel requires --inventory and --config")
+        if args.item_204_results is not None:
+            parser.error("--item-204-results applies only to inventory")
         result = panel(args.dataset, args.inventory, args.config, args.output_dir)
     print(json.dumps(result, indent=2))
 

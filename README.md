@@ -154,3 +154,122 @@ To refresh the thesis evidence from the current completed run:
 ```
 
 The exporter copies compact evidence tables and regenerates Appendices C and D. It does not edit Google Docs.
+
+## Composite Item 1.03 + Item 2.04 Model
+
+The repository also supports a separate experimental target named
+`first_sec_payment_default_disclosure_proxy`. It combines every Item 1.03 filing
+with Item 2.04 filings classified as `QUALIFIED_DEFAULT`. Deterministic rules run
+first; only `MANUAL_REVIEW` cases are sent to the configured LLM. Remaining
+unresolved Item 2.04 cases censor affected label windows instead of becoming
+negative observations.
+
+Run enrichment, combined inventory construction, panel construction and model
+training with one command:
+
+```sh
+SEC_USER_AGENT='Your Name your.email@example.com' \
+.venv/bin/python -m mcf.workflows.launcher -m mcf.workflows.payment_default_proxy \
+  --dataset ../dataset \
+  --output-dir results/payment_default_proxy
+```
+
+This defaults to local Ollama with `qwen3.5:9b`.
+
+### Run Item 2.04 enrichment separately
+
+The enrichment workflow downloads or reuses filing HTML, applies the deterministic
+rules, and sends only `MANUAL_REVIEW` cases to Ollama:
+
+```sh
+SEC_USER_AGENT='Your Name your.email@example.com' \
+.venv/bin/python -m mcf.enrichment.item204.workflow \
+  --submissions ../dataset/submissions \
+  --output-dir results/item_204_pipeline
+```
+
+Final classifications are written to
+`results/item_204_pipeline/final/classifications.jsonl`. Reruns reuse downloaded
+HTML and successful model decisions. After correcting a provider problem, retry
+only stored fallback decisions with:
+
+```sh
+.venv/bin/python -m mcf.enrichment.item204.workflow \
+  --submissions ../dataset/submissions \
+  --output-dir results/item_204_pipeline \
+  --retry-fallbacks
+```
+
+Use the completed enrichment in the remaining end-to-end workflow with:
+
+```sh
+.venv/bin/python -m mcf.workflows.launcher -m mcf.workflows.payment_default_proxy \
+  --dataset ../dataset \
+  --item-204-results results/item_204_pipeline/final \
+  --output-dir results/payment_default_proxy
+```
+
+This skips discovery, rule classification and LLM review, then builds the combined
+inventory, panel and models.
+
+### Run every stage separately
+
+Build the combined Item 1.03 + qualified Item 2.04 inventory:
+
+```sh
+.venv/bin/python -m mcf.data.empirical inventory \
+  --dataset ../dataset \
+  --cutoff 2026-09-07 \
+  --item-204-results results/item_204_pipeline/final \
+  --output-dir results/payment_default_proxy/inventory
+```
+
+Build the point-in-time panel:
+
+```sh
+.venv/bin/python -m mcf.data.empirical panel \
+  --dataset ../dataset \
+  --inventory results/payment_default_proxy/inventory \
+  --config configs/study.payment_default_proxy.json \
+  --output-dir results/payment_default_proxy/panel
+```
+
+Train and evaluate the model families:
+
+```sh
+.venv/bin/python -m mcf.workflows.launcher -m mcf.models.train \
+  --config configs/study.payment_default_proxy.json \
+  --panel results/payment_default_proxy/panel/panel.csv \
+  --output-dir results/payment_default_proxy/models
+```
+
+Inventory, panel and model output directories must be new or empty. The Item 2.04
+directory is resumable because downloaded HTML and individual review decisions are
+cached.
+
+### Run the two Item 2.04 stages separately
+
+Run deterministic discovery, download and classification:
+
+```sh
+SEC_USER_AGENT='Your Name your.email@example.com' \
+.venv/bin/python -m mcf.enrichment.item204.classify \
+  --submissions ../dataset/submissions \
+  --output-dir results/item_204_pipeline/rules \
+  --cutoff 2026-09-07
+```
+
+Then review only the remaining manual cases with Ollama:
+
+```sh
+.venv/bin/python -m mcf.enrichment.item204.reviewers.ollama \
+  --input results/item_204_pipeline/rules/classifications.jsonl \
+  --html-dir results/item_204_pipeline/rules/html \
+  --output-dir results/item_204_pipeline/final
+```
+
+The study design is in `configs/study.payment_default_proxy.json`. The resulting
+probability concerns the composite SEC disclosure proxy. Item 1.03 includes
+bankruptcy or receivership disclosures, while Item 2.04 includes several kinds of
+triggering events; the output must not be described as a verified contractual
+payment-default probability.

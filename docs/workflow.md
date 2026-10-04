@@ -71,3 +71,20 @@ The inventory identifies eligible issuers and first Item 1.03 disclosures. The p
 ```
 
 This refreshes local evidence tables, figures and Appendices C/D. It does not update Google Docs.
+
+## Experimental composite disclosure proxy
+
+The following independent workflow classifies Item 2.04 filings with rules and an
+LLM fallback, combines qualified records with Item 1.03, constructs a new panel,
+and trains the model families:
+
+```sh
+SEC_USER_AGENT='Your Name your.email@example.com' \
+.venv/bin/python -m mcf.workflows.launcher -m mcf.workflows.payment_default_proxy \
+  --dataset ../dataset \
+  --output-dir results/payment_default_proxy
+```
+
+It uses `configs/study.payment_default_proxy.json`. Unresolved Item 2.04 filings
+censor affected windows. The target is a disclosure proxy and is not verified
+contractual payment default.

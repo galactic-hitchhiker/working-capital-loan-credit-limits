@@ -16,6 +16,14 @@ A financial fact can enter a monthly row only after its filing date. Balance-she
 
 Outcome labels represent the first recorded Form 8-K or 8-K/A Item 1.03 disclosure within 60 calendar days. Negative labels require observable follow-up beyond the horizon. This label is not contractual payment default.
 
+The optional composite workflow additionally requires final Item 2.04
+`classifications.jsonl` records produced by the rules-then-LLM workflow. Each
+record must have a ten-digit CIK, accession number and one of
+`QUALIFIED_DEFAULT`, `NON_DEFAULT` or `MANUAL_REVIEW`. Qualified records become
+composite disclosure events. Manual or missing reviews censor affected outcome
+windows and are never treated as negatives. The composite remains a disclosure
+proxy rather than verified contractual payment default.
+
 ## Model Panel
 
 Each labeled row requires a company identifier, decision date, label and label-availability date. Predictors may be missing and are imputed inside each fitting sample. Identifiers, names, filing references, event dates and future data are excluded from predictors.
@@ -27,4 +35,3 @@ The configured predictor set contains 12 fields: current ratio, cash and equival
 Policy replay requires revenue, operating cash flow, reported cash, assets, the selected event probability and the source dates needed for freshness checks. Facility exposure, additional payments and cash eligibility are scenario inputs when they are not observed. Missing required policy inputs cause exclusion; they are not silently replaced with zero.
 
 The resulting limits are hypothetical unless facility-level exposure, utilization, repayment, default, recovery, loss, pricing and profitability data are supplied and validated.
-

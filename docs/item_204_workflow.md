@@ -2,6 +2,44 @@
 
 `mcf/enrichment/item204/classify.py` is separate from the current Item 1.03 inventory and model pipeline. It scans every main CIK submission file and its referenced historical archives, finds exact Item 2.04 filings in 8-K/8-K/A records, downloads primary-document HTML, and extracts the Item 2.04 narrative with Beautiful Soup.
 
+## Single rules-then-LLM workflow
+
+The unified command downloads or reuses filing HTML, applies the deterministic
+classifier, and sends only `MANUAL_REVIEW` cases to the selected provider:
+
+```sh
+SEC_USER_AGENT='Your Name your.email@example.com' \
+.venv/bin/python -m mcf.enrichment.item204.workflow \
+  --submissions ../dataset/submissions \
+  --output-dir results/item_204_pipeline
+```
+
+Ollama and `qwen3.5:9b` are the defaults. Rule outputs and HTML are stored under
+`rules/`; merged final decisions and the organized review cache are under `final/`.
+The top-level `workflow_audit.json` records hashes and final counts. Reruns reuse
+downloaded HTML and successful LLM decisions. Use `--retry-fallbacks` after fixing
+a provider problem.
+
+For the complete composite Item 1.03 + Item 2.04 panel and model, run:
+
+```sh
+SEC_USER_AGENT='Your Name your.email@example.com' \
+.venv/bin/python -m mcf.workflows.launcher -m mcf.workflows.payment_default_proxy \
+  --dataset ../dataset \
+  --output-dir results/payment_default_proxy
+```
+
+This uses `configs/study.payment_default_proxy.json`, constructs the combined
+inventory, builds the point-in-time panel and trains the existing model families.
+Qualified Item 2.04 and Item 1.03 filings are positive disclosure events. An
+unresolved or missing Item 2.04 decision censors any label window it affects.
+Same-filing Item 1.03/2.04 records are deduplicated by accession number.
+
+The target is deliberately named a payment-default **disclosure proxy**. Item 1.03
+does not require a missed payment, and Item 2.04 can describe acceleration or
+enforcement without proving nonpayment. The fitted probability therefore must not
+be reported as the probability of verified contractual payment default.
+
 ## Install and run
 
 ```sh
@@ -34,13 +72,13 @@ Successful downloads are cached in `html/`; reruns reuse them and retry previous
 
 `QUALIFIED_DEFAULT` means that the rules found strong evidence of an actual default event in the extracted section. It can include covenant defaults and acceleration, and does not itself certify a missed payment. `payment_default_evidence` separately flags payment-related phrases; it is a review aid, not a verified label. `NON_DEFAULT` represents apparently benign or hypothetical language. Unsupported, short, cross-referenced or failed downloads remain `MANUAL_REVIEW` rather than silently becoming negatives.
 
-The classifier requires strong financial-default and realized-event evidence in the same sentence. It recognizes missed payments, unpaid principal/interest, realized acceleration, and initiated/completed enforcement. Hypothetical or negated sentences cannot qualify automatically; unresolved strong-default language stays `MANUAL_REVIEW`. Technical covenant breaches and benign redemption language can be `NON_DEFAULT` when no strong event evidence is present. JSONL preserves both raw regex matches and `qualifying_event_sentences`; `payment_default_evidence` now requires the same contextual checks. These conservative rules can miss real events in complex or multi-sentence narratives, so validate a manually reviewed sample before using labels. The audit records `item204-v4-payment-context`; rerun classification to refresh outputs using cached HTML.
+The classifier requires strong financial-default and realized-event evidence in the same sentence. It recognizes missed payments, unpaid principal/interest, realized acceleration, and initiated/completed enforcement. Hypothetical or negated sentences cannot qualify automatically; unresolved strong-default language stays `MANUAL_REVIEW`. Technical covenant breaches and benign redemption language can be `NON_DEFAULT` when no strong event evidence is present. JSONL preserves both raw regex matches and `qualifying_event_sentences`; `payment_default_evidence` requires the same contextual checks. These conservative rules can miss real events in complex or multi-sentence narratives, so validate a manually reviewed sample before using labels. The audit records `item204-v5-modal-may`; rerun classification to refresh outputs using cached HTML.
 
 ## Using candidates in a future inventory
 
 Run this as a one-time preprocessing stage before constructing a revised inventory. Keep all Item 2.04 filings in the audit, including co-filed Item 1.03 records. For additional filing candidates, review `QUALIFIED_DEFAULT` records where `prior_or_same_item_103` is false; do not filter on a later Item 1.03 date when constructing historical eligibility, since that uses future information.
 
-Before changing labels, manually validate precision across classes and years, resolve incorporated-by-reference text, and deduplicate amendments/repeated reports of the same economic event. Preserve the filing availability date separately from the underlying event date. Define whether the new target is payment default, covenant default, acceleration, or a composite distress disclosure. Rebuild the panel, stage audit and models only after freezing that definition. The current script does not change existing inventories or training labels.
+Before changing labels, manually validate precision across classes and years, resolve incorporated-by-reference text, and deduplicate amendments/repeated reports of the same economic event. Preserve the filing availability date separately from the underlying event date. Define whether the new target is payment default, covenant default, acceleration, or a composite distress disclosure. The standalone classifier does not change existing inventories or training labels; the composite workflow writes a new inventory, panel and model run under its own output directory.
 
 Item 2.04 includes triggering events that materially accelerate or increase financial obligations, which can extend beyond missed payments. Source: [SEC Form 8-K](https://www.sec.gov/files/form8-k.pdf).
 

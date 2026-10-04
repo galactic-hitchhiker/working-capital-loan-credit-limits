@@ -1,5 +1,5 @@
 {
-  "created_at_utc": "2026-10-04T17:00:00.574772+00:00",
+  "created_at_utc": "2026-10-04T17:13:05.640645+00:00",
   "python": "3.13.15",
   "packages": {
     "numpy": "2.2.6",
@@ -50,7 +50,7 @@
     "mcf/__init__.py": "f6a0a3905f13ebf8a8093496f944c0092bdf3efba7e9479a9638730296d0f056",
     "mcf/common.py": "74c39d779f05cae0e0ef7f92e9e9866f3cf2668f9dc674ab0c8e288b5eca3a35",
     "mcf/data/__init__.py": "802bd8a3bc6897dba8f7bbd746bf49f986f1b397559cd10cac39b70d2b894085",
-    "mcf/data/empirical.py": "4d4add356f8e0731d4bcdd04aa23a58c9651bc0f82e5009b9cf5c29a27642311",
+    "mcf/data/empirical.py": "8917c1bfaec55e2cc3939d589bdc144e4fc179f1ca7ea51313296ebaa918bf64",
     "mcf/data/panel.py": "0dbc87275cb6fcf367bef1bfc86bfd47cb827ebcefbbcba59583f1981d719529",
     "mcf/data/point_in_time.py": "ebd0a3e90cbead556295615b989666bfe2edf7ba98d19de96e7b9e7181c8424e",
     "mcf/data/sec.py": "ed4d2ff5c985c795e07ed186eebd8c4570d69558e8c1aea348ed62e1b57210f8",
@@ -61,6 +61,7 @@
     "mcf/enrichment/item204/reviewers/common.py": "2c8730d1763a0d0a2821ff80c39aae538034920d43e0464cb3627b687180b7c8",
     "mcf/enrichment/item204/reviewers/ollama.py": "5031f56cff40efe6105814e0498057b4b94e39cbda67cc0d5277c2a3ee3891f8",
     "mcf/enrichment/item204/reviewers/openai.py": "4d4661b9aa445f2299e74dd3a0fe2d7b3b1b6f9388975ebbfe190225220749d5",
+    "mcf/enrichment/item204/workflow.py": "b9f21576150fdc51c33a84ac4bd176e153b51da131f9c45b211334bcc4a2de79",
     "mcf/models/__init__.py": "0839029f9f558e6c98653b4d73e038157b9f95621c71f0ee784e9cf7148b3571",
     "mcf/models/evaluation.py": "2a93e55bd67b6664bb1b3202641d16939787ec952246fdb8d3a3dd1f05eaf3bc",
     "mcf/models/predict.py": "5afc98313e2a4065710c7efcc3b041e4a811c3ab66f031c9c76d40cbfcb707cb",
@@ -79,7 +80,8 @@
     "mcf/reporting/thesis_evidence.py": "55a2ee95f4a40895b4917c4b47eca28f48992221d15263fd634ce492f631016b",
     "mcf/workflows/__init__.py": "bebca27a808101185db849e59c568eb0aff0e1f120bea44944217db2ae6a2f52",
     "mcf/workflows/demo.py": "993c05bb2383e86ce866069627f0f3439b4ace6814dfea863d818755c6548c97",
-    "mcf/workflows/launcher.py": "cd85d16315d01cec2c9955aec5f0b6a4ee63cf7ffc978e38183bf77f1292db97"
+    "mcf/workflows/launcher.py": "cd85d16315d01cec2c9955aec5f0b6a4ee63cf7ffc978e38183bf77f1292db97",
+    "mcf/workflows/payment_default_proxy.py": "8c7c0f131dccfd420f907f6885db951f545e7c6a17a88b9d19e8c17e3893af3a"
   },
   "artifact": "Completed thesis evidence",
   "data_kind": "empirical_except_explicit_hypothetical_worked_examples"
