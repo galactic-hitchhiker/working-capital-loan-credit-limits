@@ -3,7 +3,7 @@
 Run from the repository root:
 
 ```bash
-.venv/bin/python -m item204_enrichment.review_ollama --limit 20
+.venv/bin/python -m item204_enrichment.reviewers.ollama --limit 20
 ```
 
 Default local model: `qwen3.5:9b`. Ollama must be running.

@@ -1,6 +1,6 @@
 """Local Ollama reviewer for cached Item 2.04 filings; no API key required.
 
-Run from the repository root with: python -m item204_enrichment.review_ollama
+Run from the repository root with: python -m item204_enrichment.reviewers.ollama
 """
 
 import json
@@ -8,7 +8,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
-from .review_common import (
+from .common import (
     APIReviewError,
     PROMPT,
     SCHEMA,
@@ -16,7 +16,7 @@ from .review_common import (
     make_parser,
     check_args,
 )
-from .review_common import run as run_reviews
+from .common import run as run_reviews
 
 DEFAULT_MODEL = "qwen3.5:9b"
 

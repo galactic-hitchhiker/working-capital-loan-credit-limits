@@ -247,7 +247,23 @@ def decision_path(cache, record, provider, model, settings, input_hash):
     return cache / f"{fingerprint}.json"
 
 
-def persist_decision(path, record):
+def decision_subdirectory(saved):
+    """Group stored decisions by label and fallback reason."""
+    classification = str(
+        saved.get("review", {}).get("classification", "MANUAL_REVIEW")
+    ).lower()
+    if classification not in {"qualified_default", "non_default", "manual_review"}:
+        classification = "manual_review"
+    parts = [classification]
+    if saved.get("fallback", False):
+        status = str(saved.get("status", "fallback_unknown"))
+        if not re.fullmatch(r"fallback_[a-z0-9_]+", status):
+            status = "fallback_unknown"
+        parts.append(status)
+    return Path(*parts)
+
+
+def persist_decision(path, record, superseded_path=None):
     """Atomically persist every terminal decision, including fallbacks."""
     saved = dict(record["llm_review"])
     saved.update(
@@ -257,11 +273,43 @@ def persist_decision(path, record):
         error=record.get("llm_error", ""),
         input_scope=record.get("llm_input_scope"),
     )
-    temporary = path.with_suffix(".tmp")
+    cache = path.parent
+    for parent in (path.parent, *path.parents):
+        if parent.name == "reviews":
+            cache = parent
+            break
+    target = cache / decision_subdirectory(saved) / path.name
+    target.parent.mkdir(parents=True, exist_ok=True)
+    temporary = target.with_suffix(".tmp")
     temporary.write_text(json.dumps(saved, indent=2))
-    temporary.replace(path)
+    temporary.replace(target)
+    if superseded_path and superseded_path != target and superseded_path.exists():
+        superseded_path.unlink()
     record["llm_review"] = saved
-    record["llm_review_path"] = str(path.resolve())
+    record["llm_review_path"] = str(target.resolve())
+
+
+def organize_review_files(cache):
+    """Move legacy flat decisions into classification/status folders."""
+    moved = 0
+    for path in list(cache.glob("*.json")):
+        try:
+            saved = json.loads(path.read_text())
+            folder = decision_subdirectory(saved)
+        except (OSError, ValueError, TypeError):
+            folder = Path("_invalid")
+        target = cache / folder / path.name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if target.exists():
+            if target.read_bytes() == path.read_bytes():
+                path.unlink()
+                moved += 1
+                continue
+            digest = hashlib.sha256(path.read_bytes()).hexdigest()[:12]
+            target = target.with_name(f"{path.stem}-{digest}.json")
+        path.replace(target)
+        moved += 1
+    return moved
 
 
 def cached_decision_index(cache, provider, model):
@@ -269,7 +317,7 @@ def cached_decision_index(cache, provider, model):
     by_filing = {}
     by_html = {}
     by_input = {}
-    for path in cache.glob("*.json"):
+    for path in cache.rglob("*.json"):
         try:
             saved = json.loads(path.read_text())
         except (OSError, ValueError, TypeError):
@@ -318,6 +366,7 @@ def run(args, request_fn, provider="openai", cache_settings=None, check_text=Non
     output.mkdir(parents=True, exist_ok=True)
     cache = output / "reviews"
     cache.mkdir(exist_ok=True)
+    organize_review_files(cache)
     cached_by_filing, cached_by_html, cached_by_input = cached_decision_index(
         cache, provider, args.model
     )
@@ -328,6 +377,7 @@ def run(args, request_fn, provider="openai", cache_settings=None, check_text=Non
     for record in records:
         result = dict(record)
         cached_path = None
+        superseded_path = None
         if record.get("classification") != "MANUAL_REVIEW":
             merged.append(result)
             continue
@@ -365,6 +415,7 @@ def run(args, request_fn, provider="openai", cache_settings=None, check_text=Non
                     and getattr(args, "retry_fallbacks", False)
                     and cached[1].get("fallback", False)
                 ):
+                    superseded_path = cached[0]
                     cached = None
             if not args.dry_run and cached is not None:
                 existing_path, saved = cached
@@ -392,7 +443,7 @@ def run(args, request_fn, provider="openai", cache_settings=None, check_text=Non
                     cache_settings,
                     "fallback_missing_input",
                 )
-                persist_decision(cached_path, result)
+                persist_decision(cached_path, result, superseded_path)
                 log_review(output, result)
                 counts[result["llm_status"]] += 1
                 merged.append(result)
@@ -409,7 +460,7 @@ def run(args, request_fn, provider="openai", cache_settings=None, check_text=Non
                         cache_settings,
                         "fallback_context_budget",
                     )
-                    persist_decision(cached_path, result)
+                    persist_decision(cached_path, result, superseded_path)
                     log_review(output, result)
                     counts[result["llm_status"]] += 1
                     merged.append(result)
@@ -425,7 +476,7 @@ def run(args, request_fn, provider="openai", cache_settings=None, check_text=Non
                     cache_settings,
                     "fallback_provider_unavailable",
                 )
-                persist_decision(cached_path, result)
+                persist_decision(cached_path, result, superseded_path)
             elif args.limit and calls >= args.limit:
                 result["llm_status"] = "deferred_limit"
             else:
@@ -450,7 +501,7 @@ def run(args, request_fn, provider="openai", cache_settings=None, check_text=Non
                     reviewed_at=datetime.now(timezone.utc).isoformat(),
                 )
                 result.update(llm_status="reviewed", llm_review=saved)
-                persist_decision(cached_path, result)
+                persist_decision(cached_path, result, superseded_path)
             if "llm_review" in result:
                 if result["llm_status"] != "cached":
                     log_review(output, result)
@@ -474,7 +525,7 @@ def run(args, request_fn, provider="openai", cache_settings=None, check_text=Non
                 cached_path = decision_path(
                     cache, record, provider, args.model, cache_settings, "unavailable"
                 )
-            persist_decision(cached_path, result)
+            persist_decision(cached_path, result, superseded_path)
             log_review(output, result)
             print(f"Stopping new API calls: {api_stop_reason}", flush=True)
         except (OSError, ValueError, KeyError, TypeError) as exc:
@@ -491,7 +542,7 @@ def run(args, request_fn, provider="openai", cache_settings=None, check_text=Non
                 cached_path = decision_path(
                     cache, record, provider, args.model, cache_settings, "unavailable"
                 )
-            persist_decision(cached_path, result)
+            persist_decision(cached_path, result, superseded_path)
             log_review(output, result)
         counts[result["llm_status"]] += 1
         merged.append(result)

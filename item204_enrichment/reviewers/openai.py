@@ -3,8 +3,8 @@ import json
 import os
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
-from .review_common import APIReviewError, PROMPT, SCHEMA, validate_review, make_parser, check_args
-from .review_common import run as run_reviews
+from .common import APIReviewError, PROMPT, SCHEMA, validate_review, make_parser, check_args
+from .common import run as run_reviews
 
 def request_review(text, model, api_key):
     """One Responses API request; no tools, external retrieval, or SEC access."""

@@ -8,8 +8,8 @@ from pathlib import Path
 from unittest.mock import patch
 from io import BytesIO
 
-from item204_enrichment.review_ollama import DEFAULT_MODEL, request_review, run
-from item204_enrichment.review_common import visible_text
+from item204_enrichment.reviewers.ollama import DEFAULT_MODEL, request_review, run
+from item204_enrichment.reviewers.common import visible_text
 
 
 class OllamaReviewTests(unittest.TestCase):
@@ -21,7 +21,7 @@ class OllamaReviewTests(unittest.TestCase):
     def test_request_schema_and_defaults(self):
         payload = dict(model=DEFAULT_MODEL, done=True, done_reason='stop',
                        message={'content': json.dumps(self.review())})
-        with patch('item204_enrichment.review_ollama.urlopen',
+        with patch('item204_enrichment.reviewers.ollama.urlopen',
                    return_value=BytesIO(json.dumps(payload).encode())) as call:
             review, metadata = request_review('The issuer failed to pay interest.', DEFAULT_MODEL)
         body = json.loads(call.call_args.args[0].data)
@@ -35,12 +35,12 @@ class OllamaReviewTests(unittest.TestCase):
 
     def test_incomplete_answer_rejected(self):
         payload = dict(done=True, done_reason='length', message={'content': '{}'})
-        with patch('item204_enrichment.review_ollama.urlopen',
+        with patch('item204_enrichment.reviewers.ollama.urlopen',
                    return_value=BytesIO(json.dumps(payload).encode())), self.assertRaises(ValueError):
             request_review('The issuer failed to pay interest.', DEFAULT_MODEL)
 
     def test_context_budget_never_truncates(self):
-        with patch('item204_enrichment.review_ollama.urlopen') as call, self.assertRaises(ValueError):
+        with patch('item204_enrichment.reviewers.ollama.urlopen') as call, self.assertRaises(ValueError):
             request_review('x' * 40000, DEFAULT_MODEL)
         call.assert_not_called()
 
@@ -57,7 +57,7 @@ class OllamaReviewTests(unittest.TestCase):
                              model=DEFAULT_MODEL, dry_run=False, limit=1, max_chars=24000,
                              host='http://localhost:11434', num_ctx=32768, timeout=600, think=False)
             with patch.dict('os.environ', {}, clear=True), patch(
-                'item204_enrichment.review_ollama.request_review', return_value=(self.review(), {})
+                'item204_enrichment.reviewers.ollama.request_review', return_value=(self.review(), {})
             ) as call, patch('builtins.print'):
                 run(args)
                 args.retry_fallbacks = True
@@ -72,8 +72,9 @@ class OllamaReviewTests(unittest.TestCase):
             self.assertEqual(logs[0]['reason'], self.review()['reason'])
             self.assertEqual(logs[0]['evidence_quotes'], self.review()['evidence_quotes'])
             self.assertEqual(logs[0]['provider'], 'ollama')
-            review_files = list((args.output_dir / 'reviews').glob('*.json'))
+            review_files = list((args.output_dir / 'reviews').rglob('*.json'))
             self.assertEqual(len(review_files), 1)
+            self.assertEqual(review_files[0].parent.name, 'qualified_default')
             stored = json.loads(review_files[0].read_text())
             self.assertEqual(stored['accessionNumber'], accession)
             self.assertEqual(stored['review']['classification'], 'QUALIFIED_DEFAULT')
@@ -103,7 +104,7 @@ class OllamaReviewTests(unittest.TestCase):
                              max_chars=24000, host='http://localhost:11434',
                              num_ctx=32768, timeout=600, think=False,
                              retry_fallbacks=True, refresh=False)
-            with patch('item204_enrichment.review_ollama.request_review') as call, \
+            with patch('item204_enrichment.reviewers.ollama.request_review') as call, \
                     patch('builtins.print'):
                 run(args)
                 call.assert_not_called()

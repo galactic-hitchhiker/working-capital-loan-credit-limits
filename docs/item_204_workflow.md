@@ -53,9 +53,9 @@ All enrichment code is in `item204_enrichment/`. Run commands from the repositor
 | File | Purpose |
 | --- | --- |
 | `classify.py` | SEC discovery, HTML download/cache, and regex classification |
-| `review_common.py` | Shared conservative prompt, quote validation, resume cache, and exports |
-| `review_openai.py` | OpenAI Responses API reviewer; needs `OPENAI_API_KEY` |
-| `review_ollama.py` | Local Ollama reviewer; default `qwen3.5:9b`, no API key |
+| `reviewers/common.py` | Shared conservative prompt, quote validation, resume cache, and exports |
+| `reviewers/openai.py` | OpenAI Responses API reviewer; needs `OPENAI_API_KEY` |
+| `reviewers/ollama.py` | Local Ollama reviewer; default `qwen3.5:9b`, no API key |
 | `requirements.txt` | Beautiful Soup dependencies for both reviewers |
 
 Start the Ollama app (or run `ollama serve` if no server is running). You have already pulled `qwen3.5:9b`; no additional model download is needed.
@@ -63,23 +63,39 @@ Start the Ollama app (or run `ollama serve` if no server is running). You have a
 Check local files without inference:
 
 ```bash
-.venv/bin/python -m item204_enrichment.review_ollama --dry-run
+.venv/bin/python -m item204_enrichment.reviewers.ollama --dry-run
 ```
 
 Review a pilot with your default model:
 
 ```bash
-.venv/bin/python -m item204_enrichment.review_ollama --limit 20
+.venv/bin/python -m item204_enrichment.reviewers.ollama --limit 20
 ```
 
 Remove `--limit 20` to review all remaining eligible cases. Repeating a limited run reuses successful reviews and advances through new cases. Invalid model answers remain manual and are retried on subsequent runs. Full runs can take substantial time on local hardware.
 
 Ollama reads the same `results/item_204_review/classifications.jsonl` and cached `html/` directory as OpenAI. Its separate output directory is **`results/item_204_ollama_review/`**, containing merged JSONL/CSV, `audit.json`, and the `reviews/` decision store. Every terminal decision is saved as an individual JSON file there, including conservative fallback decisions. Each file contains the filing identifiers, status, model/provider settings, explanation, evidence, and input scope. An explicit `--limit` deferral is not stored because no decision was made. The original classifier and OpenAI results are preserved. No SEC downloads or external model API requests occur; the default endpoint is `http://localhost:11434/api/chat`. Only local HTTP endpoints are accepted.
 
+Generated decision files are organized independently from the Python source:
+
+```text
+reviews/
+├── qualified_default/
+├── non_default/
+└── manual_review/
+    ├── fallback_missing_input/
+    ├── fallback_validation_error/
+    ├── fallback_provider_error/
+    ├── fallback_provider_unavailable/
+    └── fallback_context_budget/
+```
+
+Only folders containing decisions are created. Legacy flat review files are organized automatically at startup. Cache discovery is recursive, so moving them does not cause reprocessing. When `--retry-fallbacks` succeeds, the fallback file is removed and its replacement is stored under the resulting classification.
+
 Generation uses JSON schema, temperature 0, thinking disabled, 32,768 context tokens, and a 4,096-token output budget. Missing/invalid/incomplete evidence stays `MANUAL_REVIEW`. `--think` enables thinking, but it can be slower and exhaust the output budget. A conservative byte-based budget prevents oversized inputs from being silently truncated; it may skip filings that would fit under exact tokenization. The default `--max-chars` is 24,000. To allow longer filings, increase both limits if your RAM permits:
 
 ```bash
-.venv/bin/python -m item204_enrichment.review_ollama \
+.venv/bin/python -m item204_enrichment.reviewers.ollama \
   --limit 20 --num-ctx 65536 --max-chars 50000
 ```
 
@@ -89,20 +105,20 @@ The provider uses Ollama's [chat API](https://docs.ollama.com/api/chat) and [str
 
 ## Additional LLM review of unresolved filings
 
-`item204_enrichment/review_openai.py` reads only `MANUAL_REVIEW` records from the original JSONL and uses already downloaded HTML. It never fetches SEC documents. Beautiful Soup extracts the full visible filing, allowing the model to follow internal references from Item 2.04. External exhibits are not fetched. Large filings are skipped, not truncated.
+`item204_enrichment/reviewers/openai.py` reads only `MANUAL_REVIEW` records from the original JSONL and uses already downloaded HTML. It never fetches SEC documents. Beautiful Soup extracts the full visible filing, allowing the model to follow internal references from Item 2.04. External exhibits are not fetched. Large filings use the saved Item 2.04 extract.
 
 Use an OpenAI API model available to your account that supports Responses structured outputs. The model is explicitly supplied for reproducibility. Install `item204_enrichment/requirements.txt` if needed; no additional SDK is required.
 
 First inspect cached inputs without making API calls:
 
 ```bash
-.venv/bin/python -m item204_enrichment.review_openai --model YOUR_MODEL --dry-run
+.venv/bin/python -m item204_enrichment.reviewers.openai --model YOUR_MODEL --dry-run
 ```
 
 Set `OPENAI_API_KEY` in your shell environment securely, then review a pilot:
 
 ```bash
-.venv/bin/python -m item204_enrichment.review_openai --model YOUR_MODEL --limit 20
+.venv/bin/python -m item204_enrichment.reviewers.openai --model YOUR_MODEL --limit 20
 ```
 
 Omit `--limit` to process all remaining cases. The limit counts new API attempts, including failures; cached reviews do not consume it. This sends public filing text to OpenAI and incurs API charges. Do not run multiple processes against the same output directory.
@@ -139,7 +155,7 @@ The console prints a start message before inference, then one compact line with 
 After a provider failure has been corrected, retry unresolved decisions with:
 
 ```bash
-.venv/bin/python -m item204_enrichment.review_ollama \
+.venv/bin/python -m item204_enrichment.reviewers.ollama \
   --model gemma3:4b \
   --output-dir results/item_204_gemma4b_1_review \
   --retry-fallbacks
