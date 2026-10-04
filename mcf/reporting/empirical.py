@@ -13,8 +13,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics import precision_recall_curve
 
-from model_evaluation import metrics
-from research_common import (
+from mcf.models.evaluation import metrics
+from mcf.common import (
     FEATURES,
     manifest,
     new_output,

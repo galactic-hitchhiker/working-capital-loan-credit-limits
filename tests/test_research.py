@@ -5,15 +5,15 @@ from dataclasses import replace
 from datetime import date, timedelta
 from pathlib import Path
 
-from credit_policy import (
+from mcf.policy.credit import (
     PolicyConfig,
     PolicyInputs,
     determine_limit,
     expected_loss_amount,
 )
-from sec_data import filing_rows, latest_fact, snapshot
-from sec_point_in_time import FactIndex
-from temporal_validation import chronological_partition, make_label
+from mcf.data.sec import filing_rows, latest_fact, snapshot
+from mcf.data.point_in_time import FactIndex
+from mcf.models.temporal import chronological_partition, make_label
 
 
 class PolicyTests(unittest.TestCase):

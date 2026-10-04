@@ -13,8 +13,8 @@ from collections import Counter
 from datetime import date, timedelta
 from pathlib import Path
 
-from build_panel import PANEL_FIELDS
-from research_common import (
+from mcf.data.panel import PANEL_FIELDS
+from mcf.common import (
     FEATURES,
     file_hash,
     load_design,
@@ -25,8 +25,8 @@ from research_common import (
     write_csv,
     write_json,
 )
-from sec_data import filing_rows
-from sec_point_in_time import FactIndex
+from mcf.data.sec import filing_rows
+from mcf.data.point_in_time import FactIndex
 
 PERIODIC = {"10-K", "10-K/A", "10-Q", "10-Q/A"}
 ISSUER_FORMS = PERIODIC | {"8-K", "8-K/A"}

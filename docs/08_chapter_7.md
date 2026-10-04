@@ -51,4 +51,4 @@ The fixed initial-limit assumption exceeds contemporaneous raw capacity in 19.19
 
 The policy numbers are conditional outputs from an assumed rule, not observed business results. The simulation cannot estimate expected loss, profitability, approval rates, utilization or customer effects without facility-level outcomes and economics. The selected model predicts a filing event rather than contractual payment default. Accordingly, the policy chapter demonstrates how a transparent limit engine can consume a risk signal; it does not claim that the reported dollar limits are optimal or ready for production use.
 
-File references: policy_audit.json, policy_decisions.csv, policy_sensitivity.csv, case_studies.csv, policy_report.md, empirical_policy.py and credit_policy.py.
+File references: policy_audit.json, policy_decisions.csv, policy_sensitivity.csv, case_studies.csv, policy_report.md, mcf/policy/empirical.py and mcf/policy/credit.py.

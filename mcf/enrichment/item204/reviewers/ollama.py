@@ -1,6 +1,6 @@
 """Local Ollama reviewer for cached Item 2.04 filings; no API key required.
 
-Run from the repository root with: python -m item204_enrichment.reviewers.ollama
+Run from the repository root with: python -m mcf.enrichment.item204.reviewers.ollama
 """
 
 import json

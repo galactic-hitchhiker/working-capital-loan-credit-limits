@@ -130,4 +130,4 @@ The rule combines a minimum ranking requirement with probability error. It does 
 
 The chosen probability enters the Chapter 5 rule without refitting on test outcomes. Policy coefficients are separate scenario assumptions and are not optimized against test results.
 
-File references: study.sec_disclosure.json, risk_models.py, train_models.py, temporal_validation.py, model_evaluation.py, stage_audit.json, selection.json, tuning_scores.csv, tuning_fold_scores.csv.
+File references: study.sec_disclosure.json, mcf/models/risk.py, mcf/models/train.py, mcf/models/temporal.py, mcf/models/evaluation.py, stage_audit.json, selection.json, tuning_scores.csv, tuning_fold_scores.csv.

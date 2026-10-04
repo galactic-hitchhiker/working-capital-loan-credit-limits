@@ -11,7 +11,7 @@ from pathlib import Path
 import joblib
 import numpy as np
 
-from research_common import (
+from mcf.common import (
     finite,
     manifest,
     new_output,

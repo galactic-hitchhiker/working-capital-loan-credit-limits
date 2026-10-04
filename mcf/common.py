@@ -124,7 +124,12 @@ def manifest(paths, **details):
             packages[name] = importlib.metadata.version(name)
         except importlib.metadata.PackageNotFoundError:
             pass
-    code = {p.name: file_hash(p) for p in sorted(Path(__file__).parent.glob("*.py"))}
+    package_root = Path(__file__).parent
+    repository_root = package_root.parent
+    code = {
+        str(path.relative_to(repository_root)): file_hash(path)
+        for path in sorted(package_root.rglob("*.py"))
+    }
     return {
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
         "python": platform.python_version(),

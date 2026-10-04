@@ -12,8 +12,8 @@ from dataclasses import asdict
 from datetime import date
 from pathlib import Path
 
-from credit_policy import PolicyConfig, PolicyInputs, determine_limit
-from research_common import (
+from mcf.policy.credit import PolicyConfig, PolicyInputs, determine_limit
+from mcf.common import (
     boolean,
     finite,
     manifest,

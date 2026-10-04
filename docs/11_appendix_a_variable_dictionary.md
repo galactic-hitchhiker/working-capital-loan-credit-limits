@@ -35,7 +35,7 @@ The twelve configured ratio, trend, indicator and size fields enter model fittin
 
 Negative current-ratio values and extreme ratios are retained in the fixed experiment and reported as data-quality limitations. The extractor checks source timing and period consistency; it does not certify every accounting value as economically valid.
 
-File references: sec_data.py, sec_point_in_time.py, feature_provenance.jsonl, feature_summary.csv.
+File references: mcf/data/sec.py, mcf/data/point_in_time.py, feature_provenance.jsonl, feature_summary.csv.
 
 ## A.2 Target and panel fields
 
@@ -78,4 +78,4 @@ The policy outputs capacity, multiplier, preliminary limit, assigned limit, avai
 
 The sensitivity cases change policy parameters, eligible cash, cap size, additional payments or probability. The selected random forest drives the base scenario; XGBoost and logistic mappings are model-comparison cases. Every probability refers to the defined disclosure event, never payment-default PD.
 
-File references: credit_policy.py, empirical_policy.py, policy.sec_disclosure.json, policy_audit.json, comparison_paths.csv.
+File references: mcf/policy/credit.py, mcf/policy/empirical.py, policy.sec_disclosure.json, policy_audit.json, comparison_paths.csv.

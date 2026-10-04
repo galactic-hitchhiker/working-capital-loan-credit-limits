@@ -1,6 +1,6 @@
 """Python launcher with project-local plotting and cache directories.
 
-Example: .venv/bin/python run_research.py demo_workflow.py --output-dir results/demo
+Example: .venv/bin/python -m mcf.workflows.launcher -m mcf.workflows.demo --output-dir results/demo
 No system packages or third-party binaries are modified.
 """
 
@@ -13,7 +13,7 @@ import sys
 def environment():
     """Preserve caller settings, using project-local plotting caches by default."""
     env = os.environ.copy()
-    root = Path(__file__).resolve().parent
+    root = Path(__file__).resolve().parents[2]
     env.setdefault("MPLCONFIGDIR", str(root / "results" / ".matplotlib"))
     env.setdefault("XDG_CACHE_HOME", str(root / "results" / ".cache"))
     return env

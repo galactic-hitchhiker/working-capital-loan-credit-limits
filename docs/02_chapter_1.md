@@ -75,4 +75,4 @@ Chapter 2 presents the credit-risk concepts and literature. Chapter 3 explains t
 
 Chapter 6 reports the empirical predictive results. Chapter 7 evaluates the resulting policy scenarios, historical paths and sensitivity analysis. Chapter 8 answers the research questions and presents the conclusions. The appendices provide variable definitions, reproducibility instructions, supplementary results and worked policy examples.
 
-File references: empirical_sec.py, sec_point_in_time.py, study.sec_disclosure.json, train_models.py, credit_policy.py.
+File references: mcf/data/empirical.py, mcf/data/point_in_time.py, study.sec_disclosure.json, mcf/models/train.py, mcf/policy/credit.py.

@@ -10,7 +10,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-from research_common import boolean, manifest, new_output, read_csv, write_json
+from mcf.common import boolean, manifest, new_output, read_csv, write_json
 
 
 def figures(model_dir, output, policy_dir=None):

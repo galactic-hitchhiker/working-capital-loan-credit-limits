@@ -1,20 +1,20 @@
 # Item 2.04 candidate-event review
 
-`item204_enrichment/classify.py` is separate from the current Item 1.03 inventory and model pipeline. It scans every main CIK submission file and its referenced historical archives, finds exact Item 2.04 filings in 8-K/8-K/A records, downloads primary-document HTML, and extracts the Item 2.04 narrative with Beautiful Soup.
+`mcf/enrichment/item204/classify.py` is separate from the current Item 1.03 inventory and model pipeline. It scans every main CIK submission file and its referenced historical archives, finds exact Item 2.04 filings in 8-K/8-K/A records, downloads primary-document HTML, and extracts the Item 2.04 narrative with Beautiful Soup.
 
 ## Install and run
 
 ```sh
-.venv/bin/python -m pip install -r item204_enrichment/requirements.txt
+.venv/bin/python -m pip install -r mcf/enrichment/item204/requirements.txt
 
 # Metadata-only inventory: no network requests.
-.venv/bin/python -m item204_enrichment.classify \
+.venv/bin/python -m mcf.enrichment.item204.classify \
   --submissions ../dataset/submissions \
   --output-dir results/item_204_review \
   --start 2011-01-01 --cutoff 2026-09-07 --discover-only
 
 # First inspect a small downloaded pilot.
-.venv/bin/python -m item204_enrichment.classify \
+.venv/bin/python -m mcf.enrichment.item204.classify \
   --submissions ../dataset/submissions \
   --output-dir results/item_204_review \
   --start 2011-01-01 --cutoff 2026-09-07 \
@@ -48,7 +48,7 @@ Payment-failure verbs now require a financial object directly after them. Newlin
 
 ## Local Ollama review (recommended setup for your machine)
 
-All enrichment code is in `item204_enrichment/`. Run commands from the repository root using `-m`:
+All enrichment code is in `mcf/enrichment/item204/`. Run commands from the repository root using `-m`:
 
 | File | Purpose |
 | --- | --- |
@@ -63,13 +63,13 @@ Start the Ollama app (or run `ollama serve` if no server is running). You have a
 Check local files without inference:
 
 ```bash
-.venv/bin/python -m item204_enrichment.reviewers.ollama --dry-run
+.venv/bin/python -m mcf.enrichment.item204.reviewers.ollama --dry-run
 ```
 
 Review a pilot with your default model:
 
 ```bash
-.venv/bin/python -m item204_enrichment.reviewers.ollama --limit 20
+.venv/bin/python -m mcf.enrichment.item204.reviewers.ollama --limit 20
 ```
 
 Remove `--limit 20` to review all remaining eligible cases. Repeating a limited run reuses successful reviews and advances through new cases. Invalid model answers remain manual and are retried on subsequent runs. Full runs can take substantial time on local hardware.
@@ -95,7 +95,7 @@ Only folders containing decisions are created. Legacy flat review files are orga
 Generation uses JSON schema, temperature 0, thinking disabled, 32,768 context tokens, and a 4,096-token output budget. Missing/invalid/incomplete evidence stays `MANUAL_REVIEW`. `--think` enables thinking, but it can be slower and exhaust the output budget. A conservative byte-based budget prevents oversized inputs from being silently truncated; it may skip filings that would fit under exact tokenization. The default `--max-chars` is 24,000. To allow longer filings, increase both limits if your RAM permits:
 
 ```bash
-.venv/bin/python -m item204_enrichment.reviewers.ollama \
+.venv/bin/python -m mcf.enrichment.item204.reviewers.ollama \
   --limit 20 --num-ctx 65536 --max-chars 50000
 ```
 
@@ -105,20 +105,20 @@ The provider uses Ollama's [chat API](https://docs.ollama.com/api/chat) and [str
 
 ## Additional LLM review of unresolved filings
 
-`item204_enrichment/reviewers/openai.py` reads only `MANUAL_REVIEW` records from the original JSONL and uses already downloaded HTML. It never fetches SEC documents. Beautiful Soup extracts the full visible filing, allowing the model to follow internal references from Item 2.04. External exhibits are not fetched. Large filings use the saved Item 2.04 extract.
+`mcf/enrichment/item204/reviewers/openai.py` reads only `MANUAL_REVIEW` records from the original JSONL and uses already downloaded HTML. It never fetches SEC documents. Beautiful Soup extracts the full visible filing, allowing the model to follow internal references from Item 2.04. External exhibits are not fetched. Large filings use the saved Item 2.04 extract.
 
-Use an OpenAI API model available to your account that supports Responses structured outputs. The model is explicitly supplied for reproducibility. Install `item204_enrichment/requirements.txt` if needed; no additional SDK is required.
+Use an OpenAI API model available to your account that supports Responses structured outputs. The model is explicitly supplied for reproducibility. Install `mcf/enrichment/item204/requirements.txt` if needed; no additional SDK is required.
 
 First inspect cached inputs without making API calls:
 
 ```bash
-.venv/bin/python -m item204_enrichment.reviewers.openai --model YOUR_MODEL --dry-run
+.venv/bin/python -m mcf.enrichment.item204.reviewers.openai --model YOUR_MODEL --dry-run
 ```
 
 Set `OPENAI_API_KEY` in your shell environment securely, then review a pilot:
 
 ```bash
-.venv/bin/python -m item204_enrichment.reviewers.openai --model YOUR_MODEL --limit 20
+.venv/bin/python -m mcf.enrichment.item204.reviewers.openai --model YOUR_MODEL --limit 20
 ```
 
 Omit `--limit` to process all remaining cases. The limit counts new API attempts, including failures; cached reviews do not consume it. This sends public filing text to OpenAI and incurs API charges. Do not run multiple processes against the same output directory.
@@ -155,7 +155,7 @@ The console prints a start message before inference, then one compact line with 
 After a provider failure has been corrected, retry unresolved decisions with:
 
 ```bash
-.venv/bin/python -m item204_enrichment.reviewers.ollama \
+.venv/bin/python -m mcf.enrichment.item204.reviewers.ollama \
   --model gemma3:4b \
   --output-dir results/item_204_gemma4b_1_review \
   --retry-fallbacks

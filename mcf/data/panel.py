@@ -10,7 +10,7 @@ from collections import Counter, defaultdict
 from datetime import date, timedelta
 from pathlib import Path
 
-from research_common import (
+from mcf.common import (
     FEATURES,
     boolean,
     cik,
@@ -23,8 +23,8 @@ from research_common import (
     write_csv,
     write_json,
 )
-from sec_data import snapshot
-from temporal_validation import make_label
+from mcf.data.sec import snapshot
+from mcf.models.temporal import make_label
 
 UNIVERSE_FIELDS = (
     "company_id",

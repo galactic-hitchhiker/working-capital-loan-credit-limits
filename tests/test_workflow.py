@@ -7,22 +7,22 @@ from dataclasses import replace
 from datetime import date
 from pathlib import Path
 
-from backtest_policy import replay
-from build_panel import outcome, build, UNIVERSE_FIELDS, EVENT_FIELDS, COVERAGE_FIELDS
-from credit_policy import PolicyConfig
-from research_common import boolean, load_design, read_csv, write_csv, write_json
+from mcf.policy.backtest import replay
+from mcf.data.panel import outcome, build, UNIVERSE_FIELDS, EVENT_FIELDS, COVERAGE_FIELDS
+from mcf.policy.credit import PolicyConfig
+from mcf.common import boolean, load_design, read_csv, write_csv, write_json
 
 try:
     import numpy as np
-    from demo_workflow import fixture
-    from model_evaluation import (
+    from mcf.workflows.demo import fixture
+    from mcf.models.evaluation import (
         choose_threshold,
         metrics,
         select_model,
         cluster_intervals,
     )
-    from risk_models import estimator, fit
-    from train_models import prepare, rolling_tuning_folds, select_calibration
+    from mcf.models.risk import estimator, fit
+    from mcf.models.train import prepare, rolling_tuning_folds, select_calibration
 
     HAS_ML = True
 except ModuleNotFoundError:

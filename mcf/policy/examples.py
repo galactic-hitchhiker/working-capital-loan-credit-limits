@@ -6,7 +6,7 @@ import json
 from dataclasses import asdict, replace
 from pathlib import Path
 
-from credit_policy import PolicyConfig, PolicyInputs, determine_limit
+from mcf.policy.credit import PolicyConfig, PolicyInputs, determine_limit
 
 
 def examples():

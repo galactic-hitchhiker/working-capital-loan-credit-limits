@@ -10,18 +10,18 @@ The reported run selects random forest with its identity probability mapping and
 
 | Component | Files |
 |---|---|
-| Source inventory and disclosure labels | empirical_sec.py |
-| Point-in-time financial extraction | sec_data.py, sec_point_in_time.py |
-| Monthly dates, input checks and file hashes | research_common.py |
-| Chronological label-availability purge | temporal_validation.py |
-| Model families and grids | risk_models.py |
-| Rolling tuning, calibration, selection and evaluation | train_models.py |
-| Metrics, thresholds and company bootstrap | model_evaluation.py |
-| Policy calculation and empirical replay | credit_policy.py, empirical_policy.py |
-| Tables, figures and thesis evidence | empirical_report.py, export_thesis_evidence.py |
+| Source inventory and disclosure labels | mcf/data/empirical.py |
+| Point-in-time financial extraction | mcf/data/sec.py, mcf/data/point_in_time.py |
+| Monthly dates, input checks and file hashes | mcf/common.py |
+| Chronological label-availability purge | mcf/models/temporal.py |
+| Model families and grids | mcf/models/risk.py |
+| Rolling tuning, calibration, selection and evaluation | mcf/models/train.py |
+| Metrics, thresholds and company bootstrap | mcf/models/evaluation.py |
+| Policy calculation and empirical replay | mcf/policy/credit.py, mcf/policy/empirical.py |
+| Tables, figures and thesis evidence | mcf/reporting/empirical.py, mcf/reporting/thesis_evidence.py |
 | Tests | tests/test_research.py, tests/test_workflow.py, tests/test_empirical.py |
 
-The generic `build_panel.py`, `predict_monthly.py`, `backtest_policy.py` and `policy_sensitivity.py` workflow remains available for independently verified event and facility registers. It is separate from the disclosure-specific experiment.
+The generic `mcf/data/panel.py`, `mcf/models/predict.py`, `mcf/policy/backtest.py` and `mcf/policy/sensitivity.py` workflow remains available for independently verified event and facility registers. It is separate from the disclosure-specific experiment.
 
 ## B.3 Models and Numerical Settings
 
@@ -70,7 +70,7 @@ The split run names record successive data and modeling revisions: `full_run` co
 | CSV, JSON and JSONL | Data, audits, predictions and provenance |
 | Markdown, PNG and PDF | Thesis text and figures |
 
-The pinned packages are recorded in `requirements-lock.txt`. `run_research.py` directs plotting caches to project-local paths.
+The pinned packages are recorded in `requirements-lock.txt`. `mcf/workflows/launcher.py` directs plotting caches to project-local paths.
 
 ## B.6 Reproduction and Verification
 

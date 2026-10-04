@@ -5,12 +5,12 @@ import unittest
 from datetime import date
 from pathlib import Path
 
-from empirical_sec import disclosure_label, item_103
-from sec_data import snapshot
-from sec_point_in_time import FactIndex
+from mcf.data.empirical import disclosure_label, item_103
+from mcf.data.sec import snapshot
+from mcf.data.point_in_time import FactIndex
 from test_research import document, fact
-from credit_policy import PolicyConfig
-from empirical_policy import replay_scenario
+from mcf.policy.credit import PolicyConfig
+from mcf.policy.empirical import replay_scenario
 
 
 class DisclosureTests(unittest.TestCase):

@@ -1,6 +1,6 @@
 """Fit, calibrate and compare Chapter 4 models with strictly chronological stages.
 
-The empirical SEC disclosure study uses empirical_sec.py and the fixed design
+The empirical SEC disclosure study uses mcf.data.empirical and the fixed design
 in configs/study.sec_disclosure.json. Synthetic mode is only a software check.
 """
 
@@ -17,15 +17,15 @@ from sklearn.exceptions import ConvergenceWarning
 from sklearn.frozen import FrozenEstimator
 from sklearn.inspection import permutation_importance
 
-from build_panel import PANEL_FIELDS
-from model_evaluation import (
+from mcf.data.panel import PANEL_FIELDS
+from mcf.models.evaluation import (
     choose_threshold,
     cluster_intervals,
     metrics,
     reliability_bins,
     select_model,
 )
-from research_common import (
+from mcf.common import (
     STAGES,
     file_hash,
     finite,
@@ -36,8 +36,8 @@ from research_common import (
     write_csv,
     write_json,
 )
-from risk_models import MODEL_ORDER, candidates, estimator, fit
-from temporal_validation import LabeledObservation, chronological_partition
+from mcf.models.risk import MODEL_ORDER, candidates, estimator, fit
+from mcf.models.temporal import LabeledObservation, chronological_partition
 
 CALIBRATION_ORDER = ("identity", "sigmoid")
 

@@ -9,7 +9,7 @@ import json
 import shutil
 from pathlib import Path
 
-from research_common import file_hash, manifest, read_csv, write_csv, write_json
+from mcf.common import file_hash, manifest, read_csv, write_csv, write_json
 
 
 def md_table(headers, rows):
@@ -234,7 +234,7 @@ def export(args):
     )
     appendix_d += "\nThe base uses annual revenue of USD 12 million, operating cash flow of USD 1.2 million, eligible cash of USD 500,000, additional principal due of USD 50,000, a 2% illustrative event probability and a USD 150,000 cap. The previous limit is USD 70,000 and outstanding exposure is USD 60,000.\n\n"
     appendix_d += "Risk stress raises the probability to 8%; cash-flow stress halves operating cash flow; the lower-cap case sets the cap to USD 40,000. The information case holds the previous limit, and the hard stop sets the assigned limit to zero. Neither a lower limit nor a hard stop removes outstanding exposure.\n\n"
-    appendix_d += "The separate sensitivity.csv contains 18 combinations of risk probability and risk sensitivity for this hypothetical borrower. It is not the empirical policy_sensitivity.csv. File references: policy_examples.py, credit_policy.py, worked_examples.csv, sensitivity.csv.\n"
+    appendix_d += "The separate sensitivity.csv contains 18 combinations of risk probability and risk sensitivity for this hypothetical borrower. It is not the empirical policy_sensitivity.csv. File references: mcf/policy/examples.py, mcf/policy/credit.py, worked_examples.csv, sensitivity.csv.\n"
     (docs / "14_appendix_d.md").write_text(appendix_d)
     write_json(
         tables / "release_manifest.json",

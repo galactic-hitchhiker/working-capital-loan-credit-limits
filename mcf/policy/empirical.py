@@ -16,9 +16,9 @@ from pathlib import Path
 import joblib
 import numpy as np
 
-from credit_policy import PolicyConfig, PolicyInputs, determine_limit
-from policy_sensitivity import scenarios
-from research_common import manifest, new_output, read_csv, write_csv, write_json
+from mcf.policy.credit import PolicyConfig, PolicyInputs, determine_limit
+from mcf.policy.sensitivity import scenarios
+from mcf.common import manifest, new_output, read_csv, write_csv, write_json
 
 
 def consecutive(earlier, later):

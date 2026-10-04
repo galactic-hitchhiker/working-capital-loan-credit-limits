@@ -12,12 +12,12 @@ import random
 from datetime import date, timedelta
 from pathlib import Path
 
-from backtest_policy import INPUT_FIELDS, run as replay
-from build_panel import PANEL_FIELDS
-from make_figures import figures
-from predict_monthly import predict
-from research_common import FEATURES, months, new_output, write_csv, write_json
-from train_models import run as train
+from mcf.policy.backtest import INPUT_FIELDS, run as replay
+from mcf.data.panel import PANEL_FIELDS
+from mcf.reporting.figures import figures
+from mcf.models.predict import predict
+from mcf.common import FEATURES, months, new_output, write_csv, write_json
+from mcf.models.train import run as train
 
 
 def fixture(output, companies_per_cohort=100):
@@ -193,7 +193,7 @@ def main():
         replay(
             output / "predictions" / "policy_predictions.csv",
             output / "policy_inputs.csv",
-            Path(__file__).parent / "configs" / "policy.example.json",
+            Path(__file__).resolve().parents[2] / "configs" / "policy.example.json",
             policy_dir,
         )
     figures(output / "models", output / "figures", policy_dir)

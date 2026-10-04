@@ -138,4 +138,4 @@ Third, complete follow-up is conditional on observed filing activity. Companies 
 
 Finally, financial statements do not establish cash eligibility, payments due in the next 60 days, facility utilization or recoveries. The policy analysis must keep these assumptions visible. These limitations affect both external validity and the strength of conclusions about lending.
 
-File references: empirical_sec.py, sec_data.py, sec_point_in_time.py, issuer_inventory.csv, disclosure_events.csv, inventory_audit.json, panel_audit.json, feature_provenance.jsonl, panel.csv, features.csv, 11_appendix_a_variable_dictionary.md.
+File references: mcf/data/empirical.py, mcf/data/sec.py, mcf/data/point_in_time.py, issuer_inventory.csv, disclosure_events.csv, inventory_audit.json, panel_audit.json, feature_provenance.jsonl, panel.csv, features.csv, 11_appendix_a_variable_dictionary.md.

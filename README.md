@@ -36,18 +36,21 @@ The base historical simulation uses the selected forest's continuous probability
 
 The policy results are hypothetical. The SEC data do not observe actual facility limits, utilization, repayments, contractual defaults, recoveries, losses, pricing or profitability. Capacity rules, cash eligibility, additional debt, exposure and caps are explicit scenario assumptions.
 
-## Main Files
+## Source Structure
 
-| File | Purpose |
+All application Python modules live under the `mcf/` package. Tests remain in
+`tests/`, and generated artifacts remain in `results/`.
+
+| Package | Purpose |
 |---|---|
-| `empirical_sec.py` | Build issuer inventory, disclosure labels and monthly panel |
-| `sec_data.py`, `sec_point_in_time.py` | Extract point-in-time financial facts and ratios |
+| `mcf/data/` | SEC ingestion, point-in-time facts, disclosure labels and panel construction |
 | `configs/study.sec_disclosure.json` | Define target, stages, controls and 12 predictors |
-| `risk_models.py`, `train_models.py` | Tune, calibrate, select and evaluate four model families |
-| `model_evaluation.py`, `temporal_validation.py` | Metrics, thresholds, bootstrap and chronological purging |
-| `credit_policy.py`, `empirical_policy.py` | Calculate and replay hypothetical limits |
-| `empirical_report.py` | Produce descriptive, model and policy reports |
-| `export_thesis_evidence.py` | Refresh thesis evidence tables and Appendices C/D |
+| `mcf/models/` | Model definitions, temporal validation, training, evaluation and prediction |
+| `mcf/policy/` | Credit-limit rules, replay, examples and sensitivity analysis |
+| `mcf/reporting/` | Empirical reports, figures and thesis evidence exports |
+| `mcf/workflows/` | End-to-end demo and environment-aware command launcher |
+| `mcf/enrichment/item204/` | Item 2.04 rule and LLM enrichment workflow |
+| `mcf/common.py` | Shared configuration, file and serialization helpers |
 | `tests/` | Verify extraction, chronology, modeling and policy behavior |
 
 Current result roots are:
@@ -63,7 +66,7 @@ Current result roots are:
 The recorded environment uses Python 3.13.15 and packages pinned in `requirements-lock.txt`.
 
 ```sh
-.venv/bin/python run_research.py -m unittest discover -s tests -v
+.venv/bin/python -m mcf.workflows.launcher -m unittest discover -s tests -v
 ```
 
 ## Rebuild from Scratch
@@ -73,7 +76,7 @@ Each output directory must be new or empty.
 ### 1. Build the issuer inventory
 
 ```sh
-.venv/bin/python empirical_sec.py inventory \
+.venv/bin/python -m mcf.data.empirical inventory \
   --dataset dataset \
   --cutoff 2026-09-07 \
   --output-dir results/new_run/inventory
@@ -84,7 +87,7 @@ This scans company-facts and submission histories, applies issuer eligibility ru
 ### 2. Build the point-in-time panel
 
 ```sh
-.venv/bin/python empirical_sec.py panel \
+.venv/bin/python -m mcf.data.empirical panel \
   --dataset dataset \
   --inventory results/new_run/inventory \
   --config configs/study.sec_disclosure.json \
@@ -96,7 +99,7 @@ This selects only facts filed by each monthly decision date, constructs the 12 p
 ### 3. Train and evaluate models
 
 ```sh
-.venv/bin/python run_research.py train_models.py \
+.venv/bin/python -m mcf.workflows.launcher -m mcf.models.train \
   --config configs/study.sec_disclosure.json \
   --panel results/new_run/panel/panel.csv \
   --output-dir results/new_run/models
@@ -107,7 +110,7 @@ This runs expanding temporal tuning, refits family winners, fits 2019 probabilit
 ### 4. Replay the policy
 
 ```sh
-.venv/bin/python run_research.py empirical_policy.py \
+.venv/bin/python -m mcf.workflows.launcher -m mcf.policy.empirical \
   --models results/new_run/models/models.joblib \
   --features results/new_run/panel/features.csv \
   --policy configs/policy.sec_disclosure.json \
@@ -119,26 +122,26 @@ This applies the selected probability, financial capacity, exposure cap, hard st
 ### 5. Generate reports
 
 ```sh
-.venv/bin/python run_research.py empirical_report.py data \
+.venv/bin/python -m mcf.workflows.launcher -m mcf.reporting.empirical data \
   --input results/new_run/panel/panel.csv \
   --output-dir results/new_run/descriptive
 
-.venv/bin/python run_research.py empirical_report.py models \
+.venv/bin/python -m mcf.workflows.launcher -m mcf.reporting.empirical models \
   --input results/new_run/models \
   --output-dir results/new_run/model_report
 
-.venv/bin/python run_research.py empirical_report.py policy \
+.venv/bin/python -m mcf.workflows.launcher -m mcf.reporting.empirical policy \
   --input results/new_run/policy \
   --output-dir results/new_run/policy_report
 
-.venv/bin/python policy_examples.py \
+.venv/bin/python -m mcf.policy.examples \
   --output-dir results/new_run/worked_examples
 ```
 
 To refresh the thesis evidence from the current completed run:
 
 ```sh
-.venv/bin/python export_thesis_evidence.py \
+.venv/bin/python -m mcf.reporting.thesis_evidence \
   --docs docs \
   --inventory results/full_run/inventory \
   --panel results/full_run_1/panel \

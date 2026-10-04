@@ -18,7 +18,7 @@ The model-selection stages exclude 2023–2025 labels. Earlier versions of this 
 
 ![Annual sample coverage and disclosure-label share](figures/sample_over_time.png)
 
-*Figure 6.1. Labeled panel before chronological purging. Positive rows are monthly prediction outcomes, not separate defaults. Source: panel_audit.json and empirical_report.py.*
+*Figure 6.1. Labeled panel before chronological purging. Positive rows are monthly prediction outcomes, not separate defaults. Source: panel_audit.json and mcf/reporting/empirical.py.*
 
 ## 6.2 Predictors and Rolling Tuning
 
@@ -73,4 +73,4 @@ The results are good enough to demonstrate a repeatable ranking signal for a rar
 
 These results therefore support the thesis's methodological contribution and a hypothetical policy simulation. They do not validate a payment-default probability, prove deployable lending performance or measure realized loss reduction.
 
-File references: metrics.csv, stage_audit.json, tuning_scores.csv, tuning_fold_scores.csv, selection.json, bootstrap_intervals.json, annual_test_metrics.csv, event_detection.csv, permutation_importance.csv and empirical_report.py.
+File references: metrics.csv, stage_audit.json, tuning_scores.csv, tuning_fold_scores.csv, selection.json, bootstrap_intervals.json, annual_test_metrics.csv, event_detection.csv, permutation_importance.csv and mcf/reporting/empirical.py.

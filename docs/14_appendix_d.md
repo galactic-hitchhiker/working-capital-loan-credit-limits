@@ -15,4 +15,4 @@ The base uses annual revenue of USD 12 million, operating cash flow of USD 1.2 m
 
 Risk stress raises the probability to 8%; cash-flow stress halves operating cash flow; the lower-cap case sets the cap to USD 40,000. The information case holds the previous limit, and the hard stop sets the assigned limit to zero. Neither a lower limit nor a hard stop removes outstanding exposure.
 
-The separate sensitivity.csv contains 18 combinations of risk probability and risk sensitivity for this hypothetical borrower. It is not the empirical policy_sensitivity.csv. File references: policy_examples.py, credit_policy.py, worked_examples.csv, sensitivity.csv.
+The separate sensitivity.csv contains 18 combinations of risk probability and risk sensitivity for this hypothetical borrower. It is not the empirical policy_sensitivity.csv. File references: mcf/policy/examples.py, mcf/policy/credit.py, worked_examples.csv, sensitivity.csv.

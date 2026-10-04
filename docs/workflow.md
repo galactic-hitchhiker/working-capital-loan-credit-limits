@@ -5,29 +5,29 @@ Run commands from the repository root with the pinned virtual environment. Every
 ## Verify
 
 ```sh
-.venv/bin/python run_research.py -m unittest discover -s tests -v
+.venv/bin/python -m mcf.workflows.launcher -m unittest discover -s tests -v
 ```
 
 ## Full Empirical Pipeline
 
 ```sh
-.venv/bin/python empirical_sec.py inventory \
+.venv/bin/python -m mcf.data.empirical inventory \
   --dataset dataset \
   --cutoff 2026-09-07 \
   --output-dir results/new_run/inventory
 
-.venv/bin/python empirical_sec.py panel \
+.venv/bin/python -m mcf.data.empirical panel \
   --dataset dataset \
   --inventory results/new_run/inventory \
   --config configs/study.sec_disclosure.json \
   --output-dir results/new_run/panel
 
-.venv/bin/python run_research.py train_models.py \
+.venv/bin/python -m mcf.workflows.launcher -m mcf.models.train \
   --config configs/study.sec_disclosure.json \
   --panel results/new_run/panel/panel.csv \
   --output-dir results/new_run/models
 
-.venv/bin/python run_research.py empirical_policy.py \
+.venv/bin/python -m mcf.workflows.launcher -m mcf.policy.empirical \
   --models results/new_run/models/models.joblib \
   --features results/new_run/panel/features.csv \
   --policy configs/policy.sec_disclosure.json \
@@ -39,26 +39,26 @@ The inventory identifies eligible issuers and first Item 1.03 disclosures. The p
 ## Reports
 
 ```sh
-.venv/bin/python run_research.py empirical_report.py data \
+.venv/bin/python -m mcf.workflows.launcher -m mcf.reporting.empirical data \
   --input results/new_run/panel/panel.csv \
   --output-dir results/new_run/descriptive
 
-.venv/bin/python run_research.py empirical_report.py models \
+.venv/bin/python -m mcf.workflows.launcher -m mcf.reporting.empirical models \
   --input results/new_run/models \
   --output-dir results/new_run/model_report
 
-.venv/bin/python run_research.py empirical_report.py policy \
+.venv/bin/python -m mcf.workflows.launcher -m mcf.reporting.empirical policy \
   --input results/new_run/policy \
   --output-dir results/new_run/policy_report
 
-.venv/bin/python policy_examples.py \
+.venv/bin/python -m mcf.policy.examples \
   --output-dir results/new_run/worked_examples
 ```
 
 ## Refresh Current Thesis Evidence
 
 ```sh
-.venv/bin/python export_thesis_evidence.py \
+.venv/bin/python -m mcf.reporting.thesis_evidence \
   --docs docs \
   --inventory results/full_run/inventory \
   --panel results/full_run_1/panel \
@@ -71,4 +71,3 @@ The inventory identifies eligible issuers and first Item 1.03 disclosures. The p
 ```
 
 This refreshes local evidence tables, figures and Appendices C/D. It does not update Google Docs.
-

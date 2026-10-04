@@ -1,6 +1,6 @@
 """Check conservative event evidence and isolation of the filing section."""
 import unittest
-from item204_enrichment.classify import classify_item_204, extract_item_204, has_item, matches
+from mcf.enrichment.item204.classify import classify_item_204, extract_item_204, has_item, matches
 
 
 class Item204Tests(unittest.TestCase):
@@ -96,7 +96,7 @@ class Item204Tests(unittest.TestCase):
         try:
             import bs4
         except ImportError:
-            self.skipTest('Install item204_enrichment/requirements.txt for HTML parser tests')
+            self.skipTest('Install mcf/enrichment/item204/requirements.txt for HTML parser tests')
         html = '<p>Item 1.01 The company failed to pay.</p><p>Item 2.04 ' + 'A covenant breach occurred. ' * 8 + '</p><p>Item 9.01 Exhibits</p>'
         text, status = extract_item_204(html)
         self.assertEqual(status, 'isolated_item_section')

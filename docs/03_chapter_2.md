@@ -151,4 +151,4 @@ The thesis does not claim that earlier research ignored credit-limit determinati
 
 Better ranking does not automatically imply accurate loss estimation. A well-behaved limit formula does not establish commercial lending value. The study evaluates the claims supported by its data and identifies the evidence needed for stronger conclusions.
 
-File references: risk_models.py, model_evaluation.py, credit_policy.py, 11_appendix_a_variable_dictionary.md.
+File references: mcf/models/risk.py, mcf/models/evaluation.py, mcf/policy/credit.py, 11_appendix_a_variable_dictionary.md.

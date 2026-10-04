@@ -6,7 +6,7 @@ from argparse import Namespace
 from pathlib import Path
 from unittest.mock import patch
 
-from item204_enrichment.reviewers.openai import APIReviewError, request_review, run, validate_review
+from mcf.enrichment.item204.reviewers.openai import APIReviewError, request_review, run, validate_review
 
 
 class LLMReviewTests(unittest.TestCase):
@@ -63,7 +63,7 @@ class LLMReviewTests(unittest.TestCase):
                              model="test-model", dry_run=False, limit=1, max_chars=10000)
             original = source.read_bytes()
             with patch.dict('os.environ', {"OPENAI_API_KEY": "test-key"}), patch(
-                'item204_enrichment.reviewers.openai.request_review', return_value=(self.review(), {})
+                'mcf.enrichment.item204.reviewers.openai.request_review', return_value=(self.review(), {})
             ) as request, patch('builtins.print'):
                 run(args)
                 run(args)
@@ -82,7 +82,7 @@ class LLMReviewTests(unittest.TestCase):
             args = Namespace(input=source, html_dir=root, output_dir=root / "output",
                              model="test", dry_run=False, limit=1, max_chars=10000)
             with patch.dict('os.environ', {"OPENAI_API_KEY": "test-key"}), patch(
-                'item204_enrichment.reviewers.openai.request_review'
+                'mcf.enrichment.item204.reviewers.openai.request_review'
             ) as request, patch('builtins.print'):
                 run(args)
                 request.assert_not_called()
@@ -97,7 +97,7 @@ class LLMReviewTests(unittest.TestCase):
             self.assertEqual(stored['status'], 'fallback_missing_input')
             self.assertTrue(stored['fallback'])
             with patch.dict('os.environ', {"OPENAI_API_KEY": "test-key"}), patch(
-                'item204_enrichment.reviewers.openai.request_review'
+                'mcf.enrichment.item204.reviewers.openai.request_review'
             ) as request, patch('builtins.print'):
                 run(args)
                 request.assert_not_called()
@@ -114,7 +114,7 @@ class LLMReviewTests(unittest.TestCase):
         error = HTTPError('https://api.openai.com/v1/responses', 429, 'Too Many Requests', {},
                           BytesIO(json.dumps({'error': {'code': 'insufficient_quota',
                           'message': 'Quota exhausted test-key'}}).encode()))
-        with patch('item204_enrichment.reviewers.openai.urlopen', side_effect=error):
+        with patch('mcf.enrichment.item204.reviewers.openai.urlopen', side_effect=error):
             with self.assertRaises(APIReviewError) as raised:
                 request_review('filing', 'test', 'test-key')
         self.assertIn('insufficient_quota', str(raised.exception))
@@ -135,7 +135,7 @@ class LLMReviewTests(unittest.TestCase):
             args = Namespace(input=source, html_dir=root, output_dir=root / 'output',
                              model='test', dry_run=False, limit=20, max_chars=10000)
             with patch.dict('os.environ', {'OPENAI_API_KEY': 'test-key'}), patch(
-                'item204_enrichment.reviewers.openai.request_review', side_effect=APIReviewError('HTTP 429 [insufficient_quota]')
+                'mcf.enrichment.item204.reviewers.openai.request_review', side_effect=APIReviewError('HTTP 429 [insufficient_quota]')
             ) as request, patch('builtins.print'):
                 run(args)
                 self.assertEqual(request.call_count, 1)
@@ -149,7 +149,7 @@ class LLMReviewTests(unittest.TestCase):
 
             args.retry_fallbacks = True
             with patch.dict('os.environ', {'OPENAI_API_KEY': 'test-key'}), patch(
-                'item204_enrichment.reviewers.openai.request_review',
+                'mcf.enrichment.item204.reviewers.openai.request_review',
                 return_value=(self.review(), {}),
             ) as request, patch('builtins.print'):
                 run(args)
@@ -167,7 +167,7 @@ class LLMReviewTests(unittest.TestCase):
             args.output_dir = root / 'output-success'
             args.retry_fallbacks = False
             with patch.dict('os.environ', {'OPENAI_API_KEY': 'test-key'}), patch(
-                'item204_enrichment.reviewers.openai.request_review', return_value=(self.review(), {})
+                'mcf.enrichment.item204.reviewers.openai.request_review', return_value=(self.review(), {})
             ) as request, patch('builtins.print'):
                 run(args)
                 self.assertEqual(request.call_count, 1)

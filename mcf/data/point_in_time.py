@@ -1,14 +1,14 @@
 """Incremental version of the conservative SEC snapshot extractor.
 
 Each source fact is parsed once per company. Advancing through monthly dates
-preserves the filing-date and conflicting-fact rules in sec_data.py.
+preserves the filing-date and conflicting-fact rules in mcf.data.sec.
 """
 
 import math
 from dataclasses import asdict
 from datetime import date, timedelta
 
-from sec_data import (
+from mcf.data.sec import (
     CASH_COMPONENT_TAGS,
     TAGS,
     eligible_facts,

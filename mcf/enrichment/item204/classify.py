@@ -18,7 +18,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import quote
 from urllib.request import Request, urlopen
 
-from sec_data import filing_rows
+from mcf.data.sec import filing_rows
 
 RULE_VERSION = "item204-v5-modal-may"
 # Payment failures must name a financial payment, rather than, for example,

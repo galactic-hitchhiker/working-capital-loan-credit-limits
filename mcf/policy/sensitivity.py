@@ -11,9 +11,9 @@ from dataclasses import asdict, replace
 import json
 from pathlib import Path
 
-from backtest_policy import INPUT_FIELDS, replay
-from credit_policy import PolicyConfig
-from research_common import manifest, new_output, read_csv, write_csv, write_json
+from mcf.policy.backtest import INPUT_FIELDS, replay
+from mcf.policy.credit import PolicyConfig
+from mcf.common import manifest, new_output, read_csv, write_csv, write_json
 
 
 def scenarios(base):
