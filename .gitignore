@@ -16,3 +16,4 @@ results/history/*
 !results/history/artifact_hashes.json
 Examples/
 results_*/
+.obsidian/
