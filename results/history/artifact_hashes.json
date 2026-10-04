@@ -1,0 +1,236 @@
+{
+  "version": 1,
+  "scope": "Key audit, design, metric, classification and review artifacts; large row-level files remain covered by run manifests where available.",
+  "files": [
+    {
+      "path": "item_103_model_evolution/01_initial_full_pipeline_xgboost/inventory/inventory_audit.json",
+      "size_bytes": 875,
+      "sha256": "43f4848612a8ec6045a894195f0c42387774fa35b7aacb5dce4138de258c0e22"
+    },
+    {
+      "path": "item_103_model_evolution/01_initial_full_pipeline_xgboost/inventory/manifest.json",
+      "size_bytes": 3163,
+      "sha256": "f64438bce7900b4d29552bc88e912a0e6f34e3118fd9b2d565ba455bc84a9d7a"
+    },
+    {
+      "path": "item_103_model_evolution/01_initial_full_pipeline_xgboost/models/manifest.json",
+      "size_bytes": 2602,
+      "sha256": "7210bac2408815bf23d634b48bd67b3eebe708cdde7480a8a0c28c301c31d469"
+    },
+    {
+      "path": "item_103_model_evolution/01_initial_full_pipeline_xgboost/models/metrics.csv",
+      "size_bytes": 3123,
+      "sha256": "c1e668261729a4d6ac170aaf9299a660eb2d3793ef092a1212e7f08512fbb8ca"
+    },
+    {
+      "path": "item_103_model_evolution/01_initial_full_pipeline_xgboost/models/selection.json",
+      "size_bytes": 6862,
+      "sha256": "21472dffc9b0bee3a0f2d0635e2fd1975df834cceead7630a907cdc5fcbff4d0"
+    },
+    {
+      "path": "item_103_model_evolution/01_initial_full_pipeline_xgboost/models/stage_audit.json",
+      "size_bytes": 856,
+      "sha256": "6ffed1153e47d8be3b0147bfd56204aed57055beb211166e32d3fc7b784c5fa3"
+    },
+    {
+      "path": "item_103_model_evolution/01_initial_full_pipeline_xgboost/panel/design.json",
+      "size_bytes": 2173,
+      "sha256": "6dc445764c4ed3cb7cb3e480ecffe746b389f115ab7a87487c7c61d1d6d7bd8a"
+    },
+    {
+      "path": "item_103_model_evolution/01_initial_full_pipeline_xgboost/panel/manifest.json",
+      "size_bytes": 4592,
+      "sha256": "09aa90d1b30a089d2d32789d5becccf762a30194e658f673ac895ff1a36c8b7e"
+    },
+    {
+      "path": "item_103_model_evolution/01_initial_full_pipeline_xgboost/panel/panel_audit.json",
+      "size_bytes": 2006,
+      "sha256": "9954e2a75213ba45e53048326f8fddc660d2dad2d9972651ddd61a15d1922348"
+    },
+    {
+      "path": "item_103_model_evolution/02_improved_sec_fact_coverage_xgboost/models/manifest.json",
+      "size_bytes": 2604,
+      "sha256": "1f7b135922a41a6a27e8c1c9c15a557c1ae6d5b21e0d954899b7899c19a7d4ad"
+    },
+    {
+      "path": "item_103_model_evolution/02_improved_sec_fact_coverage_xgboost/models/metrics.csv",
+      "size_bytes": 3560,
+      "sha256": "bb71acdfdc89a975925a2b76256cecfdb3642e639215679fde74d6d93f161217"
+    },
+    {
+      "path": "item_103_model_evolution/02_improved_sec_fact_coverage_xgboost/models/selection.json",
+      "size_bytes": 6874,
+      "sha256": "d0df4d5d9366991d0fca7449fbcc0402df9ac31c276ffd79bf7f7a6f35880dad"
+    },
+    {
+      "path": "item_103_model_evolution/02_improved_sec_fact_coverage_xgboost/models/stage_audit.json",
+      "size_bytes": 856,
+      "sha256": "6ffed1153e47d8be3b0147bfd56204aed57055beb211166e32d3fc7b784c5fa3"
+    },
+    {
+      "path": "item_103_model_evolution/02_improved_sec_fact_coverage_xgboost/panel/design.json",
+      "size_bytes": 2173,
+      "sha256": "6dc445764c4ed3cb7cb3e480ecffe746b389f115ab7a87487c7c61d1d6d7bd8a"
+    },
+    {
+      "path": "item_103_model_evolution/02_improved_sec_fact_coverage_xgboost/panel/manifest.json",
+      "size_bytes": 4592,
+      "sha256": "98b3cca23d9c49d616cb20357ef2ec6aecae86bbf5ef34d97f35848af66e0713"
+    },
+    {
+      "path": "item_103_model_evolution/02_improved_sec_fact_coverage_xgboost/panel/panel_audit.json",
+      "size_bytes": 2006,
+      "sha256": "c15dee8ebdd0fc18349c95226750ada3953a5728e71111e5b8b229c702d2cec8"
+    },
+    {
+      "path": "item_103_model_evolution/03_rolling_temporal_validation_random_forest/models/manifest.json",
+      "size_bytes": 2607,
+      "sha256": "a7ba395278b747a759f2a2a91ae32c1c260bd36a50e957b47d2a8732e88b6dde"
+    },
+    {
+      "path": "item_103_model_evolution/03_rolling_temporal_validation_random_forest/models/metrics.csv",
+      "size_bytes": 3569,
+      "sha256": "bb638e145d47afb7cd95f632ff844dd892827d5b1bb421367ce071f68143ad23"
+    },
+    {
+      "path": "item_103_model_evolution/03_rolling_temporal_validation_random_forest/models/selection.json",
+      "size_bytes": 6886,
+      "sha256": "ce910f24d1579fc6d44de4c54db7e7dd75bf5a06e1dd2a5d747b2e454d853c37"
+    },
+    {
+      "path": "item_103_model_evolution/03_rolling_temporal_validation_random_forest/models/stage_audit.json",
+      "size_bytes": 1374,
+      "sha256": "feb4dcff5ec7e42eb02b6724a8f08b780fc3384df1893772d2d7f20219099507"
+    },
+    {
+      "path": "item_204_enrichment_evolution/01_rule_classifier_v3_local_evidence/audit.json",
+      "size_bytes": 420,
+      "sha256": "4310ee73303eefa2be27e83433b104da5c6aa5760294aa6149229ef2d6ec79b7"
+    },
+    {
+      "path": "item_204_enrichment_evolution/01_rule_classifier_v3_local_evidence/classifications.jsonl",
+      "size_bytes": 7355017,
+      "sha256": "c6f0f29ca9ebb9ec8ec0ffc8546884a067078852ba4c8db41575d268a1308e07"
+    },
+    {
+      "path": "item_204_enrichment_evolution/02_openai_gpt_5_6_luna_incomplete_review/audit.json",
+      "size_bytes": 878,
+      "sha256": "9507f8e2c336995a7fdf3cea96352ef0fe62ca81a7abf63cfcf6bc332413707e"
+    },
+    {
+      "path": "item_204_enrichment_evolution/02_openai_gpt_5_6_luna_incomplete_review/classifications.jsonl",
+      "size_bytes": 8004175,
+      "sha256": "0d5bcfe7c6861607eb0cc3105ff84284ed3c7ab3efeccc8c8aa56ea90ed82a52"
+    },
+    {
+      "path": "item_204_enrichment_evolution/03_ollama_qwen3_5_9b_pilot/review_log.jsonl",
+      "size_bytes": 13802,
+      "sha256": "a9a2431eed2fd6b4dbc3b74a9f7a552bdb9b7f0c2ae251ee9b947d5e8a10aede"
+    },
+    {
+      "path": "item_204_enrichment_evolution/03_ollama_qwen3_5_9b_pilot/reviews/non_default/4ab6b67d5f4635ae7fdde24e50f2f3aa6bd497cc0314df1f033521e5339f6deb.json",
+      "size_bytes": 1470,
+      "sha256": "4f4c64b20b0a5e13b0b7a0e9b2abe302fe1b6eea08e8dfc4d9ec41b026d8d3a9"
+    },
+    {
+      "path": "item_204_enrichment_evolution/03_ollama_qwen3_5_9b_pilot/reviews/non_default/818869b1ea7001b26b19230fa4a37b474851ee016b365729547ec47deee88217.json",
+      "size_bytes": 1800,
+      "sha256": "479d6a3834977b8185ca354865aac99461256f4d986ead50fb63f11c2ad3ed76"
+    },
+    {
+      "path": "item_204_enrichment_evolution/03_ollama_qwen3_5_9b_pilot/reviews/non_default/997a6d7580eda119d5db39c9c0b4e8e4020a7f0668e29fac3ea2f8813f8c49c3.json",
+      "size_bytes": 1586,
+      "sha256": "5f94dac38caf89124b07e27de075a98d1dad712828911f7f9dce3a40dde0a111"
+    },
+    {
+      "path": "item_204_enrichment_evolution/03_ollama_qwen3_5_9b_pilot/reviews/non_default/c035d46b2d04faca84bf405ed474aa2a037eab975592fa55704cfc74617e6dd5.json",
+      "size_bytes": 1624,
+      "sha256": "a70accc980a4bb16ce041fdf0bb90c741b200d744ef7a02652d20abd0de1501e"
+    },
+    {
+      "path": "item_204_enrichment_evolution/03_ollama_qwen3_5_9b_pilot/reviews/non_default/d169c5d4a11e082fa08aa36d57a1c9cf746f90504c06f2e067a00d48005434b7.json",
+      "size_bytes": 1872,
+      "sha256": "67060f51cda9b1417f94f5d81d97432a8f4c10cf0a952c18511b792b77f39a9a"
+    },
+    {
+      "path": "item_204_enrichment_evolution/03_ollama_qwen3_5_9b_pilot/reviews/non_default/d5dbbc5179be01a7fab4f16b017ffc40214b01edcef81f204164af852d47196f.json",
+      "size_bytes": 1871,
+      "sha256": "c0083ac12b4c8db861145fe9778cd2d845dd7489efe1821894439b0e632cac81"
+    },
+    {
+      "path": "item_204_enrichment_evolution/03_ollama_qwen3_5_9b_pilot/reviews/non_default/e645770422b843171cf20985878968812dc3033a2c6300ee37422c9aabd6e03b.json",
+      "size_bytes": 1783,
+      "sha256": "f06a8edc824ba0b51edd7867996831e46e89af2d11d9c056b29f75d2bb3ade42"
+    },
+    {
+      "path": "item_204_enrichment_evolution/03_ollama_qwen3_5_9b_pilot/reviews/qualified_default/22cf0d15ef3dd6a69dc16a7bafe58a0d32de0a6ee08ecb86a03d5147390f581d.json",
+      "size_bytes": 2005,
+      "sha256": "d902ee2055edffc315ddc3f1d73076e1766ac651535831bda5b37f0cd7971331"
+    },
+    {
+      "path": "item_204_enrichment_evolution/03_ollama_qwen3_5_9b_pilot/reviews/qualified_default/7dd0ab938d7ba4ff120cc9845d095267951be9b400e1d36e336b9642fc002bc5.json",
+      "size_bytes": 2066,
+      "sha256": "88fd4f3d2b6ff4c58bdb9ce7606dd4c82be52b90a8fc3dc1116847c59896d7a3"
+    },
+    {
+      "path": "item_204_enrichment_evolution/03_ollama_qwen3_5_9b_pilot/reviews/qualified_default/a3488c6d84b6f110745d4ade4e1215aeb99f97a7afd6029575d91f7e47f879aa.json",
+      "size_bytes": 1457,
+      "sha256": "f976f83b6b2b754ccbc881c2d250fc8ca81f58a882b04a353f25953c9685d16b"
+    },
+    {
+      "path": "item_204_enrichment_evolution/04_ollama_gemma3_4b_pilot/review_log.jsonl",
+      "size_bytes": 12592,
+      "sha256": "422b99fb7d704df8ab650066224d762d1f5c738c7f2943d4270958d92bb63e58"
+    },
+    {
+      "path": "item_204_enrichment_evolution/04_ollama_gemma3_4b_pilot/reviews/manual_review/fallback_missing_input/7d90edb2321132a10965d2fbb92bbc7b79ff6f6ab614b5e53790ef42cc55cb00.json",
+      "size_bytes": 900,
+      "sha256": "f12258ee51592df53b94c2073a57d7f950ae7bf97f60d0310b6b7f91e4d40515"
+    },
+    {
+      "path": "item_204_enrichment_evolution/04_ollama_gemma3_4b_pilot/reviews/non_default/01c83da6d206331f197a8e189965f0857c4a13dd4bdece2c1c5c7d7559219c14.json",
+      "size_bytes": 1644,
+      "sha256": "b19ed721748679eede590d049a5342c49694c18c7989d25305b1d787b7e4d46f"
+    },
+    {
+      "path": "item_204_enrichment_evolution/04_ollama_gemma3_4b_pilot/reviews/non_default/8efe969ed8f627d370a3639e88f96b4fe10fc0ceefe4160cf4a7c35b4a9a8e64.json",
+      "size_bytes": 1752,
+      "sha256": "65b341e33fc3877d348507247e88021579a9d841fcd765faafc4535897b4ef28"
+    },
+    {
+      "path": "item_204_enrichment_evolution/04_ollama_gemma3_4b_pilot/reviews/qualified_default/006eb5ea807780e9efbf1797e3ab40383ca097082767b42a4ba69837bb658091.json",
+      "size_bytes": 1844,
+      "sha256": "bf642a19a49dcbb0524802ba4215a17753435117b9afd8b8644bc13e2ae54a85"
+    },
+    {
+      "path": "item_204_enrichment_evolution/04_ollama_gemma3_4b_pilot/reviews/qualified_default/1d0c5edaf9e328e0b7fbe86188669849c49b896253ca644e19571163abdab703.json",
+      "size_bytes": 1589,
+      "sha256": "29f526ea01eecf68aa2309f266925c11ed069a5e67635ca5404f398e6676bb39"
+    },
+    {
+      "path": "item_204_enrichment_evolution/04_ollama_gemma3_4b_pilot/reviews/qualified_default/239668a1bfe6eb3242ec90756834aaf4abfff9b9d29bec70a11886ed6a06cf95.json",
+      "size_bytes": 2125,
+      "sha256": "8a12c04eccbe319e6066bc5435df94a283d975a92946f43f2e3f7ae6c86984f8"
+    },
+    {
+      "path": "item_204_enrichment_evolution/04_ollama_gemma3_4b_pilot/reviews/qualified_default/4886252a9586e2edba794502b51f81f5f7f13052821768d3a2e43cef897361ce.json",
+      "size_bytes": 1606,
+      "sha256": "987c953dd2ebb5f5466af32488952c5b3e553b2694de63c52c1b229fedeed5ac"
+    },
+    {
+      "path": "item_204_enrichment_evolution/04_ollama_gemma3_4b_pilot/reviews/qualified_default/4deca1e80177e9cd185720688417518a60cf941ad85485ce2a64f8bf62f48ed6.json",
+      "size_bytes": 2213,
+      "sha256": "e229633d3be814064527e038dc1b386253991eca5577af052f72ec1ccdd08446"
+    },
+    {
+      "path": "item_204_enrichment_evolution/04_ollama_gemma3_4b_pilot/reviews/qualified_default/87910afad2bf98d65fb3763797c927e425861c5ee1eac89c84c0995d5dfb4878.json",
+      "size_bytes": 1687,
+      "sha256": "f831f605a317116407c3c5991d5fdb0e96a6f281ce532bdd602ff5e2b6f684fc"
+    },
+    {
+      "path": "item_204_enrichment_evolution/04_ollama_gemma3_4b_pilot/reviews/qualified_default/f8dd5670bb8da40a99bdea4912f7478c77edff67dd704ad8af834bab06fcfe1f.json",
+      "size_bytes": 2327,
+      "sha256": "48989a407aec8c1920b0d48c2a0f0d23d28fbc273bc0aa73ebc7cdbe6832a746"
+    }
+  ]
+}

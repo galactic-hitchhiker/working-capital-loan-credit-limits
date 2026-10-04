@@ -1,0 +1,5 @@
+sequence,snapshot,original_folder,method,model_or_rule_version,input_records,qualified_default,non_default,manual_review,stored_llm_decisions,status
+1,item_204_enrichment_evolution/01_rule_classifier_v3_local_evidence,results/item_204_review,deterministic_rules,item204-v3-local-evidence,2688,237,977,1474,0,historical_complete_rule_run
+2,item_204_enrichment_evolution/02_openai_gpt_5_6_luna_incomplete_review,results/item_204_llm_review,openai,gpt-5.6-luna / item204-llm-v1,2688,237,977,1474,0,incomplete_provider_failure
+3,item_204_enrichment_evolution/03_ollama_qwen3_5_9b_pilot,results/item_204_ollama_review,ollama,qwen3.5:9b / item204-llm-v2-sec-context,,,,,10,pilot
+4,item_204_enrichment_evolution/04_ollama_gemma3_4b_pilot,results/item_204_gemma4b_review,ollama,gemma3:4b / item204-llm-v3-explicit-outcomes,,,,,10,pilot

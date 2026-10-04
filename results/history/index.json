@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "purpose": "Project evolution and comparison evidence",
+  "tracks": {
+    "item_103_model_evolution": [
+      {
+        "sequence": 1,
+        "original_folder": "results/full_run",
+        "folder": "item_103_model_evolution/01_initial_full_pipeline_xgboost",
+        "created_at_utc": "2026-09-29T22:39:50.797309+00:00",
+        "status": "completed",
+        "selected_model": "xgboost",
+        "role": "Initial complete inventory, panel and model run"
+      },
+      {
+        "sequence": 2,
+        "original_folder": "results/full_run_1",
+        "folder": "item_103_model_evolution/02_improved_sec_fact_coverage_xgboost",
+        "created_at_utc": "2026-09-30T20:46:52.111531+00:00",
+        "status": "completed",
+        "selected_model": "xgboost",
+        "depends_on": "item_103_model_evolution/01_initial_full_pipeline_xgboost/inventory",
+        "role": "Improved SEC fact coverage, rebuilt panel and models"
+      },
+      {
+        "sequence": 3,
+        "original_folder": "results/full_run_2",
+        "folder": "item_103_model_evolution/03_rolling_temporal_validation_random_forest",
+        "created_at_utc": "2026-09-30T22:23:01.312129+00:00",
+        "status": "completed",
+        "selected_model": "random_forest",
+        "depends_on": "item_103_model_evolution/02_improved_sec_fact_coverage_xgboost/panel",
+        "role": "Rolling temporal validation plus final reports and policy outputs"
+      }
+    ],
+    "item_204_enrichment_evolution": [
+      {
+        "sequence": 1,
+        "original_folder": "results/item_204_review",
+        "folder": "item_204_enrichment_evolution/01_rule_classifier_v3_local_evidence",
+        "status": "historical_complete_rule_run",
+        "role": "Rule classifications and downloaded SEC HTML"
+      },
+      {
+        "sequence": 2,
+        "original_folder": "results/item_204_llm_review",
+        "folder": "item_204_enrichment_evolution/02_openai_gpt_5_6_luna_incomplete_review",
+        "status": "incomplete_provider_failure",
+        "role": "Early OpenAI review attempt"
+      },
+      {
+        "sequence": 3,
+        "original_folder": "results/item_204_ollama_review",
+        "folder": "item_204_enrichment_evolution/03_ollama_qwen3_5_9b_pilot",
+        "status": "pilot",
+        "role": "Local Qwen cache and validation experiment"
+      },
+      {
+        "sequence": 4,
+        "original_folder": "results/item_204_gemma4b_review",
+        "folder": "item_204_enrichment_evolution/04_ollama_gemma3_4b_pilot",
+        "status": "pilot",
+        "role": "Local Gemma cache and fallback-storage experiment"
+      }
+    ],
+    "incomplete_experiments": [
+      {
+        "sequence": 1,
+        "original_folder": "results/ocf_feature_run",
+        "folder": "incomplete_experiments/01_empty_ocf_feature_run",
+        "status": "empty",
+        "role": "Abandoned output directory with no artifacts"
+      }
+    ]
+  }
+}

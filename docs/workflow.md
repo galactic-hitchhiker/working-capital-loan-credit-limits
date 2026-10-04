@@ -60,14 +60,14 @@ The inventory identifies eligible issuers and first Item 1.03 disclosures. The p
 ```sh
 .venv/bin/python -m mcf.reporting.thesis_evidence \
   --docs docs \
-  --inventory results/full_run/inventory \
-  --panel results/full_run_1/panel \
-  --models results/full_run_2/models \
-  --descriptive results/full_run_2/descriptive \
-  --model-report results/full_run_2/model_report \
-  --policy results/full_run_2/policy \
-  --policy-report results/full_run_2/policy_report \
-  --examples results/full_run_2/worked_examples
+  --inventory results/history/item_103_model_evolution/01_initial_full_pipeline_xgboost/inventory \
+  --panel results/history/item_103_model_evolution/02_improved_sec_fact_coverage_xgboost/panel \
+  --models results/history/item_103_model_evolution/03_rolling_temporal_validation_random_forest/models \
+  --descriptive results/history/item_103_model_evolution/03_rolling_temporal_validation_random_forest/descriptive \
+  --model-report results/history/item_103_model_evolution/03_rolling_temporal_validation_random_forest/model_report \
+  --policy results/history/item_103_model_evolution/03_rolling_temporal_validation_random_forest/policy \
+  --policy-report results/history/item_103_model_evolution/03_rolling_temporal_validation_random_forest/policy_report \
+  --examples results/history/item_103_model_evolution/03_rolling_temporal_validation_random_forest/worked_examples
 ```
 
 This refreshes local evidence tables, figures and Appendices C/D. It does not update Google Docs.

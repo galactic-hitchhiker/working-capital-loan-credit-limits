@@ -6,6 +6,13 @@ dataset/
 results/.matplotlib/
 results/.cache/
 *.joblib
-results/
+results/*
+!results/history/
+results/history/*
+!results/history/README.md
+!results/history/index.json
+!results/history/model_comparison.csv
+!results/history/item_204_enrichment_comparison.csv
+!results/history/artifact_hashes.json
 Examples/
 results_*/

@@ -44,14 +44,19 @@ Company-cluster bootstrap intervals use 500 repetitions and retain all monthly r
 
 | Artifact | Location |
 |---|---|
-| Inventory, disclosure events and source hashes | results/full_run/inventory/ |
-| Panel, model features and provenance | results/full_run_1/panel/ |
-| Fitted models, selection and evaluation | results/full_run_2/models/ |
-| Descriptive summaries | results/full_run_2/descriptive/ |
-| Model reports and figures | results/full_run_2/model_report/ |
-| Policy decisions and sensitivity | results/full_run_2/policy/ |
-| Policy reports and case studies | results/full_run_2/policy_report/ |
-| Worked examples | results/full_run_2/worked_examples/ |
+| Inventory, disclosure events and source hashes | results/history/item_103_model_evolution/01_initial_full_pipeline_xgboost/inventory/ |
+| Panel, model features and provenance | results/history/item_103_model_evolution/02_improved_sec_fact_coverage_xgboost/panel/ |
+| Fitted models, selection and evaluation | results/history/item_103_model_evolution/03_rolling_temporal_validation_random_forest/models/ |
+| Descriptive summaries | results/history/item_103_model_evolution/03_rolling_temporal_validation_random_forest/descriptive/ |
+| Model reports and figures | results/history/item_103_model_evolution/03_rolling_temporal_validation_random_forest/model_report/ |
+| Policy decisions and sensitivity | results/history/item_103_model_evolution/03_rolling_temporal_validation_random_forest/policy/ |
+| Policy reports and case studies | results/history/item_103_model_evolution/03_rolling_temporal_validation_random_forest/policy_report/ |
+| Worked examples | results/history/item_103_model_evolution/03_rolling_temporal_validation_random_forest/worked_examples/ |
+
+The numbered history and dependency chain are documented in
+`results/history/README.md` and `results/history/index.json`. Compact historical
+model metrics are in `results/history/model_comparison.csv`, and key artifact
+hashes are preserved in `results/history/artifact_hashes.json`.
 | Thesis evidence copies | docs/tables/ and docs/figures/ |
 
 The split run names record successive data and modeling revisions: `full_run` contains the inventory, `full_run_1` the improved panel, and `full_run_2` the final model and policy outputs. Every result stage writes a manifest and hashes its inputs and source files. New output directories must be empty, preventing silent overwrites.

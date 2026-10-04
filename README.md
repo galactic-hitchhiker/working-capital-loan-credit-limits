@@ -53,13 +53,14 @@ All application Python modules live under the `mcf/` package. Tests remain in
 | `mcf/common.py` | Shared configuration, file and serialization helpers |
 | `tests/` | Verify extraction, chronology, modeling and policy behavior |
 
-Current result roots are:
+The completed thesis run is preserved in the results history:
 
-- `results/full_run/inventory/` — issuer inventory and disclosure events;
-- `results/full_run_1/panel/` — improved panel and feature provenance;
-- `results/full_run_2/models/` — selected models and evaluation;
-- `results/full_run_2/policy/` — policy decisions and sensitivity;
-- `results/full_run_2/descriptive/`, `model_report/`, `policy_report/` and `worked_examples/` — regenerated reporting material.
+- `results/history/item_103_model_evolution/01_initial_full_pipeline_xgboost/inventory/` — issuer inventory and disclosure events;
+- `results/history/item_103_model_evolution/02_improved_sec_fact_coverage_xgboost/panel/` — improved panel and feature provenance;
+- `results/history/item_103_model_evolution/03_rolling_temporal_validation_random_forest/` — selected models, reports, policy decisions and worked examples.
+
+See `results/history/README.md` and `results/history/index.json` for the complete
+model and Item 2.04 enrichment evolution.
 
 ## Verify the Code
 
@@ -143,14 +144,14 @@ To refresh the thesis evidence from the current completed run:
 ```sh
 .venv/bin/python -m mcf.reporting.thesis_evidence \
   --docs docs \
-  --inventory results/full_run/inventory \
-  --panel results/full_run_1/panel \
-  --models results/full_run_2/models \
-  --descriptive results/full_run_2/descriptive \
-  --model-report results/full_run_2/model_report \
-  --policy results/full_run_2/policy \
-  --policy-report results/full_run_2/policy_report \
-  --examples results/full_run_2/worked_examples
+  --inventory results/history/item_103_model_evolution/01_initial_full_pipeline_xgboost/inventory \
+  --panel results/history/item_103_model_evolution/02_improved_sec_fact_coverage_xgboost/panel \
+  --models results/history/item_103_model_evolution/03_rolling_temporal_validation_random_forest/models \
+  --descriptive results/history/item_103_model_evolution/03_rolling_temporal_validation_random_forest/descriptive \
+  --model-report results/history/item_103_model_evolution/03_rolling_temporal_validation_random_forest/model_report \
+  --policy results/history/item_103_model_evolution/03_rolling_temporal_validation_random_forest/policy \
+  --policy-report results/history/item_103_model_evolution/03_rolling_temporal_validation_random_forest/policy_report \
+  --examples results/history/item_103_model_evolution/03_rolling_temporal_validation_random_forest/worked_examples
 ```
 
 The exporter copies compact evidence tables and regenerates Appendices C and D. It does not edit Google Docs.
