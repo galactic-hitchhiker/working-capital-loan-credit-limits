@@ -1,4 +1,14 @@
-"""Export descriptive statistics and publication figures from completed real runs."""
+"""Export descriptive statistics and publication figures from completed real runs.
+
+Run from the repository root:
+    .venv/bin/python -m mcf.reporting.empirical [parameters]
+
+Parameters:
+    action: Required data (panel statistics), models (model evaluation) or policy (scenarios).
+    --input PATH: Required completed panel, model or policy directory matching action.
+    --output-dir PATH: Required destination for report tables, figures and summaries.
+    -h, --help: Show command usage and exit.
+"""
 
 import argparse
 import csv

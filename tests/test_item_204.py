@@ -1,107 +1,76 @@
-"""Check conservative event evidence and isolation of the filing section."""
+"""Item 2.04 source discovery performs no event classification.
+
+Run from the repository root:
+    PYTHONPATH=. .venv/bin/python tests/test_item_204.py [parameters]
+
+Parameters (standard unittest options):
+    TEST ...: Optional test class or Class.method names (default: all tests here).
+    -v, --verbose: Print individual test names and results.
+    -q, --quiet: Print only the summary and failures.
+    --locals: Include local variables in failure tracebacks (default: off).
+    --durations N: Report the N slowest tests; 0 reports all (default: disabled).
+    -f, --failfast: Stop at the first failure or error.
+    -b, --buffer: Hide captured stdout/stderr unless a test fails.
+    -c, --catch: Finish the current test on Ctrl-C and report results.
+    -k PATTERN: Run tests whose names match the substring or wildcard pattern.
+    -h, --help: Show command usage and exit.
+"""
+import json
+import tempfile
 import unittest
-from mcf.enrichment.item204.classify import classify_item_204, extract_item_204, has_item, matches
+from argparse import Namespace
+from pathlib import Path
+from unittest.mock import patch
+
+from mcf.enrichment.item204.discover import extract_item_204, has_item, iter_item_204, run
 
 
-class Item204Tests(unittest.TestCase):
-    def test_payment_failure(self):
-        self.assertEqual(classify_item_204('The company failed to pay interest.'), 'QUALIFIED_DEFAULT')
-
-    def test_generic_default_requires_review(self):
-        self.assertEqual(classify_item_204('An event of default has occurred.'), 'MANUAL_REVIEW')
-
-    def test_strong_without_actual_requires_review(self):
-        self.assertEqual(classify_item_204('Payment default may constitute a breach.'), 'MANUAL_REVIEW')
-
-    def test_hypothetical_payment_failure_requires_review(self):
-        self.assertEqual(classify_item_204('A technical default may result if the borrower failed to pay.'), 'MANUAL_REVIEW')
-
-    def test_technical_and_redemption(self):
-        for text in ('A covenant violation occurred.', 'Scheduled redemption.', 'A technical event of default.'):
-            self.assertEqual(classify_item_204(text), 'NON_DEFAULT')
-
-    def test_hypothetical(self):
-        self.assertEqual(classify_item_204('This could constitute a breach.'), 'NON_DEFAULT')
-
-    def test_foreclosure(self):
-        self.assertEqual(classify_item_204('The lender commenced foreclosure.'), 'QUALIFIED_DEFAULT')
-
-    def test_ambiguous_or_negated_events(self):
-        for text in (
-            'No payment default has occurred.',
-            'The debt was not accelerated.',
-            'The lender may commence foreclosure.',
-            'If the company failed to pay interest, acceleration would follow.',
-            'A covenant violation occurred. Payment default may result.',
-            'The lender received notice of a possible foreclosure.',
-        ):
-            with self.subTest(text=text):
-                self.assertEqual(classify_item_204(text), 'MANUAL_REVIEW')
-
-    def test_nonfinancial_failure(self):
-        self.assertEqual(classify_item_204('The company failed to make a filing.'), 'MANUAL_REVIEW')
-
-    def test_realized_financial_events(self):
-        for text in (
-            'The company missed an interest payment.',
-            'Principal has not been paid.',
-            'The notes have been accelerated.',
-            'The lender declared the loan immediately due and payable.',
-            "The trustee’s sale was completed.",
-            'A covenant violation occurred. The company failed to pay principal.',
-        ):
-            with self.subTest(text=text):
-                self.assertEqual(classify_item_204(text), 'QUALIFIED_DEFAULT')
-
-    def test_conditional_line_breaks_and_disputes(self):
-        for text in (
-            'If the company\nfailed to pay interest, the lender could accelerate.',
-            'If a default occurs; the debt was accelerated under the agreement.',
-            'The company disputes that a payment default has occurred.',
-            'The company hasn’t failed to pay interest.',
-            'An event of default occurred and may result in acceleration.',
-        ):
-            with self.subTest(text=text):
-                self.assertEqual(classify_item_204(text), 'MANUAL_REVIEW')
-
-    def test_additional_nonpayment_wording(self):
-        for text in ('The company did not pay interest.',
-                     'Scheduled payments have not been paid.',
-                     'The company failed to make a principal payment.'):
-            with self.subTest(text=text):
-                self.assertEqual(classify_item_204(text), 'QUALIFIED_DEFAULT')
-
-    def test_month_may_is_not_hypothetical(self):
-        self.assertEqual(
-            classify_item_204(
-                'On May 5, 2023, the Company failed to make payment of principal and interest.'
-            ),
-            'QUALIFIED_DEFAULT',
-        )
-
-    def test_unrelated_payment_word_does_not_qualify(self):
-        self.assertEqual(classify_item_204(
-            'The company failed to make a filing concerning interest payments.'
-        ), 'MANUAL_REVIEW')
-
-    def test_case_insensitive_dotall(self):
-        self.assertIs(matches([r'declared.{0,50}immediately due'], 'DECLARED\n immediately due'), True)
-        self.assertIs(matches([r'failed'], 'Nothing relevant'), False)
-
+class Item204DiscoveryTests(unittest.TestCase):
     def test_exact_item(self):
         self.assertTrue(has_item('1.01; 2.04,9.01', '2.04'))
         self.assertFalse(has_item('12.04', '2.04'))
 
     def test_section_isolation(self):
-        try:
-            import bs4
-        except ImportError:
-            self.skipTest('Install mcf/enrichment/item204/requirements.txt for HTML parser tests')
-        html = '<p>Item 1.01 The company failed to pay.</p><p>Item 2.04 ' + 'A covenant breach occurred. ' * 8 + '</p><p>Item 9.01 Exhibits</p>'
+        html = '<p>Item 1.01 Other terms.</p><p>Item 2.04 ' + 'The issuer failed to pay interest. ' * 8 + '</p><p>Item 9.01 Exhibits</p>'
         text, status = extract_item_204(html)
         self.assertEqual(status, 'isolated_item_section')
-        self.assertNotIn('failed to pay', text)
-        self.assertEqual(classify_item_204(text), 'NON_DEFAULT')
+        self.assertNotIn('Other terms', text)
+        self.assertIn('failed to pay interest', text)
+
+    def test_inventory_includes_exact_204_forms_and_date_scope(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / 'CIK0000001800.json').write_text(json.dumps({'name': 'Test'}))
+            filings = [dict(form=form, items=items, filingDate='2020-01-01',
+                            accessionNumber=f'0001104659-20-{index:06d}', primaryDocument='filing.htm')
+                       for index, (form, items) in enumerate([('8-K', '2.04'), ('8-K/A', '2.04'),
+                                                             ('8-K', '12.04'), ('10-K', '2.04')])]
+            with patch('mcf.enrichment.item204.discover.filing_rows', return_value=(filings, [])):
+                rows = list(iter_item_204(root))
+            self.assertEqual(len(rows), 2)
+            self.assertTrue(all('classification' not in row for row in rows))
+
+    def test_downloader_never_assigns_rule_labels_or_evidence(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            html_dir = root / 'html'
+            html_dir.mkdir()
+            record = dict(company_id='0000001800', accessionNumber='0001104659-20-000001',
+                          filingDate='2020-01-01', source_url='https://www.sec.gov/filing.htm')
+            (html_dir / '0000001800_0001104659-20-000001.html').write_text(
+                '<p>Item 2.04 The issuer failed to pay interest. ' + 'Details. ' * 30 + '</p>')
+            args = Namespace(submissions=root, output_dir=root / 'source', html_dir=html_dir,
+                             start=None, cutoff=None, discover_only=False, offline=True,
+                             user_agent='', interval=.25, limit=None)
+            with patch('mcf.enrichment.item204.discover.iter_item_204', return_value=iter([record])), patch('builtins.print'):
+                run(args)
+            saved = json.loads((args.output_dir / 'filings.jsonl').read_text())
+            self.assertEqual(saved['status'], 'parsed')
+            self.assertIn('failed to pay interest', saved['item_204_text'])
+            self.assertNotIn('classification', saved)
+            self.assertNotIn('rule_version', saved)
+            self.assertNotIn('evidence', saved)
+            self.assertEqual(json.loads((args.output_dir / 'audit.json').read_text())['filings'], 1)
 
 
 if __name__ == '__main__':

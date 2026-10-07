@@ -1,4 +1,13 @@
-"""Reproduce Chapter 5 examples and parameter scenarios; NOT empirical results."""
+"""Reproduce Chapter 5 examples and parameter scenarios; NOT empirical results.
+
+Run from the repository root:
+    .venv/bin/python -m mcf.policy.examples [parameters]
+
+Parameters:
+    --output-dir PATH: Worked examples, sensitivity CSV and policy-config destination
+        (default: results/policy).
+    -h, --help: Show command usage and exit.
+"""
 
 import argparse
 import csv

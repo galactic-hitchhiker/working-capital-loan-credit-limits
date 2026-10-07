@@ -2,6 +2,22 @@
 
 This intentionally refreshes docs/tables, docs/figures and Appendices C/D from
 completed runs. It never trains a model or replaces source datasets.
+
+Run from the repository root:
+    .venv/bin/python -m mcf.reporting.thesis_evidence [parameters]
+
+Parameters:
+    --docs PATH: Thesis documentation destination; refreshes tables, figures and appendices
+        (default: docs).
+    --inventory PATH: Inventory audit source (default: results/empirical_inventory).
+    --panel PATH: Panel audit/design source (default: results/empirical_panel).
+    --models PATH: Training metrics and evidence source (default: results/empirical_models).
+    --descriptive PATH: Data-report source (default: results/empirical_descriptive_final).
+    --model-report PATH: Model-report source (default: results/empirical_model_figures_final).
+    --policy PATH: Policy-scenario source (default: results/empirical_policy).
+    --policy-report PATH: Policy-report source (default: results/empirical_policy_figures_final).
+    --examples PATH: Illustrative worked-example source (default: results/policy).
+    -h, --help: Show command usage and exit.
 """
 
 import argparse

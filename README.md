@@ -160,8 +160,8 @@ The exporter copies compact evidence tables and regenerates Appendices C and D. 
 
 The repository also supports a separate experimental target named
 `first_sec_payment_default_disclosure_proxy`. It combines every Item 1.03 filing
-with Item 2.04 filings classified as `QUALIFIED_DEFAULT`. Deterministic rules run
-first; only `MANUAL_REVIEW` cases are sent to the configured LLM. Remaining
+with Item 2.04 filings classified as `QUALIFIED_DEFAULT` by OpenAI Batch. Every
+Item 2.04 filing is reviewed by AI; there is no rule-based event classification. Remaining
 unresolved Item 2.04 cases censor affected label windows instead of becoming
 negative observations.
 
@@ -175,22 +175,16 @@ SEC_USER_AGENT='Your Name your.email@example.com' \
   --output-dir results/payment_default_proxy
 ```
 
-This defaults to local Ollama with `gemma3:12b`. Pull the model once before the
-first run:
-
-```sh
-ollama pull gemma3:12b
-```
-
-Use `--model MODEL_NAME` to select another installed Ollama model. Review cache
-keys include the model name, so existing decisions produced by another model are
-preserved and `gemma3:12b` creates its own cached decisions.
+This uses OpenAI Batch with `gpt-6-luna`. Set `OPENAI_API_KEY` before running.
+The first pass submits jobs and stops before training while reviews are pending;
+rerun the same command after completion to collect reviews and continue.
 
 ### Run Item 2.04 enrichment separately
 
-The enrichment workflow downloads or reuses filing HTML, applies the deterministic
-rules, and sends only `MANUAL_REVIEW` cases to Ollama. It also defaults to
-`gemma3:12b`:
+The enrichment workflow discovers and downloads filing HTML, then submits
+every uncached Item 2.04 filing to OpenAI Batch. Event labels are assigned only
+by AI. The
+default model is `gpt-6-luna`, and the entire visible filing text is sent:
 
 ```sh
 SEC_USER_AGENT='Your Name your.email@example.com' \
@@ -220,7 +214,7 @@ Use the completed enrichment in the remaining end-to-end workflow with:
   --output-dir results/payment_default_proxy
 ```
 
-This skips discovery, rule classification and LLM review, then builds the combined
+This skips discovery, downloading and AI review, then builds the combined
 inventory, panel and models.
 
 ### Run every stage separately
@@ -260,24 +254,27 @@ cached.
 
 ### Run the two Item 2.04 stages separately
 
-Run deterministic discovery, download and classification:
+Run deterministic discovery, discovery and download:
 
 ```sh
 SEC_USER_AGENT='Your Name your.email@example.com' \
-.venv/bin/python -m mcf.enrichment.item204.classify \
+.venv/bin/python -m mcf.enrichment.item204.discover \
   --submissions ../dataset/submissions \
-  --output-dir results/item_204_pipeline/rules \
+  --output-dir results/item_204_pipeline/source \
   --cutoff 2026-09-07
 ```
 
-Then review only the remaining manual cases with Ollama:
+Then classify all Item 2.04 filings with OpenAI Batch (`OPENAI_API_KEY` must be set):
 
 ```sh
-.venv/bin/python -m mcf.enrichment.item204.reviewers.ollama \
-  --input results/item_204_pipeline/rules/classifications.jsonl \
-  --html-dir results/item_204_pipeline/rules/html \
+.venv/bin/python -m mcf.enrichment.item204.reviewers.openai_batch \
+  --input results/item_204_pipeline/source/filings.jsonl \
+  --html-dir results/item_204_pipeline/source/html \
   --output-dir results/item_204_pipeline/final
 ```
+
+Rerun the same command to collect completed Batch results. See
+[the enrichment parameter guide](docs/item_204_workflow.md) for defaults and options.
 
 The study design is in `configs/study.payment_default_proxy.json`. The resulting
 probability concerns the composite SEC disclosure proxy. Item 1.03 includes

@@ -3,6 +3,16 @@
 This is an exposure-policy simulation. It does not simulate drawdowns, repayments,
 recoveries, profit, causality or realized loss. Never substitutes accounting cash
 or total debt for verified cash eligibility or payments due.
+
+Run from the repository root:
+    .venv/bin/python -m mcf.policy.backtest [parameters]
+
+Parameters:
+    --predictions PATH: Required monthly policy_predictions.csv from model scoring.
+    --inputs PATH: Required borrower/facility input CSV, including provenance and initial limits.
+    --policy PATH: Required policy-parameter JSON.
+    --output-dir PATH: Required destination for sequential limit paths and audit.
+    -h, --help: Show command usage and exit.
 """
 
 import argparse

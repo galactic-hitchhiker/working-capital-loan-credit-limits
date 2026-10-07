@@ -1,4 +1,14 @@
-"""Export standalone PNG/PDF research figures from saved run outputs."""
+"""Export standalone PNG/PDF research figures from saved run outputs.
+
+Run from the repository root:
+    .venv/bin/python -m mcf.reporting.figures [parameters]
+
+Parameters:
+    --models PATH: Required completed model-run directory containing selection and metrics.
+    --policy PATH: Optional completed policy-replay directory for limit-path figures.
+    --output-dir PATH: Required destination for PNG/PDF figures and their manifest.
+    -h, --help: Show command usage and exit.
+"""
 
 import argparse
 import json

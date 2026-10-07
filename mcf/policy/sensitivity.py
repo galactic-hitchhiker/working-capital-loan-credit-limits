@@ -4,6 +4,16 @@ These are policy alternatives, not independently estimated optimal parameters.
 Each scenario starts from the same supplied initial conditions and replays its
 own previous limits. Probability, facility utilization and borrower behavior are
 held fixed, so comparisons do not estimate behavioral or causal effects.
+
+Run from the repository root:
+    .venv/bin/python -m mcf.policy.sensitivity [parameters]
+
+Parameters:
+    --predictions PATH: Required monthly policy_predictions.csv from model scoring.
+    --inputs PATH: Required borrower/facility input CSV with initial conditions.
+    --policy PATH: Required baseline policy-parameter JSON.
+    --output-dir PATH: Required destination for scenario replays and comparisons.
+    -h, --help: Show command usage and exit.
 """
 
 import argparse

@@ -1,3 +1,21 @@
+"""Check credit-policy calculations, SEC fact extraction and temporal model stages.
+
+Run from the repository root:
+    PYTHONPATH=. .venv/bin/python tests/test_research.py [parameters]
+
+Parameters (standard unittest options):
+    TEST ...: Optional test class or Class.method names (default: all tests here).
+    -v, --verbose: Print individual test names and results.
+    -q, --quiet: Print only the summary and failures.
+    --locals: Include local variables in failure tracebacks (default: off).
+    --durations N: Report the N slowest tests; 0 reports all (default: disabled).
+    -f, --failfast: Stop at the first failure or error.
+    -b, --buffer: Hide captured stdout/stderr unless a test fails.
+    -c, --catch: Finish the current test on Ctrl-C and report results.
+    -k PATTERN: Run tests whose names match the substring or wildcard pattern.
+    -h, --help: Show command usage and exit.
+"""
+
 import json
 import tempfile
 import unittest

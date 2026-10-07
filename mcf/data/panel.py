@@ -2,6 +2,18 @@
 
 Input evidence is supplied through reviewed CSV registers. Empty/unverified
 coverage never creates a negative label. Original files remain untouched.
+
+Run from the repository root:
+    .venv/bin/python -m mcf.data.panel [parameters]
+
+Parameters:
+    --config PATH: Required study-design JSON with dates, features and target settings.
+    --universe PATH: Required reviewed company-universe CSV.
+    --events PATH: Required reviewed event-register CSV.
+    --coverage PATH: Required outcome-coverage CSV; determines usable negative labels.
+    --dataset PATH: Local SEC dataset (default: dataset).
+    --output-dir PATH: Required destination for the panel, features and audit.
+    -h, --help: Show command usage and exit.
 """
 
 import argparse

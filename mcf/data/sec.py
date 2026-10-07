@@ -5,6 +5,16 @@ TTM flows, and does not infer a default target, cash eligibility, debt service,
 facility utilization, or historical listing status. USD/us-gaap/10-K/10-Q only.
 Filing-day values become usable on the following calendar day. Provenance is
 retained so a filing can be checked before a thesis result is accepted.
+
+Run from the repository root:
+    .venv/bin/python -m mcf.data.sec [parameters]
+
+Parameters:
+    --dataset PATH: Local SEC dataset with companyfacts/ and submissions/ (default: dataset).
+    --as-of YYYY-MM-DD: Required snapshot date; only previously available facts are used.
+    --sample-size N: Positive number of companies to sample (default: 100).
+    --output-dir PATH: Snapshot, candidate and audit outputs (default: results/sec_audit).
+    -h, --help: Show command usage and exit.
 """
 
 import argparse

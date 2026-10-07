@@ -3,6 +3,14 @@
 The fixture generates latent monthly states, feature values, and subsequent random
 events. Company cohorts differ between stages; rows repeat within each cohort.
 It is a software fixture, not a calibrated corporate-default simulator.
+
+Run from the repository root:
+    .venv/bin/python -m mcf.workflows.demo [parameters]
+
+Parameters:
+    --output-dir PATH: Required destination for generated fixtures, trained models,
+        predictions, policy replays and figures.
+    -h, --help: Show command usage and exit.
 """
 
 import argparse

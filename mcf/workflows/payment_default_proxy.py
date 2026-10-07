@@ -2,6 +2,38 @@
 
 The workflow combines Item 1.03 with conservatively qualified Item 2.04 filings.
 It produces a disclosure proxy model; it does not claim verified payment defaults.
+
+Run from the repository root:
+    .venv/bin/python -m mcf.workflows.payment_default_proxy [parameters]
+
+Parameters:
+    --dataset PATH: Local SEC dataset with submissions/ and companyfacts/ (default: ../dataset).
+    --config PATH: Composite-target study-design JSON; also supplies the disclosure cutoff
+        (default: configs/study.payment_default_proxy.json).
+    --output-dir PATH: Required root for enrichment, inventory, panel and model outputs.
+    --item-204-results PATH: Optional completed Item 2.04 final-review directory;
+        skips enrichment and reuses these results.
+    --user-agent TEXT: SEC identification with contact email (default: SEC_USER_AGENT).
+    --interval SECONDS: SEC request spacing, at least 0.1 (default: 0.25).
+    --offline: Use cached filing HTML only; OpenAI calls still occur (default: off).
+    --llm-limit N: Limit new filing review attempts per run (default: 0, all).
+    --smoke: Use a smaller model-training grid for a software check (default: off).
+    --model NAME: OpenAI model for new requests (default: gpt-6-luna).
+    --reasoning-effort LEVEL: none, low, medium, high, xhigh or max (default: medium);
+        supported levels depend on the selected model.
+    --max-output-tokens N: Per-request output cap, including reasoning (default: 3000);
+        does not truncate input filing text.
+    --batch-id ID: Recover an interrupted submission using its existing OpenAI Batch ID.
+    --refresh: Ignore saved decisions and request fresh reviews (default: off).
+    --retry-fallbacks: Retry saved provider failures while retaining other decisions
+        (default: off); cannot be combined with --refresh.
+    -h, --help: Show command usage and exit.
+
+OpenAI calls require OPENAI_API_KEY. Rerun the same command to collect pending
+batches and reuse completed reviews. Full available filing text is sent; identical
+requests are deduplicated. Missing source text is reported for follow-up.
+SEC downloads require --user-agent or SEC_USER_AGENT with a contact email.
+Training waits until enrichment has no pending or limit-deferred reviews.
 """
 
 import argparse
@@ -17,8 +49,9 @@ from mcf.data.empirical import (
     inventory,
     panel,
 )
-from mcf.enrichment.item204.reviewers.ollama import DEFAULT_MODEL
 from mcf.enrichment.item204.workflow import run as run_item_204
+from mcf.enrichment.item204.reviewers.openai_batch import DEFAULT_MODEL, add_options
+from mcf.enrichment.item204.reviewers.common import APIReviewError
 from mcf.models.train import run as train
 
 
@@ -46,19 +79,28 @@ def run(args):
                 interval=args.interval,
                 filing_limit=0,
                 offline=args.offline,
-                provider=args.provider,
+                batch_id=getattr(args, "batch_id", None),
+                reasoning_effort=getattr(args, "reasoning_effort", "medium"),
+                max_output_tokens=getattr(args, "max_output_tokens", 3000),
                 model=args.model,
                 llm_limit=args.llm_limit,
-                max_chars=args.max_chars,
                 dry_run=False,
                 refresh=args.refresh,
                 retry_fallbacks=args.retry_fallbacks,
-                host=args.host,
-                num_ctx=args.num_ctx,
-                timeout=args.timeout,
-                think=args.think,
             )
         )
+
+    review_audit = Path(item_204_results) / "audit.json"
+    if review_audit.exists():
+        review_state = json.loads(review_audit.read_text())
+        review_counts = review_state.get("review_counts", {})
+        if review_counts.get("batch_pending", 0) or (
+            review_state.get("provider") == "openai_batch" and review_counts.get("deferred_limit", 0)
+        ):
+            raise ValueError(
+                "Item 2.04 reviews are pending or limited. Rerun enrichment to collect "
+                "all results before building inventory, panel, and models."
+            )
 
     inventory_report = inventory(
         args.dataset,
@@ -125,16 +167,12 @@ def parser():
     result.add_argument("--user-agent", default=os.environ.get("SEC_USER_AGENT", ""))
     result.add_argument("--interval", type=float, default=0.25)
     result.add_argument("--offline", action="store_true")
-    result.add_argument("--provider", choices=("ollama", "openai"), default="ollama")
+    result.add_argument("--batch-id", help="Recover an interrupted OpenAI Batch submission")
+    add_options(result)
     result.add_argument("--model", default=DEFAULT_MODEL)
     result.add_argument("--llm-limit", type=int, default=0)
-    result.add_argument("--max-chars", type=int, default=24000)
     result.add_argument("--refresh", action="store_true")
     result.add_argument("--retry-fallbacks", action="store_true")
-    result.add_argument("--host", default="http://localhost:11434")
-    result.add_argument("--num-ctx", type=int, default=32768)
-    result.add_argument("--timeout", type=int, default=600)
-    result.add_argument("--think", action="store_true")
     result.add_argument("--smoke", action="store_true")
     return result
 
@@ -142,17 +180,13 @@ def parser():
 def main():
     command = parser()
     args = command.parse_args()
-    if args.interval < 0.1 or args.llm_limit < 0 or args.max_chars < 100:
-        command.error("invalid interval, LLM limit, or maximum input size")
+    if args.interval < 0.1 or args.llm_limit < 0:
+        command.error("--interval must be at least 0.1 and --llm-limit nonnegative")
     if args.refresh and args.retry_fallbacks:
         command.error("Use either --refresh or --retry-fallbacks")
-    if args.provider == "openai" and args.model == DEFAULT_MODEL:
-        command.error("--provider openai requires an explicit OpenAI --model")
-    if args.num_ctx < 8192 or args.timeout <= 0:
-        command.error("--num-ctx must be at least 8192 and --timeout positive")
     try:
         run(args)
-    except (OSError, ValueError, KeyError) as exc:
+    except (APIReviewError, OSError, ValueError, KeyError) as exc:
         command.exit(2, f"Workflow stopped: {exc}\n")
 
 

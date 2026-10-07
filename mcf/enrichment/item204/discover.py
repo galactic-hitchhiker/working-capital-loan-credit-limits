@@ -1,7 +1,32 @@
-"""One-time, resumable review of SEC 8-K Item 2.04 disclosures.
+"""Discover and download SEC 8-K Item 2.04 filings for OpenAI Batch review.
 
-This produces candidate disclosure labels, not verified payment-default labels.
+This gathers source documents and metadata without assigning event labels.
 It deliberately does not alter the existing inventory, panel or study config.
+
+Run from the repository root:
+    .venv/bin/python -m mcf.enrichment.item204.discover [parameters]
+
+Example:
+    .venv/bin/python -m mcf.enrichment.item204.discover \
+        --submissions ../dataset/submissions \
+        --output-dir results/sec/item204 \
+        --start 2010-01-01 \
+        --cutoff 2026-09-07 \
+        --user-agent "My Name fake.email@gmail.com" \
+        --limit 10
+
+
+Parameters:
+    --submissions PATH: Required directory of downloaded SEC submissions JSON files.
+    --output-dir PATH: Required destination for filings.jsonl/CSV, HTML cache and audit.
+    --start YYYY-MM-DD: Inclusive filing-date lower bound (default: no lower bound).
+    --cutoff YYYY-MM-DD: Exclusive filing-date upper bound (default: no upper bound).
+    --user-agent TEXT: SEC identification with contact email (default: SEC_USER_AGENT).
+    --interval SECONDS: SEC request spacing, at least 0.1 (default: 0.25).
+    --limit N: Positive pilot filing limit; omit to discover all matching filings.
+    --offline: Parse cached HTML only; do not download missing filings (default: off).
+    --discover-only: Write the metadata inventory without downloading/parsing HTML (default: off).
+    -h, --help: Show command usage and exit.
 """
 
 import argparse
@@ -20,113 +45,8 @@ from urllib.request import Request, urlopen
 
 from mcf.data.sec import filing_rows
 
-RULE_VERSION = "item204-v5-modal-may"
-# Payment failures must name a financial payment, rather than, for example,
-# "failed to make a filing". Acceleration and enforcement are separate events.
-PAYMENT_DEFAULT = (
-    r"\b(?:failed|failure) to (?:pay (?:the |any |scheduled )?(?:interest|principal|installments?|payments?)|make (?:the |a |any |scheduled )?(?:(?:interest|principal|debt[- ]service) )?payments?)\b",
-    r"\b(?:missed|did not make) (?:an? |the |scheduled )?(?:(?:interest|principal) )?payments?\b",
-    r"\b(?:payment default|non[- ]?payment|default in (?:the )?payment)\b",
-    r"\b(?:principal|interest|installments?|payments?)\b.{0,30}?\b(?:was not|has not been|were not|have not been) paid\b",
-    r"\b(?:did not|has not|have not) pay (?:the |scheduled )?(?:interest|principal|installments?)\b",
-)
-STRONG_DEFAULT = list(PAYMENT_DEFAULT) + [
-    r"\bdeclared\b.{0,60}?\b(?:immediately )?due and payable\b",
-    r"\b(?:debt|obligations?|loans?|notes?|maturity)\b.{0,60}?\b(?:has been|have been|were|was) accelerated\b",
-    r"\baccelerated\b.{0,50}?\b(?:debt|obligations?|loans?|notes?|maturity)\b",
-    r"\b(?:commenced|initiated|filed|completed)\b.{0,50}?\bforeclosure\b",
-    r"\bforeclosure (?:proceedings?|sale)\b.{0,40}?\b(?:commenced|initiated|completed|occurred)\b",
-    r"\btrustee['’]?s sale\b.{0,40}?\b(?:occurred|completed|held)\b",
-]
-ACTUAL_EVENT = [
-    r"\b(?:has|have|had) occurred\b", r"\boccurred\b",
-    r"\bfailed\b", r"\bmissed\b", r"\bdid not make\b",
-    r"\b(?:was not|has not been|were not|have not been) paid\b",
-    r"\b(?:did not|has not|have not) pay\b",
-    r"\breceived\b.{0,30}?\bnotice\b",
-    r"\b(?:declared|accelerated|commenced|initiated|completed|held)\b",
-    r"\bbecame\b.{0,30}?\bdue\b",
-]
-NEGATIVE = [
-    r"\btechnical (?:event of )?default\b",
-    r"\bcovenant (?:breach|violation)\b",
-    r"\b(?:voluntary|optional|scheduled) redemption\b",
-    r"\bvoluntary prepayment\b", r"\bconversion price\b",
-]
-HYPOTHETICAL = [
-    # A bare case-insensitive ``may`` also matches the month in filing dates.
-    # Require modal language after "may" while retaining the other auxiliaries.
-    r"\bmay\s+(?:be|have|constitute|cause|result|occur|trigger|accelerate|increase|become|lead|require|exercise|seek|declare|commence)\b",
-    r"\b(?:might|could|would|will|shall)\b",
-    r"\bin the event (?:of|that)\b", r"\bupon the occurrence of\b",
-    r"\bif\b", r"\b(?:risk|possibility) of\b",
-]
-# Ambiguous or negated financial-default language stays in manual review.
-NEGATED = [
-    r"\b(?:no|not|never|without|neither)\b",
-    r"\b(?:hasn['’]t|haven['’]t|hadn['’]t|didn['’]t)\b",
-    r"\b(?:disputes?|disputed|alleged|alleges?|denies?|denied)\b",
-]
-
-
+DISCOVERY_VERSION = "item204-discovery-v1"
 ITEM_HEADING = re.compile(r"\bitem\s+(\d[.]\d{2})\b", re.IGNORECASE)
-
-
-def matches(patterns, text):
-    """Return whether any supplied expression matches, including across newlines."""
-    return any(re.search(pattern, text, re.I | re.S) for pattern in patterns)
-
-
-def matching_phrases(patterns, text):
-    """Keep exact evidence phrases separately from the boolean classifier."""
-    return [
-        match.group(0)
-        for pattern in patterns
-        for match in re.finditer(pattern, text, re.I | re.S)
-    ]
-
-
-def qualifying_event_sentences(text, patterns=STRONG_DEFAULT):
-    """Require strong and realized evidence in the same sentence.
-
-    Mixed hypothetical/negated sentences are intentionally left to reviewers:
-    regexes cannot reliably resolve which clause or borrower an assertion covers.
-    """
-    # Newlines and semicolons can sit inside conditional clauses. Normalize
-    # whitespace first so a line break cannot turn boilerplate into an event.
-    normalized = re.sub(r"\s+", " ", text).strip()
-    sentences = re.split(r"(?<=[.!?])\s+(?=[A-Z\"“])", normalized)
-    return [
-        sentence.strip()
-        for sentence in sentences
-        if matches(patterns, sentence)
-        and matches(ACTUAL_EVENT, sentence)
-        and not matches(HYPOTHETICAL, sentence)
-        and not matches(
-            NEGATED,
-            # "Interest was not paid" asserts nonpayment, not absence of default.
-            re.sub(
-                r"\b(?:was not|has not been|were not|have not been) paid\b|"
-                r"\b(?:did not|has not|have not) pay\b",
-                "unpaid", sentence, flags=re.I,
-            ),
-        )
-    ]
-
-
-def classify_item_204(text):
-    """Conservatively classify realized events; keep ambiguous evidence for review."""
-    if qualifying_event_sentences(text):
-        return "QUALIFIED_DEFAULT"
-    # Do not let boilerplate elsewhere turn an unresolved payment event negative.
-    if matches(STRONG_DEFAULT, text) or matches(
-        [r"\b(?:failed|failure) to pay\b", r"\b(?:foreclosure|trustee['’]?s sale)\b",
-         r"\b(?<!technical )event of default\b"], text
-    ):
-        return "MANUAL_REVIEW"
-    if matches(NEGATIVE, text) or matches(HYPOTHETICAL, text):
-        return "NON_DEFAULT"
-    return "MANUAL_REVIEW"
 
 
 def extract_item_204(html):
@@ -237,7 +157,7 @@ def fetch_html(url, cache_path, user_agent, interval, retries=3):
 
 
 def run(args):
-    """Rebuild deterministic CSV/audit outputs while reusing cached filing HTML."""
+    """Build a filing inventory while reusing cached HTML; never classify events."""
     if not args.submissions.is_dir():
         raise ValueError(f"Submissions directory does not exist: {args.submissions}")
     if not args.discover_only:
@@ -248,10 +168,10 @@ def run(args):
                 "Provide --user-agent 'Name email@example.com' for SEC requests"
             )
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    cache = args.output_dir / "html"
-    cache.mkdir(exist_ok=True)
+    cache = getattr(args, "html_dir", None) or args.output_dir / "html"
+    cache.mkdir(parents=True, exist_ok=True)
     counts = Counter()
-    records_path = args.output_dir / "classifications.jsonl"
+    records_path = args.output_dir / "filings.jsonl"
     with records_path.open("w") as output:
         for n, record in enumerate(
             iter_item_204(args.submissions, args.start, args.cutoff), 1
@@ -259,8 +179,6 @@ def run(args):
             if args.limit and n > args.limit:
                 break
             record.update(
-                rule_version=RULE_VERSION,
-                classification="MANUAL_REVIEW",
                 status="discovered",
             )
             if not args.discover_only:
@@ -285,33 +203,13 @@ def run(args):
                         html_path=str(path),
                     )
 
-                    record["evidence"] = {
-                        name: matching_phrases(patterns, section)
-                        for name, patterns in (
-                            ("strong_default", STRONG_DEFAULT),
-                            ("actual_event", ACTUAL_EVENT),
-                            ("negative", NEGATIVE),
-                            ("hypothetical", HYPOTHETICAL),
-                            ("payment_default", PAYMENT_DEFAULT),
-                        )
-                    }
-
-                    if scope == "isolated_item_section":
-                        record["classification"] = classify_item_204(section)
-
-                    record["evidence"]["qualifying_event_sentences"] = qualifying_event_sentences(section)
-                    record["payment_default_evidence"] = bool(
-                        qualifying_event_sentences(section, PAYMENT_DEFAULT)
-                    )
-
                 except (OSError, ValueError, URLError, TimeoutError) as exc:
                     record.update(status="error", error=str(exc))
 
-            counts[record["classification"]] += 1
             counts[f"status_{record['status']}"] += 1
             output.write(json.dumps(record, ensure_ascii=False) + "\n")
             if n % 100 == 0:
-                print(f"Reviewed {n} filings: {dict(counts)}", flush=True)
+                print(f"Discovered {n} filings: {dict(counts)}", flush=True)
 
     fields = [
         "company_id",
@@ -320,17 +218,15 @@ def run(args):
         "reportDate",
         "accessionNumber",
         "form",
-        "classification",
         "status",
         "same_filing_item_103",
         "prior_or_same_item_103",
         "first_recorded_item_103_date",
-        "payment_default_evidence",
         "source_url",
         "error",
     ]
 
-    with (args.output_dir / "classifications.csv").open("w", newline="") as output:
+    with (args.output_dir / "filings.csv").open("w", newline="") as output:
         writer = csv.DictWriter(output, fieldnames=fields, extrasaction="ignore")
         writer.writeheader()
         with records_path.open() as records:
@@ -338,12 +234,14 @@ def run(args):
                 writer.writerow(json.loads(line))
 
     audit = {
-        "rule_version": RULE_VERSION,
+        "discovery_version": DISCOVERY_VERSION,
         "counts": dict(counts),
         "start": str(args.start),
         "cutoff": str(args.cutoff),
         "discovery_only": args.discover_only,
-        "label_note": "Rule-based candidates; not verified payment defaults. Amendments and repeated filings are not deduplicated economic events.",
+        "filings": sum(counts.values()),
+        "html_dir": str(cache.resolve()),
+        "label_note": "Source inventory only; event labels are assigned by OpenAI Batch.",
     }
 
     (args.output_dir / "audit.json").write_text(json.dumps(audit, indent=2) + "\n")

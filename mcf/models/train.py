@@ -2,6 +2,16 @@
 
 The empirical SEC disclosure study uses mcf.data.empirical and the fixed design
 in configs/study.sec_disclosure.json. Synthetic mode is only a software check.
+
+Run from the repository root:
+    .venv/bin/python -m mcf.models.train [parameters]
+
+Parameters:
+    --config PATH: Required study-design JSON defining features and chronological stages.
+    --panel PATH: Required labeled monthly panel CSV.
+    --output-dir PATH: Required destination for fitted models, metrics and audit files.
+    --smoke: Use a smaller training grid for a software check (default: off).
+    -h, --help: Show command usage and exit.
 """
 
 import argparse

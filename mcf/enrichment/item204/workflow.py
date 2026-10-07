@@ -1,4 +1,36 @@
-"""Run Item 2.04 discovery, rule classification, and LLM fallback in one command."""
+"""Discover Item 2.04 filings and classify every filing using OpenAI Batch.
+
+Run from the repository root:
+    .venv/bin/python -m mcf.enrichment.item204.workflow [parameters]
+
+Parameters:
+    --submissions PATH: Required directory of downloaded SEC submissions JSON files.
+    --output-dir PATH: Source/cache and final-review root (default: results/item_204_pipeline).
+    --start YYYY-MM-DD: Inclusive filing-date lower bound (default: no lower bound).
+    --cutoff YYYY-MM-DD: Exclusive filing-date upper bound (default: no upper bound).
+    --user-agent TEXT: SEC identification with contact email (default: SEC_USER_AGENT).
+    --interval SECONDS: SEC request spacing, at least 0.1 (default: 0.25).
+    --filing-limit N: Limit source filings for a pilot (default: 0, all).
+    --offline: Use cached HTML only; OpenAI calls still occur (default: off).
+    --llm-limit N: Limit new filing review attempts per run (default: 0, all).
+    --dry-run: Inspect sources/write local outputs without OpenAI calls; SEC downloads
+        still occur unless --offline is also set (default: off).
+    --model NAME: OpenAI model for new requests (default: gpt-6-luna).
+    --reasoning-effort LEVEL: none, low, medium, high, xhigh or max (default: medium);
+        supported levels depend on the selected model.
+    --max-output-tokens N: Per-request output cap, including reasoning (default: 3000);
+        does not truncate input filing text.
+    --batch-id ID: Recover an interrupted submission using its existing OpenAI Batch ID.
+    --refresh: Ignore saved decisions and request fresh reviews (default: off).
+    --retry-fallbacks: Retry saved provider failures while retaining other decisions
+        (default: off); cannot be combined with --refresh.
+    -h, --help: Show command usage and exit.
+
+OpenAI calls require OPENAI_API_KEY. Rerun the same command to collect pending
+batches and reuse completed reviews. Full available filing text is sent; identical
+requests are deduplicated. Missing source text is reported for follow-up.
+SEC downloads require --user-agent or SEC_USER_AGENT with a contact email.
+"""
 
 import argparse
 import json
@@ -8,25 +40,29 @@ from datetime import date
 from pathlib import Path
 
 from mcf.common import file_hash
-from mcf.enrichment.item204.classify import run as run_rules
-from mcf.enrichment.item204.reviewers.ollama import (
-    DEFAULT_MODEL,
-    run as run_ollama,
-)
-from mcf.enrichment.item204.reviewers.openai import run as run_openai
+from mcf.enrichment.item204.discover import run as run_discovery
+from mcf.enrichment.item204.reviewers.openai_batch import DEFAULT_MODEL, add_options, run as run_openai_batch
+from mcf.enrichment.item204.reviewers.common import APIReviewError
 
 
 def run(args):
-    """Classify every selected filing with rules, then review only unresolved cases."""
+    """Discover/download every selected filing, then classify it with OpenAI Batch."""
     root = args.output_dir
-    rules_dir = root / "rules"
+    source_dir = root / "source"
     final_dir = root / "final"
     root.mkdir(parents=True, exist_ok=True)
+    # Reuse source documents downloaded by the previous workflow without retaining
+    # any of its heuristic labels or downloading the same documents again.
+    legacy_html = root / "rules" / "html"
+    html_dir = source_dir / "html"
+    if not html_dir.is_dir() and legacy_html.is_dir():
+        html_dir = legacy_html
 
-    run_rules(
+    run_discovery(
         Namespace(
             submissions=args.submissions,
-            output_dir=rules_dir,
+            output_dir=source_dir,
+            html_dir=html_dir,
             start=args.start,
             cutoff=args.cutoff,
             user_agent=args.user_agent,
@@ -38,36 +74,36 @@ def run(args):
     )
 
     review_args = Namespace(
-        input=rules_dir / "classifications.jsonl",
-        html_dir=rules_dir / "html",
+        input=source_dir / "filings.jsonl",
+        html_dir=html_dir,
         output_dir=final_dir,
         model=args.model,
+        start=args.start,
+        cutoff=args.cutoff,
         limit=args.llm_limit,
-        max_chars=args.max_chars,
         dry_run=args.dry_run,
         refresh=args.refresh,
         retry_fallbacks=args.retry_fallbacks,
     )
-    if args.provider == "ollama":
-        review_args.host = args.host
-        review_args.num_ctx = args.num_ctx
-        review_args.timeout = args.timeout
-        review_args.think = args.think
-        run_ollama(review_args)
-    else:
-        run_openai(review_args)
+    review_args.batch_id = getattr(args, "batch_id", None)
+    for name in ("reasoning_effort", "max_output_tokens"):
+        if hasattr(args, name):
+            setattr(review_args, name, getattr(args, name))
+    run_openai_batch(review_args)
 
-    rule_audit = json.loads((rules_dir / "audit.json").read_text())
+    source_audit = json.loads((source_dir / "audit.json").read_text())
     final_audit = json.loads((final_dir / "audit.json").read_text())
     audit = {
-        "workflow": "item204-rules-then-llm-v1",
-        "provider": args.provider,
+        "workflow": "item204-discovery-then-openai-batch-v2",
+        "provider": "openai_batch",
         "model": args.model,
-        "rules_dir": str(rules_dir.resolve()),
+        "interrupted": final_audit.get("interrupted", False),
+        "batch_pending": final_audit.get("batch_pending", 0),
+        "source_dir": str(source_dir.resolve()),
         "final_dir": str(final_dir.resolve()),
-        "rules_sha256": file_hash(rules_dir / "classifications.jsonl"),
+        "source_sha256": file_hash(source_dir / "filings.jsonl"),
         "final_sha256": file_hash(final_dir / "classifications.jsonl"),
-        "rule_counts": rule_audit["counts"],
+        "source_counts": source_audit["counts"],
         "final_labels": final_audit["final_labels"],
         "unresolved_filings": final_audit["final_labels"].get("MANUAL_REVIEW", 0),
         "label_note": (
@@ -77,6 +113,9 @@ def run(args):
     }
     (root / "workflow_audit.json").write_text(json.dumps(audit, indent=2) + "\n")
     print(json.dumps(audit, indent=2))
+    if audit["interrupted"]:
+        # Stop callers such as the composite model workflow as well.
+        raise SystemExit(130)
     return final_dir
 
 
@@ -86,29 +125,27 @@ def parser():
     result.add_argument(
         "--output-dir", type=Path, default=Path("results/item_204_pipeline")
     )
-    result.add_argument("--start", type=date.fromisoformat)
-    result.add_argument("--cutoff", type=date.fromisoformat)
+    result.add_argument("--start", type=date.fromisoformat,
+                        help="Inclusive filing-date lower bound (YYYY-MM-DD)")
+    result.add_argument("--cutoff", type=date.fromisoformat,
+                        help="Exclusive filing-date upper bound (YYYY-MM-DD)")
     result.add_argument("--user-agent", default=os.environ.get("SEC_USER_AGENT", ""))
     result.add_argument("--interval", type=float, default=0.25)
     result.add_argument(
         "--filing-limit", type=int, default=0, help="Pilot filing limit; 0 means all"
     )
     result.add_argument(
-        "--offline", action="store_true", help="Use only HTML already in rules/html"
+        "--offline", action="store_true", help="Use only cached HTML; do not download missing filings"
     )
-    result.add_argument("--provider", choices=("ollama", "openai"), default="ollama")
+    result.add_argument("--batch-id", help="Recover an interrupted OpenAI Batch submission")
+    add_options(result)
     result.add_argument("--model", default=DEFAULT_MODEL)
     result.add_argument(
         "--llm-limit", type=int, default=0, help="New LLM attempts; 0 means all"
     )
-    result.add_argument("--max-chars", type=int, default=24000)
     result.add_argument("--dry-run", action="store_true")
     result.add_argument("--refresh", action="store_true")
     result.add_argument("--retry-fallbacks", action="store_true")
-    result.add_argument("--host", default="http://localhost:11434")
-    result.add_argument("--num-ctx", type=int, default=32768)
-    result.add_argument("--timeout", type=int, default=600)
-    result.add_argument("--think", action="store_true")
     return result
 
 
@@ -119,17 +156,17 @@ def main():
         command.error("--interval must be at least 0.1 seconds")
     if args.filing_limit < 0 or args.llm_limit < 0:
         command.error("limits must be nonnegative")
-    if args.max_chars < 100:
-        command.error("--max-chars must be at least 100")
     if args.start and args.cutoff and args.start >= args.cutoff:
         command.error("--start must precede --cutoff")
     if args.refresh and args.retry_fallbacks:
         command.error("Use either --refresh or --retry-fallbacks")
-    if args.provider == "openai" and args.model == DEFAULT_MODEL:
-        command.error("--provider openai requires an explicit OpenAI --model")
-    if args.num_ctx < 8192 or args.timeout <= 0:
-        command.error("--num-ctx must be at least 8192 and --timeout positive")
-    run(args)
+    try:
+        run(args)
+    except (APIReviewError, OSError, ValueError) as exc:
+        command.exit(2, f"Workflow stopped: {exc}\n")
+    except KeyboardInterrupt:
+        print("\nJob stopped. Rerun the same command to resume using saved HTML and reviews.")
+        raise SystemExit(130) from None
 
 
 if __name__ == "__main__":

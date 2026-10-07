@@ -3,6 +3,21 @@
 The original target is the first Item 1.03 disclosure. An optional composite adds
 conservatively qualified Item 2.04 filings as a payment-default disclosure proxy.
 Neither target establishes the legal or contractual date of payment default.
+
+Run from the repository root:
+    .venv/bin/python -m mcf.data.empirical [parameters]
+
+Parameters:
+    action: Required inventory (screen issuers/find disclosures) or panel (build monthly data).
+    --dataset PATH: Local SEC dataset (default: dataset).
+    --output-dir PATH: Required destination for the selected action's outputs.
+    --cutoff YYYY-MM-DD: Exclusive disclosure cutoff for inventory (default: 2026-09-07);
+        panel uses the study config instead.
+    --inventory PATH: Inventory output directory; required for panel.
+    --config PATH: Study-design JSON; required for panel.
+    --item-204-results PATH: Optional completed OpenAI review directory or classifications.jsonl;
+        inventory only, adds qualifying Item 2.04 disclosures to the target.
+    -h, --help: Show command usage and exit.
 """
 
 import argparse

@@ -2,6 +2,15 @@
 
 Outcome labels are not required for scoring. Eligibility and hard-stop decisions
 remain part of the separately documented credit policy.
+
+Run from the repository root:
+    .venv/bin/python -m mcf.models.predict [parameters]
+
+Parameters:
+    --models PATH: Required frozen models.joblib bundle from training.
+    --features PATH: Required monthly feature CSV to score; labels are optional.
+    --output-dir PATH: Required destination for predictions and provenance.
+    -h, --help: Show command usage and exit.
 """
 
 import argparse

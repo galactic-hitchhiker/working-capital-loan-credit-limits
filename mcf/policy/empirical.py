@@ -3,6 +3,16 @@
 Cash eligibility, additional debt payments, caps and facility exposure are
 assumptions. No losses, borrower behavior, utilization or recoveries are modeled.
 Gaps start new hypothetical facilities; no monthly change crosses a gap.
+
+Run from the repository root:
+    .venv/bin/python -m mcf.policy.empirical [parameters]
+
+Parameters:
+    --models PATH: Required frozen models.joblib bundle from training.
+    --features PATH: Required monthly SEC feature CSV with financial policy inputs.
+    --policy PATH: Required policy-parameter JSON.
+    --output-dir PATH: Required destination for probabilities, limit scenarios and audits.
+    -h, --help: Show command usage and exit.
 """
 
 import argparse
