@@ -9,12 +9,14 @@ from dataclasses import asdict
 from datetime import date, timedelta
 
 from mcf.data.sec import (
-    CASH_COMPONENT_TAGS,
+    COMPONENT_TAGS,
+    FLOW_FIELDS,
     TAGS,
     eligible_facts,
     ratio,
     resolve_cash_and_equivalents,
     resolve_liabilities,
+    resolve_net_income,
 )
 
 
@@ -30,8 +32,8 @@ class FactIndex:
         self.document = document
         self.pending, self.position, self.known = {}, {}, {}
         self.current = None
-        for field in (*TAGS, *CASH_COMPONENT_TAGS):
-            annual = field in {"revenue", "operating_cashflow", "net_income"}
+        for field in (*TAGS, *COMPONENT_TAGS):
+            annual = field in FLOW_FIELDS
             facts = list(
                 eligible_facts(document, field, last_decision + timedelta(days=1))
             )
@@ -100,7 +102,7 @@ class FactIndex:
         # ties between facts that agree on the period and value.
         if len({(f.start, f.value) for f in facts}) != 1:
             return None
-        tags = TAGS.get(field, CASH_COMPONENT_TAGS.get(field))
+        tags = TAGS.get(field, COMPONENT_TAGS.get(field))
         return min(facts, key=lambda f: (tags.index(f.tag), f.accession))
 
     def get_prior_year(self, field, current_end):
@@ -158,6 +160,11 @@ class FactIndex:
             facts[field] = (
                 self.get(field, start=annual.start, end=annual.end) if annual else None
             )
+        income, income_basis, income_sources = (
+            resolve_net_income(self.get, annual.start, annual.end)
+            if annual else (None, "missing", {})
+        )
+        facts["net_income"] = income
         # Flow-to-assets ratios use assets at the annual flow's start and end,
         # even if a newer balance sheet is available for liquidity predictors.
         opening = closing = opening_liabilities = closing_liabilities = None
@@ -254,6 +261,11 @@ class FactIndex:
         facts["prior_assets_for_12m_change"] = prior_assets
         facts["prior_liabilities_for_12m_change"] = prior_liabilities
         provenance = {k: asdict(v) if v else None for k, v in facts.items()}
+        provenance["net_income_derivation"] = (
+            {"basis": income_basis, "filed": max(f.filed for f in income_sources.values()),
+             "sources": {k: asdict(f) for k, f in income_sources.items()}}
+            if income_sources else None
+        )
         provenance["cash_derivation"] = (
             {
                 "basis": cash_basis,

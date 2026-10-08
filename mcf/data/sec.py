@@ -56,6 +56,18 @@ CASH_COMPONENT_TAGS = {
     "restricted_cash_current": ("RestrictedCashCurrent",),
     "restricted_cash_noncurrent": ("RestrictedCashNoncurrent",),
 }
+COMPONENT_TAGS = {
+    **CASH_COMPONENT_TAGS,
+    "total_liabilities_equity": ("LiabilitiesAndStockholdersEquity",),
+    "consolidated_equity": ("StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",),
+    "temporary_equity_total": ("TemporaryEquityCarryingAmountIncludingPortionAttributableToNoncontrollingInterests",),
+    "consolidated_income": ("ProfitLoss",),
+    "noncontrolling_income": ("NetIncomeLossAttributableToNoncontrollingInterest",),
+    "common_income": ("NetIncomeLossAvailableToCommonStockholdersBasic",),
+    "preferred_adjustments": ("PreferredStockDividendsAndOtherAdjustments",),
+}
+FLOW_FIELDS = {"revenue", "operating_cashflow", "net_income", "consolidated_income",
+               "noncontrolling_income", "common_income", "preferred_adjustments"}
 FORMS = {"10-K", "10-K/A", "10-Q", "10-Q/A"}
 
 
@@ -71,7 +83,7 @@ class Fact:
 
 def eligible_facts(document, field: str, as_of: date):
     """Never use a fiscal-year label or a frame as an availability date."""
-    tags = TAGS.get(field, CASH_COMPONENT_TAGS.get(field))
+    tags = TAGS.get(field, COMPONENT_TAGS.get(field))
     if tags is None:
         raise KeyError(field)
     for tag in tags:
@@ -133,7 +145,7 @@ def latest_fact(document, field, as_of, *, annual=False, start=None, end=None):
     # Conflicting USD totals for one period are flagged missing rather than chosen.
     if len({(r.start, r.value) for r in rows}) != 1:
         return None
-    tags = TAGS.get(field, CASH_COMPONENT_TAGS.get(field))
+    tags = TAGS.get(field, COMPONENT_TAGS.get(field))
     return min(rows, key=lambda r: (tags.index(r.tag), r.accession))
 
 
@@ -230,6 +242,39 @@ def resolve_liabilities(get_fact, end):
                 "liabilities_noncurrent": noncurrent,
             },
         )
+    # Permanent consolidated equity excludes temporary equity. Require its
+    # explicit total (including an explicitly reported zero); absence is not zero.
+    total = get_fact("total_liabilities_equity", end=end)
+    equity = get_fact("consolidated_equity", end=end)
+    temporary = get_fact("temporary_equity_total", end=end)
+    sources = {"total_liabilities_equity": total, "consolidated_equity": equity,
+               "temporary_equity_total": temporary}
+    if all(sources.values()) and len({f.accession for f in sources.values()}) == 1:
+        value = total.value - equity.value - temporary.value
+        if value >= 0 and temporary.value >= 0:
+            return (Fact(value, "LiabilitiesAndStockholdersEquity-ConsolidatedEquity-TemporaryEquity",
+                         None, end, max(f.filed for f in sources.values()), total.accession),
+                    "total_minus_permanent_and_temporary_equity", sources)
+    return None, "missing", {}
+
+
+def resolve_net_income(get_fact, start, end):
+    """Recover parent income only from explicit, same-filing accounting components.
+
+    ProfitLoss includes noncontrolling income; common-shareholder income deducts
+    preferred adjustments. Neither is an interchangeable NetIncomeLoss alias.
+    """
+    direct = get_fact("net_income", start=start, end=end)
+    if direct:
+        return direct, "direct", {"net_income": direct}
+    for left, right, sign, basis in (
+        ("consolidated_income", "noncontrolling_income", -1, "consolidated_minus_noncontrolling"),
+        ("common_income", "preferred_adjustments", 1, "common_plus_preferred_adjustments"),
+    ):
+        a, b = (get_fact(field, start=start, end=end) for field in (left, right))
+        if a and b and a.accession == b.accession:
+            return (Fact(a.value + sign * b.value, basis, start, end,
+                         max(a.filed, b.filed), a.accession), basis, {left: a, right: b})
     return None, "missing", {}
 
 
@@ -297,6 +342,13 @@ def snapshot(document, as_of: date):
             if annual
             else None
         )
+    income, income_basis, income_sources = (
+        resolve_net_income(
+            lambda field, **kwargs: latest_fact(document, field, as_of, annual=True, **kwargs),
+            annual.start, annual.end,
+        ) if annual else (None, "missing", {})
+    )
+    facts["net_income"] = income
     values = {key: fact.value if fact else None for key, fact in facts.items()}
     values["cash"] = cash_value
     # Flow-to-assets ratios need period-matched assets, not a newer balance
@@ -390,6 +442,11 @@ def snapshot(document, as_of: date):
         "status": "financial_snapshot_only_no_event_label_or_credit_recommendation",
     }
     provenance = {key: asdict(fact) if fact else None for key, fact in facts.items()}
+    provenance["net_income_derivation"] = (
+        {"basis": income_basis, "filed": max(f.filed for f in income_sources.values()),
+         "sources": {k: asdict(f) for k, f in income_sources.items()}}
+        if income_sources else None
+    )
     provenance["cash_derivation"] = (
         {
             "basis": cash_basis,

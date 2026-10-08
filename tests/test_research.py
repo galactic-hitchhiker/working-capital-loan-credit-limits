@@ -179,6 +179,57 @@ def document(mapping):
 
 
 class SecTests(unittest.TestCase):
+    def test_income_reconstruction_preserves_parent_scope_and_availability(self):
+        mapping = {
+            "Assets": [fact(100), fact(80, end="2023-12-31")],
+            "NetCashProvidedByUsedInOperatingActivities": [fact(10, start="2024-01-01")],
+            "ProfitLoss": [fact(12, start="2024-01-01")],
+            "NetIncomeLossAttributableToNoncontrollingInterest": [
+                fact(3, start="2024-01-01", filed="2025-02-02")],
+        }
+        data = document(mapping)
+        for decision, expected in [(date(2025, 2, 2), None), (date(2025, 2, 3), 9)]:
+            slow, provenance = snapshot(data, decision)
+            fast, fast_provenance = FactIndex(data, decision).snapshot(decision)
+            self.assertEqual(slow["net_income"], expected)
+            self.assertEqual(slow, fast)
+            self.assertEqual(provenance, fast_provenance)
+        mapping["NetIncomeLossAttributableToNoncontrollingInterest"][0]["accn"] = "other"
+        self.assertIsNone(snapshot(document(mapping), date(2025, 3, 1))[0]["net_income"])
+
+    def test_common_income_needs_explicit_matching_preferred_adjustment(self):
+        mapping = {
+            "NetCashProvidedByUsedInOperatingActivities": [fact(10, start="2024-01-01")],
+            "NetIncomeLossAvailableToCommonStockholdersBasic": [fact(-5, start="2024-01-01")],
+        }
+        decision = date(2025, 3, 1)
+        self.assertIsNone(snapshot(document(mapping), decision)[0]["net_income"])
+        mapping["PreferredStockDividendsAndOtherAdjustments"] = [fact(8, start="2024-01-01")]
+        data = document(mapping)
+        slow, provenance = snapshot(data, decision)
+        self.assertEqual(slow["net_income"], 3)
+        self.assertEqual(slow["negative_net_income"], 0)
+        self.assertEqual((slow, provenance), FactIndex(data, decision).snapshot(decision))
+        mapping["NetIncomeLoss"] = [fact(7, start="2024-01-01")]
+        self.assertEqual(snapshot(document(mapping), decision)[0]["net_income"], 7)
+
+    def test_equity_residual_requires_explicit_temporary_equity_and_consolidated_scope(self):
+        mapping = {
+            "Assets": [fact(100)],
+            "LiabilitiesAndStockholdersEquity": [fact(100)],
+            "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest": [fact(30)],
+        }
+        decision = date(2025, 3, 1)
+        self.assertIsNone(snapshot(document(mapping), decision)[0]["liabilities"])
+        temporary = "TemporaryEquityCarryingAmountIncludingPortionAttributableToNoncontrollingInterests"
+        mapping[temporary] = [fact(10)]
+        data = document(mapping)
+        slow, provenance = snapshot(data, decision)
+        self.assertEqual(slow["liabilities"], 60)
+        self.assertEqual((slow, provenance), FactIndex(data, decision).snapshot(decision))
+        mapping[temporary][0]["accn"] = "other"
+        self.assertIsNone(snapshot(document(mapping), decision)[0]["liabilities"])
+
     def test_no_same_day_or_future_filing(self):
         d = document({"Assets": [fact(100)]})
         self.assertIsNone(latest_fact(d, "assets", date(2025, 2, 1)))

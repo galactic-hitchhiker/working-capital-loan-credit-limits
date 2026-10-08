@@ -449,6 +449,8 @@ def panel(dataset, inventory_dir, config_path, output):
         {},
         Counter(),
     )
+    financial_exclusions = Counter()
+    derivations = Counter()
     feature_fields = (
         "company_id",
         "decision_date",
@@ -511,16 +513,24 @@ def panel(dataset, inventory_dir, config_path, output):
                     counts["outside_observed_reporting_life"] += 1
                     continue
                 values, source_facts = index.snapshot(decision)
-                if (
-                    values["assets"] is None
-                    or values["assets"] <= 0
-                    or values["balance_age_days"] is None
-                    or values["flow_age_days"] is None
-                    or values["balance_age_days"] > config["max_balance_age_days"]
-                    or values["flow_age_days"] > config["max_flow_age_days"]
-                ):
+                reasons = []
+                if values["assets"] is None:
+                    reasons.append("missing_or_conflicting_assets")
+                elif values["assets"] <= 0:
+                    reasons.append("nonpositive_assets")
+                if values["balance_age_days"] is not None and values["balance_age_days"] > config["max_balance_age_days"]:
+                    reasons.append("stale_balance")
+                if values["flow_age_days"] is None:
+                    reasons.append("missing_or_conflicting_annual_operating_cashflow")
+                elif values["flow_age_days"] > config["max_flow_age_days"]:
+                    reasons.append("stale_annual_operating_cashflow")
+                if reasons:
                     counts["missing_or_stale_financials"] += 1
+                    financial_exclusions.update(reasons)
                     continue
+                for field in ("cash", "liabilities", "net_income"):
+                    source = source_facts.get(field + "_derivation")
+                    derivations[f"{field}:{source['basis'] if source else 'missing'}"] += 1
                 available = max(
                     date.fromisoformat(v["filed"]) + timedelta(days=1)
                     for v in source_facts.values()
@@ -649,6 +659,9 @@ def panel(dataset, inventory_dir, config_path, output):
         counts=dict(counts),
         annual_counts={k: dict(v) for k, v in sorted(year_counts.items())},
         missing_predictors=dict(missing),
+        financial_exclusion_reasons=dict(financial_exclusions),
+        financial_exclusion_note="Reasons overlap; a company-month can fail multiple checks.",
+        feature_row_derivations=dict(derivations),
         limitation=(
             "Bankruptcy/receivership or payment-failure disclosure episodes; 1.03 qualifies without payment review. "
             "Filing dates and episode gaps are operational, not verified failure/cure. Unresolved 2.04 censors labels. "
