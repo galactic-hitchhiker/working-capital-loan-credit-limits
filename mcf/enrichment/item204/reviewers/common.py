@@ -356,6 +356,15 @@ def retryable_fallback(saved):
     return bool(saved.get("fallback", False)) and saved.get("status") in RETRYABLE_FALLBACK_STATUSES
 
 
+def manual_review_needs_retry(saved, model, settings):
+    """Retry unresolved decisions once per model/settings; collection is idempotent."""
+    return (
+        saved.get("review", {}).get("classification") == "MANUAL_REVIEW"
+        and saved.get("status") != "fallback_missing_input"
+        and (saved.get("requested_model") != model or saved.get("settings") != settings)
+    )
+
+
 def cached_decision_index(cache, provider, model):
     """Index final filing answers; scope identity-free legacy hashes to the model."""
     by_filing = {}
@@ -405,7 +414,7 @@ def review_text(record, full_text):
     return "", "unavailable"
 
 
-def run(args, request_fn, provider="openai_batch", cache_settings=None):
+def run(args, request_fn, provider="openai_batch", cache_settings=None, print_audit=True):
     source = args.input.resolve()
     output = args.output_dir.resolve()
     if output == source.parent:
@@ -438,6 +447,19 @@ def run(args, request_fn, provider="openai_batch", cache_settings=None):
     cached_by_filing, cached_by_html, cached_by_input = cached_decision_index(
         cache, provider, args.model
     )
+    retry_manual = getattr(args, "retry_manual_review", False)
+    if retry_manual:
+        if getattr(args, "refresh", False) or getattr(args, "retry_fallbacks", False):
+            raise ValueError("--retry-manual-review cannot be combined with --refresh or --retry-fallbacks")
+        if any(
+            (str(record.get("company_id", "")), record.get("accessionNumber"))
+            not in cached_by_filing
+            for record in records
+        ):
+            raise ValueError(
+                "--retry-manual-review requires saved OpenAI reviews for every selected filing. "
+                "Use the original input and output directory and collect the initial batch first."
+            )
     counts = Counter()
     calls = 0
     api_stop_reason = None
@@ -459,6 +481,8 @@ def run(args, request_fn, provider="openai_batch", cache_settings=None):
                 )
                 if restored_input or (
                     getattr(args, "retry_fallbacks", False) and retryable_fallback(cached[1])
+                ) or (
+                    retry_manual and manual_review_needs_retry(cached[1], args.model, cache_settings)
                 ):
                     superseded_path = cached[0]
                 else:
@@ -507,8 +531,10 @@ def run(args, request_fn, provider="openai_batch", cache_settings=None):
                             cached = cached_by_input.get(input_hash)
                     if (
                         cached is not None
-                        and getattr(args, "retry_fallbacks", False)
-                        and retryable_fallback(cached[1])
+                        and (
+                            (getattr(args, "retry_fallbacks", False) and retryable_fallback(cached[1]))
+                            or (retry_manual and manual_review_needs_retry(cached[1], args.model, cache_settings))
+                        )
                     ):
                         superseded_path = cached[0]
                         cached = None
@@ -731,7 +757,8 @@ def run(args, request_fn, provider="openai_batch", cache_settings=None):
     temporary = output / "audit.json.tmp"
     temporary.write_text(json.dumps(audit, indent=2))
     temporary.replace(output / "audit.json")
-    print(json.dumps(audit, indent=2))
+    if print_audit:
+        print(json.dumps(audit, indent=2))
     return audit
 
 
@@ -795,3 +822,5 @@ def check_args(parser, args):
         parser.error("--limit must be nonnegative")
     if args.refresh and args.retry_fallbacks:
         parser.error("Use either --refresh or --retry-fallbacks, not both")
+    if getattr(args, "retry_manual_review", False) and (args.refresh or args.retry_fallbacks):
+        parser.error("--retry-manual-review cannot be combined with --refresh or --retry-fallbacks")

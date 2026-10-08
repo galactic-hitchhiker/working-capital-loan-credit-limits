@@ -3,7 +3,19 @@
 Run from the repository root:
     .venv/bin/python -m mcf.enrichment.item204.reviewers.openai_batch [parameters]
 
+Example:
+    .venv/bin/python -m mcf.enrichment.item204.reviewers.openai_batch \
+    --input results/sec/item204/filings.jsonl \
+    --html-dir results/sec/item204/html \
+    --output-dir results/item_204_openai_batch_review/
+
+
 Parameters:
+    --retry-manual-review: Retry only saved MANUAL_REVIEW decisions when model or
+        settings change. Use the original input/output paths; repeat the same command
+        to collect results. Resolved decisions and completed retries are reused.
+    --batch-max-requests N: Requests per job (default: 50000). Use 200 for smaller
+        sequential jobs when the model's queued input-token allowance is limited.
     --input PATH: Filing-inventory JSONL (default: results/item_204_pipeline/source/filings.jsonl;
         falls back to rules/classifications.jsonl under that root if only the legacy file exists).
     --html-dir PATH: Cached filing HTML (default: results/item_204_pipeline/source/html;
@@ -260,7 +272,7 @@ def refresh_job(path, job, key):
                 temporary.replace(destination)
 
 
-def prepare_jobs(directory, requests):
+def prepare_jobs(directory, requests, max_requests=MAX_REQUESTS):
     """Split at both published limits; save input and manifest before submission."""
     chunk, size, prepared = [], 0, []
 
@@ -281,7 +293,7 @@ def prepare_jobs(directory, requests):
         line = (json.dumps(request) + "\n").encode()
         if len(line) > MAX_BYTES:
             raise ValueError("One Batch request exceeds the 200 MB input limit")
-        if chunk and (len(chunk) >= MAX_REQUESTS or size + len(line) > MAX_BYTES):
+        if chunk and (len(chunk) >= min(max_requests, MAX_REQUESTS) or size + len(line) > MAX_BYTES):
             save()
             chunk, size = [], 0
         chunk.append(line)
@@ -322,6 +334,9 @@ def run(args):
         raise ValueError("Use a separate output directory to preserve original results")
     directory.mkdir(parents=True, exist_ok=True)
     jobs = load_jobs(directory)
+    max_requests = getattr(args, "batch_max_requests", MAX_REQUESTS)
+    if not 1 <= max_requests <= MAX_REQUESTS:
+        raise ValueError("--batch-max-requests must be between 1 and 50000")
     recovery_id = getattr(args, "batch_id", None)
     ambiguous = [(path, job) for path, job in jobs if job["status"] == "submitting"]
     if recovery_id:
@@ -352,15 +367,48 @@ def run(args):
             "Find its local_job metadata in the OpenAI dashboard and rerun with --batch-id ID. "
             "No duplicate batch was submitted."
         )
+    # Split only jobs that have never been accepted or were rejected for queue
+    # capacity. Never replace an active job or discard completed responses.
+    capacity_deferred = set()
+    for path, job in list(jobs):
+        if job["status"] not in {"prepared", "uploaded"} and job["status"] not in TERMINAL:
+            refresh_job(path, job, key)
+        queue_rejected = job["status"] == "failed" and "enqueued token limit" in json.dumps(job.get("errors")).lower()
+        outstanding = set(job["custom_ids"]) - set(job.get("consumed", []))
+        if outstanding and (job["status"] in {"prepared", "uploaded"} or queue_rejected) and len(outstanding) > max_requests:
+            requests = {
+                line["custom_id"]: line
+                for line in map(json.loads, (path.parent / "input.jsonl").read_text().splitlines())
+                if line["custom_id"] in outstanding
+            }
+            replacements = prepare_jobs(directory, requests, max_requests)
+            job["consumed"] = sorted(set(job.get("consumed", [])) | outstanding)
+            job["replaced_by"] = [p.parent.name for p, _ in replacements]
+            atomic_json(path, job)
+        elif outstanding and queue_rejected:
+            job["status"] = "uploaded"
+            atomic_json(path, job)
+            capacity_deferred.add(path)
+            print("Batch queue capacity is exhausted. Wait for other jobs or lower --batch-max-requests.", flush=True)
+    jobs = load_jobs(directory)
+    active = bool(capacity_deferred) or any(
+        job["status"] not in TERMINAL | {"prepared", "uploaded"}
+        and set(job["custom_ids"]) - set(job.get("consumed", []))
+        for _, job in jobs
+    )
     pending, results, owners = set(), {}, {}
     for path, job in jobs:
         outstanding = set(job["custom_ids"]) - set(job.get("consumed", []))
         if not outstanding:
             continue
         if job["status"] in {"prepared", "uploaded"}:
+            if active or path in capacity_deferred:
+                pending.update(outstanding)
+                continue
             submit(path, job, key)
-        refresh_job(path, job, key)
+            refresh_job(path, job, key)
         if job["status"] not in TERMINAL:
+            active = True
             pending.update(outstanding)
             continue
         lines = {}
@@ -412,7 +460,9 @@ def run(args):
             queued[custom_id] = line
         raise ReviewDeferred()
 
-    audit = run_reviews(args, review, provider="openai_batch", cache_settings=settings)
+    audit = run_reviews(
+        args, review, provider="openai_batch", cache_settings=settings, print_audit=False
+    )
     # Decisions are saved atomically by the shared reviewer before marking consumed.
     if not audit["interrupted"]:
         for path, job in jobs:
@@ -420,8 +470,10 @@ def run(args):
                 set(job.get("consumed", [])) | (consumed & set(job["custom_ids"]))
             )
             atomic_json(path, job)
-        for path, job in prepare_jobs(directory, queued):
-            submit(path, job, key)
+        for path, job in prepare_jobs(directory, queued, max_requests):
+            if not active:
+                submit(path, job, key)
+                active = job["status"] not in TERMINAL
     audit["batch_jobs"] = [
         {
             "batch_id": job.get("batch_id"),
@@ -432,7 +484,17 @@ def run(args):
         for _, job in load_jobs(directory)
     ]
     audit["batch_pending"] = audit["review_counts"].get("batch_pending", 0)
+    # These count local filing callbacks, not HTTP calls or paid requests.
+    audit["review_attempts"] = audit.pop("api_calls")
     atomic_json(args.output_dir.resolve() / "audit.json", audit)
+    print(json.dumps(audit, indent=2))
+    if audit["batch_pending"]:
+        print(
+            f"Waiting for Batch results for {audit['batch_pending']} filings. "
+            "MANUAL_REVIEW is a placeholder for pending filings. "
+            "Rerun the same command with the same output directory to collect results.",
+            flush=True,
+        )
     return audit
 
 
@@ -442,6 +504,14 @@ def parser():
     )
     command.add_argument(
         "--batch-id", help="Recover a job ID after an interrupted submission"
+    )
+    command.add_argument(
+        "--retry-manual-review", action="store_true",
+        help="Retry saved MANUAL_REVIEW decisions once with changed model/settings; preserve resolved decisions",
+    )
+    command.add_argument(
+        "--batch-max-requests", type=int, default=MAX_REQUESTS,
+        help="Maximum requests per job; jobs are submitted sequentially (try 200 for small token queues)",
     )
     add_options(command)
     return command

@@ -41,17 +41,72 @@ The policy results are hypothetical. The SEC data do not observe actual facility
 All application Python modules live under the `mcf/` package. Tests remain in
 `tests/`, and generated artifacts remain in `results/`.
 
-| Package | Purpose |
+| Path | Purpose |
 |---|---|
 | `mcf/data/` | SEC ingestion, point-in-time facts, disclosure labels and panel construction |
-| `configs/study.sec_disclosure.json` | Define target, stages, controls and 12 predictors |
+| `configs/` | Study designs and policy parameters for the Item 1.03 study, composite disclosure proxy and examples |
 | `mcf/models/` | Model definitions, temporal validation, training, evaluation and prediction |
 | `mcf/policy/` | Credit-limit rules, replay, examples and sensitivity analysis |
 | `mcf/reporting/` | Empirical reports, figures and thesis evidence exports |
-| `mcf/workflows/` | End-to-end demo and environment-aware command launcher |
-| `mcf/enrichment/item204/` | Item 2.04 rule and LLM enrichment workflow |
+| `mcf/workflows/` | Composite disclosure-proxy workflow, synthetic demo and environment-aware command launcher |
+| `mcf/enrichment/item204/` | SEC filing discovery/download and OpenAI Batch classification of all Item 2.04 filings |
 | `mcf/common.py` | Shared configuration, file and serialization helpers |
 | `tests/` | Verify extraction, chronology, modeling and policy behavior |
+| `docs/` | Thesis chapters, input contracts and workflow/parameter guides |
+| `results/` | Local source caches, generated runs and preserved research history |
+
+The Item 2.04 implementation has two stages:
+
+```text
+mcf/enrichment/item204/
+├── discover.py                 # Inventory filings and download/cache SEC HTML
+├── workflow.py                 # Run discovery, then submit/collect Batch reviews
+└── reviewers/
+    ├── common.py               # Source text, output schema, validation and review cache
+    └── openai_batch.py         # Submit, resume and collect OpenAI Batch jobs
+```
+
+OpenAI Batch is the only AI provider. Discovery assigns no event labels; the
+reviewer processes every filing with available source text, reusing completed
+OpenAI reviews. Missing text is recorded as unresolved in the final exports.
+The previous `classify.py`, synchronous OpenAI and Ollama entry points have been
+removed. Historical artifacts remain available under `results/history/`.
+
+Runnable Python files begin with their purpose, run command and parameter list,
+including defaults and required inputs. Run modules from the repository root
+using `.venv/bin/python -m ...`. For command-line help:
+
+```sh
+.venv/bin/python -m mcf.enrichment.item204.workflow --help
+.venv/bin/python -m mcf.enrichment.item204.reviewers.openai_batch --help
+.venv/bin/python -m mcf.workflows.payment_default_proxy --help
+```
+
+## Results Structure
+
+The current local layout separates cached SEC sources, model runs and history:
+
+```text
+results/
+├── sec/item204/
+│   ├── filings.jsonl           # Item 2.04 source inventory
+│   ├── html/                   # Cached filing documents
+│   └── audit.json              # Discovery audit
+├── run_001/
+│   ├── inventory/              # Issuer inventory and disclosure events
+│   ├── panel/                  # Monthly features and labels
+│   └── models/                 # Training outputs
+└── history/
+    ├── item_103_model_evolution/
+    ├── item_204_enrichment_evolution/
+    └── incomplete_experiments/
+```
+
+Paths are supplied through command-line parameters. Moving source files does
+not change CLI defaults: the standalone Batch reviewer still looks under
+`results/item_204_pipeline/source/` unless explicit paths are supplied. Use the
+[cached-filings command below](#review-the-current-cached-filings) for
+`results/sec/item204/`. New study runs should use fresh output directories.
 
 The completed thesis run is preserved in the results history:
 
@@ -59,7 +114,8 @@ The completed thesis run is preserved in the results history:
 - `results/history/item_103_model_evolution/02_improved_sec_fact_coverage_xgboost/panel/` — improved panel and feature provenance;
 - `results/history/item_103_model_evolution/03_rolling_temporal_validation_random_forest/` — selected models, reports, policy decisions and worked examples.
 
-See `results/history/README.md` and `results/history/index.json` for the complete
+See [the history guide](results/history/README.md) and
+[history index](results/history/index.json) for the complete
 model and Item 2.04 enrichment evolution.
 
 ## Verify the Code
@@ -72,7 +128,10 @@ The recorded environment uses Python 3.13.15 and packages pinned in `requirement
 
 ## Rebuild from Scratch
 
-Each output directory must be new or empty.
+The following steps rebuild the Item 1.03 study. Each output directory must be
+new or empty. Item 2.04 enrichment, described later, uses resumable directories.
+Set `--dataset` to your local SEC dataset root; the examples below use `dataset`,
+while the composite examples use `../dataset`.
 
 ### 1. Build the issuer inventory
 
@@ -161,7 +220,8 @@ The exporter copies compact evidence tables and regenerates Appendices C and D. 
 The repository also supports a separate experimental target named
 `first_sec_payment_default_disclosure_proxy`. It combines every Item 1.03 filing
 with Item 2.04 filings classified as `QUALIFIED_DEFAULT` by OpenAI Batch. Every
-Item 2.04 filing is reviewed by AI; there is no rule-based event classification. Remaining
+Item 2.04 filing with available source text is reviewed by AI; there is no
+rule-based event classification. Remaining
 unresolved Item 2.04 cases censor affected label windows instead of becoming
 negative observations.
 
@@ -182,9 +242,9 @@ rerun the same command after completion to collect reviews and continue.
 ### Run Item 2.04 enrichment separately
 
 The enrichment workflow discovers and downloads filing HTML, then submits
-every uncached Item 2.04 filing to OpenAI Batch. Event labels are assigned only
-by AI. The
-default model is `gpt-6-luna`, and the entire visible filing text is sent:
+every uncached Item 2.04 filing with available text to OpenAI Batch. Event labels
+are assigned only by AI. The default model is `gpt-6-luna`, and the entire visible
+filing text is sent. Set `OPENAI_API_KEY` before running:
 
 ```sh
 SEC_USER_AGENT='Your Name your.email@example.com' \
@@ -195,7 +255,10 @@ SEC_USER_AGENT='Your Name your.email@example.com' \
 
 Final classifications are written to
 `results/item_204_pipeline/final/classifications.jsonl`. Reruns reuse downloaded
-HTML and successful model decisions. After correcting a provider problem, retry
+HTML, pending Batch jobs and completed OpenAI reviews. The workflow stores source
+metadata in `source/filings.jsonl`, cached documents in `source/html/`, and Batch
+jobs, reviews and exports under `final/`. Rerun the same command to collect
+finished jobs. After correcting a provider problem, retry
 only stored fallback decisions with:
 
 ```sh
@@ -216,6 +279,46 @@ Use the completed enrichment in the remaining end-to-end workflow with:
 
 This skips discovery, downloading and AI review, then builds the combined
 inventory, panel and models.
+
+### Review the current cached filings
+
+To use the reorganized source cache without downloading the filings again, set
+`OPENAI_API_KEY` and run:
+
+```sh
+.venv/bin/python -m mcf.enrichment.item204.reviewers.openai_batch \
+  --input results/sec/item204/filings.jsonl \
+  --html-dir results/sec/item204/html \
+  --output-dir results/sec/item204/final
+```
+
+Rerun this exact command to check pending jobs and collect completed reviews.
+The resulting `results/sec/item204/final` directory can then be passed to
+`mcf.workflows.payment_default_proxy` with `--item-204-results`.
+
+Each unique filing request is a separate JSONL item; multiple items are submitted
+together in a Batch job. Identical request bodies are deduplicated. The number
+of new requests depends on available text and the existing review cache.
+
+| Parameter | Meaning |
+|---|---|
+| `--input`, `--html-dir` | Source inventory and cached documents for the standalone reviewer |
+| `--output-dir` | Keep the same review destination when submitting and collecting results |
+| `--model` | Model for new requests; default `gpt-6-luna` |
+| `--limit N` | Standalone reviewer pilot limit; default `0` processes all uncached filings |
+| `--filing-limit N`, `--llm-limit N` | Combined enrichment workflow's discovery/review limits; both default to `0` (all) |
+| `--start`, `--cutoff` | Optional inclusive start and exclusive cutoff filing dates, in `YYYY-MM-DD` format |
+| `--dry-run` | Inspect inputs without OpenAI calls; the combined workflow can still download SEC HTML |
+| `--offline` | Discovery/combined workflow only: use cached HTML; OpenAI calls remain enabled |
+| `--retry-fallbacks` | Retry saved provider failures after fixing their cause |
+| `--refresh` | Request fresh reviews instead of reusing saved decisions; omit for normal collection |
+| `--max-output-tokens` | Generated-token cap including reasoning; default `3000`, not an input-text limit |
+| `--reasoning-effort` | Reasoning setting for new requests; default `medium` |
+
+Full available filing text is used without a character cap. Missing source text
+remains visible as `fallback_missing_input`. See the
+[enrichment parameter guide](docs/item_204_workflow.md) for all options,
+environment variables, recovery and output details.
 
 ### Run every stage separately
 
@@ -254,7 +357,7 @@ cached.
 
 ### Run the two Item 2.04 stages separately
 
-Run deterministic discovery, discovery and download:
+Discover filing metadata and download source documents:
 
 ```sh
 SEC_USER_AGENT='Your Name your.email@example.com' \

@@ -58,6 +58,56 @@ records imported decisions. Keep `batches/` and `reviews/` so reruns can resume.
 
 ## Parameters you might actually need
 
+### Retry only unresolved decisions with a stronger model
+
+After collecting the initial batch, use the same original input, HTML directory
+and output directory. For the current saved run:
+
+```bash
+.venv/bin/python -m mcf.enrichment.item204.reviewers.openai_batch \
+  --input results/sec/item204/filings.jsonl \
+  --html-dir results/sec/item204/html \
+  --output-dir results/item_204_openai_batch_review \
+  --retry-manual-review \
+  --model gpt-6-sol \
+  --max-output-tokens 8000 \
+  --reasoning-effort medium
+```
+
+This retries saved `MANUAL_REVIEW` decisions, including validation and generation
+failures, only when their model or settings differ from the requested configuration.
+It preserves `QUALIFIED_DEFAULT` and `NON_DEFAULT` decisions. Missing-text cases
+cannot be submitted until source text is available. All selected filings must
+already have saved OpenAI reviews; a fresh output directory is not accepted.
+
+Run the exact same command later to collect results. Pending requests are reused,
+and completed retries are cached even when their answer remains `MANUAL_REVIEW`.
+Change the model or settings to intentionally attempt those cases again.
+The full combined CSV/JSONL is updated in the same output directory; no manual
+merge is required. Do not combine this option with `--refresh` or `--retry-fallbacks`.
+Add `--dry-run` to preview eligible filings without OpenAI calls (it writes local exports).
+
+The 8000-token setting increases the previous 3000-token output/reasoning allowance;
+it does not change the full-text input policy. A stronger model may still find
+insufficient evidence. This command has no budget cap: higher model prices and
+output allowances can exceed the earlier $15 budget. See
+[official model pricing](https://developers.openai.com/api/docs/models/gpt-6-sol).
+
+### General options
+
+If OpenAI rejects a job with "Enqueued token limit reached", the model's queue
+limit counts input tokens across pending jobs. Reducing `--max-output-tokens`
+does not reduce that input-token count. Add `--batch-max-requests 200` to the
+same command to prepare smaller jobs. The reviewer submits one job at a time;
+rerun to collect results and submit the next job. Existing unsent large jobs and
+jobs rejected specifically for enqueued-token capacity are split automatically,
+preserving their original manifests and completed decisions.
+
+Request counts do not guarantee a token count because document lengths vary.
+If a smaller job still exceeds capacity, wait for other jobs or lower the request
+limit further. Active jobs are never split or resubmitted. All available filing
+text is preserved.
+
 All parameters are optional for the command above.
 
 | Parameter | When to use it |
@@ -71,6 +121,7 @@ All parameters are optional for the command above.
 | `--start YYYY-MM-DD` | Include filings on or after this date. Omit it for all dates present in the input. |
 | `--cutoff YYYY-MM-DD` | Include filings strictly before this date. Omit it for all dates present in the input. |
 | `--retry-fallbacks` | Retry saved provider/request failures after fixing their cause; retain successful reviews and other saved outcomes. |
+| `--retry-manual-review` | Standalone Batch reviewer: retry saved unresolved decisions with changed model/settings, preserving resolved decisions and completed retries. |
 | `--refresh` | Intentionally replace saved decisions with new AI reviews. It does not duplicate an identical pending job. Do not use it for normal collection. |
 
 Advanced parameters are `--reasoning-effort` (default `medium`),

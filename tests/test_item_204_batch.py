@@ -192,6 +192,68 @@ class BatchReviewTests(unittest.TestCase):
         self.submit()
         self.assertEqual(len(batch.load_jobs(self.args.output_dir / "batches")), 2)
 
+    def test_manual_retry_preserves_resolved_and_resumes_once_per_configuration(self):
+        self.submit()
+        _, _, lines = self.result_lines()
+        content = lines[0]["response"]["body"]["output"][0]["content"][0]
+        content["text"] = json.dumps(dict(
+            classification="MANUAL_REVIEW", event_type="UNCERTAIN", certainty="UNCERTAIN",
+            reason="The evidence is incomplete.", evidence_quotes=[],
+        ))
+        self.collect(lines)
+        original = self.rows()[0]["llm_review"]
+        self.args.retry_manual_review = True
+        self.args.model = "gpt-6-sol"
+        self.args.max_output_tokens = 8000
+        self.args.reasoning_effort = "medium"
+        self.submit()
+        path, job = next((p, j) for p, j in batch.load_jobs(self.args.output_dir / "batches")
+                         if not j["consumed"])
+        request = json.loads((path.parent / "input.jsonl").read_text())
+        self.assertEqual(len(job["custom_ids"]), 1)
+        self.assertEqual(request["body"]["model"], "gpt-6-sol")
+        self.assertEqual(request["body"]["max_output_tokens"], 8000)
+        self.assertIn("loan 2", request["body"]["input"])
+        self.assertEqual(self.rows()[0]["llm_review"], original)
+        with patch.object(batch, "api_request", return_value={"status": "in_progress"}), patch.object(batch, "upload") as upload:
+            batch.run(self.args)
+        upload.assert_not_called()
+        lines[0]["custom_id"] = request["custom_id"]
+        self.collect(lines[:1])
+        self.assertEqual(self.rows()[0]["llm_review"], original)
+        self.assertEqual(self.rows()[1]["classification"], "MANUAL_REVIEW")
+        self.assertEqual(self.rows()[1]["llm_review"]["requested_model"], "gpt-6-sol")
+        with patch.object(batch, "api_request") as api, patch.object(batch, "upload") as upload:
+            batch.run(self.args)
+        api.assert_not_called()
+        upload.assert_not_called()
+
+    def test_manual_retry_includes_validation_failures_but_not_missing_text(self):
+        self.records[0]["item_204_text"] = ""
+        self.source.write_text("".join(json.dumps(r) + "\n" for r in self.records))
+        self.submit()
+        _, _, lines = self.result_lines(invalid=True)
+        self.collect(lines)
+        self.args.retry_manual_review = True
+        self.args.max_output_tokens = 8000
+        self.submit()
+        jobs = batch.load_jobs(self.args.output_dir / "batches")
+        self.assertEqual(len(jobs), 2)
+        self.assertTrue(all(len(j['custom_ids']) == 1 for _, j in jobs))
+        self.assertEqual(self.rows()[0]["llm_review"]["status"], "fallback_missing_input")
+
+    def test_manual_retry_requires_existing_reviews_and_rejects_refresh(self):
+        self.args.retry_manual_review = True
+        with patch.object(batch, "api_request") as api, self.assertRaisesRegex(ValueError, "requires saved OpenAI reviews"):
+            batch.run(self.args)
+        api.assert_not_called()
+        from mcf.enrichment.item204.reviewers.common import check_args
+        command = batch.parser()
+        for conflict in ("--refresh", "--retry-fallbacks"):
+            args = command.parse_args(["--retry-manual-review", conflict])
+            with self.assertRaises(SystemExit):
+                check_args(command, args)
+
     def test_split_limits_and_identical_request_deduplication(self):
         self.records[1]["item_204_text"] = self.records[0]["item_204_text"]
         self.source.write_text("".join(json.dumps(r) + "\n" for r in self.records))
@@ -204,6 +266,57 @@ class BatchReviewTests(unittest.TestCase):
         line_size = len((json.dumps(next(iter(requests.values()))) + "\n").encode())
         with patch.object(batch, "MAX_BYTES", line_size):
             self.assertEqual(len(batch.prepare_jobs(self.root, requests)), 3)
+
+    def test_small_jobs_are_submitted_sequentially(self):
+        self.args.batch_max_requests = 1
+        self.submit()
+        jobs = batch.load_jobs(self.args.output_dir / "batches")
+        self.assertEqual(sorted(j['status'] for _, j in jobs), ['prepared', 'validating'])
+        active_path, active_job = next((p,j) for p,j in jobs if j['status']=='validating')
+        with patch.object(batch, 'api_request', return_value={'status':'in_progress'}) as api, patch.object(batch, 'upload') as upload:
+            batch.run(self.args)
+        upload.assert_not_called()
+        api.assert_called_once_with('/batches/batch-1', 'test-key')
+        result = dict(custom_id=active_job['custom_ids'][0], error=None,
+                      response=dict(status_code=200, body=dict(status='completed', output=[dict(content=[dict(
+                          type='output_text', text=json.dumps(dict(classification='MANUAL_REVIEW',
+                          event_type='UNCERTAIN', certainty='UNCERTAIN', reason='Incomplete evidence', evidence_quotes=[])))])])))
+        def api(path, *args, **kwargs):
+            if path == '/batches/batch-1':
+                return {'status':'completed','output_file_id':'finished-output'}
+            if path == '/files/finished-output/content':
+                return json.dumps(result)+'\n'
+            if path == '/batches':
+                return {'id':'batch-2','status':'validating'}
+            if path == '/batches/batch-2':
+                return {'status':'in_progress'}
+            raise AssertionError(path)
+        with patch.object(batch, 'api_request', side_effect=api), patch.object(batch, 'upload', return_value='next-input') as upload:
+            batch.run(self.args)
+        upload.assert_called_once()
+        self.assertEqual(sorted(j['status'] for _,j in batch.load_jobs(self.args.output_dir/'batches')), ['completed','in_progress'])
+
+    def test_queue_rejected_large_job_is_split_without_filing_failures(self):
+        self.submit()
+        self.args.batch_max_requests = 1
+        def api(path, *args, **kwargs):
+            if path == '/batches/batch-1':
+                return {'status':'failed', 'errors':{'data':[{'message':'Enqueued token limit reached'}]}}
+            if path == '/batches':
+                return {'id':'batch-small', 'status':'validating'}
+            if path == '/batches/batch-small':
+                return {'status':'in_progress'}
+            raise AssertionError(path)
+        with patch.object(batch, 'api_request', side_effect=api), patch.object(batch, 'upload', return_value='small-input') as upload:
+            audit = batch.run(self.args)
+        upload.assert_called_once()
+        self.assertEqual(audit['batch_pending'], 2)
+        self.assertTrue(all(r['llm_status']=='batch_pending' for r in self.rows()))
+        jobs=batch.load_jobs(self.args.output_dir/'batches')
+        self.assertEqual(len(jobs),3)
+        old=next(j for _,j in jobs if j['status']=='failed')
+        self.assertEqual(old['consumed'], sorted(old['custom_ids']))
+        self.assertEqual(len(old['replaced_by']),2)
 
     def test_full_large_filing_is_submitted_without_extract_fallback(self):
         full = "Item 2.04 " + "Filing detail. " * 12000 + "The issuer failed to pay interest."
@@ -271,7 +384,9 @@ class BatchReviewTests(unittest.TestCase):
         self.submit()
         (self.root / "0000001800_0001104659-19-000001.html").write_text(
             "<p>Item 2.04 The issuer failed to pay principal.</p>")
-        self.submit()
+        with patch.object(batch, "api_request", return_value={"status": "in_progress"}), patch.object(batch, "upload") as upload:
+            batch.run(self.args)
+        upload.assert_not_called()
         self.assertEqual([r["llm_status"] for r in self.rows()], ["batch_pending"] * 2)
         self.assertEqual(len(batch.load_jobs(self.args.output_dir / "batches")), 2)
 
