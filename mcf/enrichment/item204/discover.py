@@ -1,4 +1,4 @@
-"""Discover and download SEC 8-K Item 2.04 filings for OpenAI Batch review.
+"""Discover and download SEC 8-K Item 1.03/2.04 filings for OpenAI Batch review.
 
 This gathers source documents and metadata without assigning event labels.
 It deliberately does not alter the existing inventory, panel or study config.
@@ -17,8 +17,10 @@ Example:
 
 
 Parameters:
+    --items ITEM ...: SEC items to discover (default: 2.04); use 1.03 2.04 for payment failure.
     --submissions PATH: Required directory of downloaded SEC submissions JSON files.
     --output-dir PATH: Required destination for filings.jsonl/CSV, HTML cache and audit.
+    --html-dir PATH: Reuse a separate HTML cache (default: OUTPUT_DIR/html).
     --start YYYY-MM-DD: Inclusive filing-date lower bound (default: no lower bound).
     --cutoff YYYY-MM-DD: Exclusive filing-date upper bound (default: no upper bound).
     --user-agent TEXT: SEC identification with contact email (default: SEC_USER_AGENT).
@@ -81,7 +83,7 @@ def has_item(items, item):
     return item in re.split(r"[,;\s]+", str(items))
 
 
-def iter_item_204(submissions_dir, start=None, cutoff=None):
+def iter_item_204(submissions_dir, start=None, cutoff=None, items=("2.04",)):
     """Scan all main submission records and their referenced historical archives."""
     for path in sorted(Path(submissions_dir).glob("CIK*.json")):
         if not re.fullmatch(r"CIK\d{10}\.json", path.name):
@@ -94,8 +96,8 @@ def iter_item_204(submissions_dir, start=None, cutoff=None):
             if f["form"] in {"8-K", "8-K/A"} and has_item(f["items"], "1.03")
         )
         for filing in filings:
-            if filing["form"] not in {"8-K", "8-K/A"} or not has_item(
-                filing["items"], "2.04"
+            if filing["form"] not in {"8-K", "8-K/A"} or not any(
+                has_item(filing["items"], item) for item in items
             ):
                 continue
             filed = date.fromisoformat(filing["filingDate"])
@@ -174,7 +176,7 @@ def run(args):
     records_path = args.output_dir / "filings.jsonl"
     with records_path.open("w") as output:
         for n, record in enumerate(
-            iter_item_204(args.submissions, args.start, args.cutoff), 1
+            iter_item_204(args.submissions, args.start, args.cutoff, getattr(args, "items", ("2.04",))), 1
         ):
             if args.limit and n > args.limit:
                 break
@@ -235,6 +237,7 @@ def run(args):
 
     audit = {
         "discovery_version": DISCOVERY_VERSION,
+        "items": list(getattr(args, "items", ("2.04",))),
         "counts": dict(counts),
         "start": str(args.start),
         "cutoff": str(args.cutoff),
@@ -252,7 +255,9 @@ def run(args):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--submissions", type=Path, required=True)
+    parser.add_argument("--items", nargs="+", choices=("1.03", "2.04"), default=["2.04"])
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--html-dir", type=Path)
     parser.add_argument("--start", type=date.fromisoformat)
     parser.add_argument(
         "--cutoff", type=date.fromisoformat, help="Exclusive filing-date cutoff"

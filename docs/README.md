@@ -24,9 +24,10 @@
 ## Supporting Material
 
 - [Reproduction workflow](workflow.md)
+- [Current bankruptcy/payment-failure workflow](bankruptcy_payment_failure_workflow.md)
+- [Narrow payment-only workflow](disclosed_payment_failure_workflow.md)
 - [Input contracts](input_contracts.md)
 - [Evidence tables](tables/)
 - [Figures](figures/)
 
 The local Markdown files are the current thesis source. Google Docs is intentionally left unchanged until final synchronization.
-

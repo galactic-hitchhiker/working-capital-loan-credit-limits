@@ -1,8 +1,9 @@
 """Build point-in-time SEC disclosure targets from the supplied local dataset.
 
-The original target is the first Item 1.03 disclosure. An optional composite adds
-conservatively qualified Item 2.04 filings as a payment-default disclosure proxy.
-Neither target establishes the legal or contractual date of payment default.
+The combined target automatically includes Item 1.03 and evidence-reviewed
+2.04 payment failures. A narrower payment-only target and historical
+first-disclosure targets remain available for comparison and reproduction.
+Filing dates do not establish the contractual date of payment default.
 
 Run from the repository root:
     .venv/bin/python -m mcf.data.empirical [parameters]
@@ -15,8 +16,11 @@ Parameters:
         panel uses the study config instead.
     --inventory PATH: Inventory output directory; required for panel.
     --config PATH: Study-design JSON; required for panel.
-    --item-204-results PATH: Optional completed OpenAI review directory or classifications.jsonl;
-        inventory only, adds qualifying Item 2.04 disclosures to the target.
+    --target NAME: Inventory target; defaults to a historical target when omitted.
+    --episode-gap-days N: Quiet-gap grouping for payment episodes (default: 90).
+    --disclosure-results PATH: Completed review directory or classifications.jsonl;
+        inventory only; accepts payment-specific or earlier OpenAI Item 2.04 reviews.
+    --item-204-results PATH: Alias for --disclosure-results.
     -h, --help: Show command usage and exit.
 """
 
@@ -42,13 +46,21 @@ from mcf.common import (
 )
 from mcf.data.sec import filing_rows
 from mcf.data.point_in_time import FactIndex
+from mcf.data.payment_failure import (
+    TARGET as PAYMENT_FAILURE_TARGET,
+    REVIEW_TARGET,
+    BANKRUPTCY_PAYMENT_TARGET,
+    RECURRENT_TARGETS,
+    payment_disclosures,
+    episode_label,
+)
 
 PERIODIC = {"10-K", "10-K/A", "10-Q", "10-Q/A"}
 ISSUER_FORMS = PERIODIC | {"8-K", "8-K/A"}
 ITEM_103_TARGET = "first_sec_item_1_03_disclosure"
 PAYMENT_DEFAULT_PROXY_TARGET = "first_sec_payment_default_disclosure_proxy"
 TARGET = ITEM_103_TARGET  # Backwards-compatible name for the original study target.
-SUPPORTED_TARGETS = {ITEM_103_TARGET, PAYMENT_DEFAULT_PROXY_TARGET}
+SUPPORTED_TARGETS = {ITEM_103_TARGET, PAYMENT_DEFAULT_PROXY_TARGET, *RECURRENT_TARGETS}
 
 
 def item_103(value):
@@ -150,16 +162,28 @@ def combine_disclosures(company, filings, item_204_results):
     return sorted(events.values(), key=ordering), sorted(unresolved, key=ordering), stats
 
 
-def inventory(dataset, output, cutoff, item_204_results_path=None):
-    """Audit filing histories and record Item 1.03 or composite proxy events."""
+def inventory(dataset, output, cutoff, item_204_results_path=None, target=None, episode_gap_days=90):
+    """Audit filing histories and record the selected disclosure target."""
     item_204_results, item_204_source = load_item_204_results(
         item_204_results_path
     )
-    target = (
+    target = target or (
         PAYMENT_DEFAULT_PROXY_TARGET
         if item_204_results_path is not None
         else ITEM_103_TARGET
     )
+    if target not in SUPPORTED_TARGETS:
+        raise ValueError("Unsupported disclosure target")
+    if target in RECURRENT_TARGETS:
+        if type(episode_gap_days) is not int or episode_gap_days < 1:
+            raise ValueError("episode_gap_days must be a positive integer")
+        if item_204_source is None:
+            raise ValueError("Payment-failure target requires completed OpenAI disclosure reviews")
+        for row in item_204_results.values():
+            saved = row.get("llm_review") or {}
+            review_target = (saved.get("settings") or {}).get("target")
+            if review_target not in {None, REVIEW_TARGET} or (review_target is None and saved.get("provider") != "openai_batch"):
+                raise ValueError("Use completed payment-specific reviews or earlier OpenAI Item 2.04 reviews; rule-only labels cannot be reused")
     output = new_output(output)
     paths = sorted((Path(dataset) / "companyfacts").glob("CIK*.json"))
     rows, events, errors, counts, years = [], [], [], Counter(), Counter()
@@ -203,7 +227,13 @@ def inventory(dataset, output, cutoff, item_204_results_path=None):
                 issuer = sorted(
                     {f["filingDate"] for f in dated if f["form"] in ISSUER_FORMS}
                 )
-                if target == PAYMENT_DEFAULT_PROXY_TARGET:
+                if target in RECURRENT_TARGETS:
+                    disclosures, unresolved_204, company_204_counts = payment_disclosures(
+                        company, dated, item_204_results, episode_gap_days,
+                        include_item_103=target == BANKRUPTCY_PAYMENT_TARGET,
+                    )
+                    item_204_counts.update(company_204_counts)
+                elif target == PAYMENT_DEFAULT_PROXY_TARGET:
                     disclosures, unresolved_204, company_204_counts = combine_disclosures(
                         company, dated, item_204_results
                     )
@@ -274,6 +304,11 @@ def inventory(dataset, output, cutoff, item_204_results_path=None):
                     "unresolved_item_204_records": len(unresolved_204),
                 }
                 rows.append(row)
+                if target in RECURRENT_TARGETS:
+                    row.update(
+                        payment_failure_disclosures=json.dumps(disclosures),
+                        unresolved_payment_disclosures=json.dumps(unresolved_204),
+                    )
                 if disclosures and exclusion == "candidate":
                     years[row["first_disclosure_date"][:4]] += 1
                 for j, f in enumerate(disclosures):
@@ -291,20 +326,37 @@ def inventory(dataset, output, cutoff, item_204_results_path=None):
                 errors.append({"company_id": company, "error": str(exc)})
             if n % 1000 == 0:
                 print(f"Inventory: {n}/{len(paths)} companies", flush=True)
-    write_csv(output / "issuer_inventory.csv", rows)
-    write_csv(output / "disclosure_events.csv", events)
+    write_csv(output / "issuer_inventory.csv", rows, fields=None if rows else (
+        "company_id", "entity_name", "screen",
+    ))
+    write_csv(output / "disclosure_events.csv", events, fields=None if events else (
+        "company_id", "accessionNumber", "filingDate", "target", "event_component",
+        "episode_id", "episode_start", "is_episode_start",
+    ))
     report = {
         "companyfacts_files": len(paths),
         "inventoried_companies": len(rows),
         "screen_counts": dict(counts),
         "disclosure_records": len(events),
         "target": target,
+        "episode_gap_days": episode_gap_days if target in RECURRENT_TARGETS else None,
         "item_204_results": str(item_204_source) if item_204_source else None,
         "item_204_counts": dict(item_204_counts),
         "candidate_first_disclosures_by_year": dict(sorted(years.items())),
+        "candidate_payment_episodes_by_year": dict(sorted(Counter(
+            e["filingDate"][:4] for e in events
+            if e["screen"] == "candidate" and e.get("is_episode_start")
+        ).items())) if target in RECURRENT_TARGETS else None,
         "cutoff": str(cutoff),
         "errors": errors,
         "target_note": (
+            "Recurrent bankruptcy/receivership (all 1.03) or explicit 2.04 payment-failure disclosures; "
+            "quiet-gap grouping is operational, and the target does not establish contractual nonpayment. "
+            if target == BANKRUPTCY_PAYMENT_TARGET else
+            "Recurrent disclosed payment-failure episodes from explicit payment evidence in 1.03/2.04; "
+            "earlier OpenAI 2.04 PAYMENT_FAILURE/BENIGN reviews may be reused; other legacy distress stays unresolved; "
+            "quiet-gap grouping is not contractual cure and filing date is not default onset"
+            if target in RECURRENT_TARGETS else
             "First Item 1.03 or conservatively qualified Item 2.04 filing; a "
             "payment-default disclosure proxy, not a verified contractual default date"
             if target == PAYMENT_DEFAULT_PROXY_TARGET
@@ -322,6 +374,8 @@ def inventory(dataset, output, cutoff, item_204_results_path=None):
             source_hash_list_sha256=file_hash(output / "source_hashes.jsonl"),
         ),
     )
+    if target in RECURRENT_TARGETS and errors:
+        raise ValueError("Payment-failure inventory has errors; inspect inventory_audit.json before proceeding")
     return report
 
 
@@ -380,6 +434,13 @@ def panel(dataset, inventory_dir, config_path, output):
         raise ValueError(
             f"Inventory target {inventory_target!r} does not match design {target!r}"
         )
+    payment_target = target in RECURRENT_TARGETS
+    if payment_target and inventory_audit.get("errors"):
+        raise ValueError("Resolve payment-failure inventory errors before building the panel")
+    if payment_target and (config["horizon_days"] != 60 or config.get("episode_gap_days") != inventory_audit.get("episode_gap_days")):
+        raise ValueError("Payment-failure design requires a 60-day horizon and the inventory's episode gap")
+    if payment_target:
+        gap_days = config["episode_gap_days"]
     issuers = [r for r in read_csv(inventory_path) if r["screen"] == "candidate"]
     counts, companies, event_ids, year_counts, missing = (
         Counter(),
@@ -392,6 +453,8 @@ def panel(dataset, inventory_dir, config_path, output):
         "company_id",
         "decision_date",
         "data_kind",
+        "event_type",
+        "horizon_days",
         "feature_available_on",
         *FEATURES,
         "entity_name",
@@ -441,6 +504,8 @@ def panel(dataset, inventory_dir, config_path, output):
                 if issuer.get("first_unresolved_item_204_date", "")
                 else None
             )
+            payment_events = json.loads(issuer["payment_failure_disclosures"]) if payment_target else []
+            payment_unknown = json.loads(issuer["unresolved_payment_disclosures"]) if payment_target else []
             for decision in dates:
                 if decision <= first or decision > last:
                     counts["outside_observed_reporting_life"] += 1
@@ -465,6 +530,8 @@ def panel(dataset, inventory_dir, config_path, output):
                     company_id=company,
                     decision_date=str(decision),
                     data_kind="empirical",
+                    event_type=target,
+                    horizon_days=config["horizon_days"],
                     feature_available_on=str(available),
                     **{f: values[f] for f in FEATURES},
                     entity_name=issuer["entity_name"],
@@ -478,7 +545,10 @@ def panel(dataset, inventory_dir, config_path, output):
                     flow_period_end=values["flow_period_end"],
                     balance_age_days=values["balance_age_days"],
                     flow_age_days=values["flow_age_days"],
-                    known_disclosure=event is not None and event < decision,
+                    known_disclosure=(
+                        any(0 <= (decision - date.fromisoformat(e["filingDate"])).days <= gap_days for e in payment_events if e["filingDate"] <= str(decision))
+                        if payment_target else event is not None and event < decision
+                    ),
                 )
                 # Keep usable predictors even when the outcome cannot be labeled;
                 # later policy scenarios also need unlabeled/post-disclosure rows.
@@ -494,14 +564,15 @@ def panel(dataset, inventory_dir, config_path, output):
                     )
                     + "\n"
                 )
-                label, reason = disclosure_label(
-                    decision,
-                    event,
-                    last,
-                    config["horizon_days"],
-                    cutoff,
-                    unresolved,
-                )
+                payment_event = None
+                if payment_target:
+                    label, reason, payment_event = episode_label(
+                        decision, payment_events, payment_unknown, last, cutoff, gap_days
+                    )
+                else:
+                    label, reason = disclosure_label(
+                        decision, event, last, config["horizon_days"], cutoff, unresolved,
+                    )
                 if label is None:
                     counts[reason] += 1
                     continue
@@ -519,7 +590,10 @@ def panel(dataset, inventory_dir, config_path, output):
                 if label_available >= cutoff:
                     counts["late_coverage_confirmation"] += 1
                     continue
-                event_id = f"{company}:{target}:{event}" if label else ""
+                event_id = (
+                    payment_event["episode_id"] if payment_target and label
+                    else f"{company}:{target}:{event}" if label else ""
+                )
                 source = f"dataset/submissions/CIK{company}.json and referenced historical files"
                 record = dict(
                     company_id=company,
@@ -532,7 +606,8 @@ def panel(dataset, inventory_dir, config_path, output):
                     label=label,
                     event_id=event_id,
                     label_source=(
-                        issuer["first_disclosure_accession"] if label else source
+                        payment_event["accessionNumber"] if payment_target and label
+                        else issuer["first_disclosure_accession"] if label else source
                     ),
                     coverage_source=source,
                     feature_available_on=str(available),
@@ -575,6 +650,13 @@ def panel(dataset, inventory_dir, config_path, output):
         annual_counts={k: dict(v) for k, v in sorted(year_counts.items())},
         missing_predictors=dict(missing),
         limitation=(
+            "Bankruptcy/receivership or payment-failure disclosure episodes; 1.03 qualifies without payment review. "
+            "Filing dates and episode gaps are operational, not verified failure/cure. Unresolved 2.04 censors labels. "
+            if target == BANKRUPTCY_PAYMENT_TARGET else
+            "Disclosed payment-failure episodes, not all actual defaults. Filing dates define disclosure timing. "
+            "Episode gaps are operational, not verified cure. Unresolved 1.03/2.04 evidence censors later rows; "
+            "negative labels require reporting follow-up, not verified absence of contractual default."
+            if payment_target else
             "Current SIC screen; the composite is a payment-default disclosure "
             "proxy rather than verified contractual default. Unresolved Item 2.04 "
             "filings censor affected windows; negative labels concern reporting only."
@@ -607,12 +689,13 @@ def main():
     parser.add_argument("--cutoff", type=date.fromisoformat, default=date(2026, 9, 7))
     parser.add_argument("--inventory", type=Path)
     parser.add_argument("--config", type=Path)
+    parser.add_argument("--target", choices=sorted(SUPPORTED_TARGETS), help="Inventory target; default derives from supplied reviews")
+    parser.add_argument("--episode-gap-days", type=int, default=90, help="Quiet-gap grouping for recurrent payment disclosures (default: 90)")
     parser.add_argument(
-        "--item-204-results",
+        "--disclosure-results", "--item-204-results", dest="item_204_results",
         type=Path,
         help=(
-            "Final rule-plus-LLM Item 2.04 directory or classifications.jsonl; "
-            "enables the composite payment-default disclosure proxy"
+            "Completed disclosure-review directory or classifications.jsonl"
         ),
     )
     args = parser.parse_args()
@@ -622,6 +705,8 @@ def main():
             args.output_dir,
             args.cutoff,
             args.item_204_results,
+            target=args.target,
+            episode_gap_days=args.episode_gap_days,
         )
     else:
         if args.inventory is None or args.config is None:

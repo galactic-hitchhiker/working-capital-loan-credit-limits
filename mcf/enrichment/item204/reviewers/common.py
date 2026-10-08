@@ -365,7 +365,7 @@ def manual_review_needs_retry(saved, model, settings):
     )
 
 
-def cached_decision_index(cache, provider, model):
+def cached_decision_index(cache, provider, model, cache_settings=None):
     """Index final filing answers; scope identity-free legacy hashes to the model."""
     by_filing = {}
     by_html = {}
@@ -378,6 +378,10 @@ def cached_decision_index(cache, provider, model):
         if not isinstance(saved, dict) or not isinstance(saved.get("review"), dict):
             continue
         if provider == "openai_batch" and saved.get("provider") != "openai_batch":
+            continue
+        # Payment-failure labels must never reuse the broader distress definition.
+        expected_target = (cache_settings or {}).get("target")
+        if (saved.get("settings") or {}).get("target") != expected_target:
             continue
         if saved["review"].get("classification") not in {
             "QUALIFIED_DEFAULT", "NON_DEFAULT", "MANUAL_REVIEW"
@@ -445,7 +449,7 @@ def run(args, request_fn, provider="openai_batch", cache_settings=None, print_au
     cache.mkdir(exist_ok=True)
     organize_review_files(cache)
     cached_by_filing, cached_by_html, cached_by_input = cached_decision_index(
-        cache, provider, args.model
+        cache, provider, args.model, cache_settings
     )
     retry_manual = getattr(args, "retry_manual_review", False)
     if retry_manual:
@@ -686,7 +690,7 @@ def run(args, request_fn, provider="openai_batch", cache_settings=None, print_au
               flush=True)
         # A signal may arrive after the atomic save but before the export/log.
         # Reload disk decisions so that response still appears in the export.
-        saved_by_filing, _, _ = cached_decision_index(cache, provider, args.model)
+        saved_by_filing, _, _ = cached_decision_index(cache, provider, args.model, cache_settings)
         for record in records[len(merged):]:
             result = {key: value for key, value in record.items() if not key.startswith("llm_")}
             # Legacy source labels are provenance, never a reason to bypass AI.

@@ -1,9 +1,12 @@
-"""Discover Item 2.04 filings and classify every filing using OpenAI Batch.
+"""Discover Item 1.03/2.04 filings and review every filing using OpenAI Batch.
 
 Run from the repository root:
     .venv/bin/python -m mcf.enrichment.item204.workflow [parameters]
 
 Parameters:
+    --items ITEM ...: Discover 2.04 by default; use 1.03 2.04 for payment failure.
+    --payment-failure-only: Use payment-specific classification and separate cache identity.
+    --batch-max-requests N: Maximum requests per sequential Batch job (default: 50000).
     --submissions PATH: Required directory of downloaded SEC submissions JSON files.
     --output-dir PATH: Source/cache and final-review root (default: results/item_204_pipeline).
     --start YYYY-MM-DD: Inclusive filing-date lower bound (default: no lower bound).
@@ -70,6 +73,7 @@ def run(args):
             limit=args.filing_limit or None,
             offline=args.offline,
             discover_only=False,
+            items=getattr(args, "items", ["2.04"]),
         )
     )
 
@@ -86,7 +90,7 @@ def run(args):
         retry_fallbacks=args.retry_fallbacks,
     )
     review_args.batch_id = getattr(args, "batch_id", None)
-    for name in ("reasoning_effort", "max_output_tokens"):
+    for name in ("reasoning_effort", "max_output_tokens", "batch_max_requests", "payment_failure_only"):
         if hasattr(args, name):
             setattr(review_args, name, getattr(args, name))
     run_openai_batch(review_args)
@@ -107,6 +111,9 @@ def run(args):
         "final_labels": final_audit["final_labels"],
         "unresolved_filings": final_audit["final_labels"].get("MANUAL_REVIEW", 0),
         "label_note": (
+            "Payment-specific missed principal/interest disclosure evidence from either filing item; "
+            "MANUAL_REVIEW remains unresolved; episodes are grouped downstream."
+            if getattr(args, "payment_failure_only", False) else
             "QUALIFIED_DEFAULT is a conservative disclosure classification, not "
             "proof of contractual payment default. MANUAL_REVIEW remains unresolved."
         ),
@@ -122,6 +129,9 @@ def run(args):
 def parser():
     result = argparse.ArgumentParser(description=__doc__)
     result.add_argument("--submissions", type=Path, required=True)
+    result.add_argument("--items", nargs="+", choices=("1.03", "2.04"), default=["2.04"])
+    result.add_argument("--payment-failure-only", action="store_true")
+    result.add_argument("--batch-max-requests", type=int, default=50000)
     result.add_argument(
         "--output-dir", type=Path, default=Path("results/item_204_pipeline")
     )

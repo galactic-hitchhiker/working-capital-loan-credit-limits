@@ -1,5 +1,11 @@
 # Item 2.04 enrichment with OpenAI Batch
 
+For the current recurrent bankruptcy/payment-failure target, follow the
+[combined-target guide](bankruptcy_payment_failure_workflow.md). Item 1.03
+qualifies automatically; only Item 2.04 requires payment-specific review.
+The commands below describe the historical broader Item 2.04 review profile.
+
+
 The workflow discovers and downloads SEC Item 2.04 filings, then OpenAI Batch
 classifies **every filing**. There is no rule-based event classifier and no
 label-based filter before AI review. Every input row appears in the final exports.

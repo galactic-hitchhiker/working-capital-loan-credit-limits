@@ -1,18 +1,20 @@
-"""Build and train the composite SEC payment-default disclosure proxy workflow.
+"""Build and train recurrent bankruptcy/payment-failure disclosure models.
 
-The workflow combines Item 1.03 with conservatively qualified Item 2.04 filings.
-It produces a disclosure proxy model; it does not claim verified payment defaults.
+The default target automatically includes Item 1.03 bankruptcy/receivership
+and includes Item 2.04 only with explicit payment-failure evidence within 60 days.
 
 Run from the repository root:
     .venv/bin/python -m mcf.workflows.payment_default_proxy [parameters]
 
 Parameters:
     --dataset PATH: Local SEC dataset with submissions/ and companyfacts/ (default: ../dataset).
-    --config PATH: Composite-target study-design JSON; also supplies the disclosure cutoff
-        (default: configs/study.payment_default_proxy.json).
-    --output-dir PATH: Required root for enrichment, inventory, panel and model outputs.
-    --item-204-results PATH: Optional completed Item 2.04 final-review directory;
-        skips enrichment and reuses these results.
+    --config PATH: Payment-disclosure study-design JSON; also supplies the disclosure cutoff
+        (default: configs/study.bankruptcy_or_payment_failure.json).
+    --output-dir PATH: Required fresh root for inventory, panel and model outputs.
+    --disclosure-results PATH: Completed payment-specific or earlier OpenAI 2.04 reviews;
+        skips enrichment; 1.03 qualifies automatically in the default composite design.
+    --item-204-results PATH: Backward-compatible alias for --disclosure-results.
+    --batch-max-requests N: Maximum requests per sequential Batch job (default: 200).
     --user-agent TEXT: SEC identification with contact email (default: SEC_USER_AGENT).
     --interval SECONDS: SEC request spacing, at least 0.1 (default: 0.25).
     --offline: Use cached filing HTML only; OpenAI calls still occur (default: off).
@@ -46,6 +48,9 @@ from pathlib import Path
 from mcf.common import load_design
 from mcf.data.empirical import (
     PAYMENT_DEFAULT_PROXY_TARGET,
+    PAYMENT_FAILURE_TARGET,
+    BANKRUPTCY_PAYMENT_TARGET,
+    RECURRENT_TARGETS,
     inventory,
     panel,
 )
@@ -56,11 +61,13 @@ from mcf.models.train import run as train
 
 
 def run(args):
-    """Create Item 2.04 decisions, combined inventory, panel, and fitted models."""
+    """Create reviewed disclosures, episode inventory, panel, and fitted models."""
     config = load_design(args.config)
-    if config["event_type"] != PAYMENT_DEFAULT_PROXY_TARGET:
+    target = config["event_type"]
+    payment_target = target in RECURRENT_TARGETS
+    if target not in {PAYMENT_DEFAULT_PROXY_TARGET, *RECURRENT_TARGETS}:
         raise ValueError(
-            f"Config must use {PAYMENT_DEFAULT_PROXY_TARGET!r}"
+            "Config must define a supported payment-disclosure target"
         )
     cutoff = date.fromisoformat(config["observed_as_of"])
     root = args.output_dir
@@ -72,7 +79,7 @@ def run(args):
         item_204_results = run_item_204(
             Namespace(
                 submissions=args.dataset / "submissions",
-                output_dir=root / "item204",
+                output_dir=root / ("disclosures" if payment_target else "item204"),
                 start=None,
                 cutoff=cutoff,
                 user_agent=args.user_agent,
@@ -87,6 +94,9 @@ def run(args):
                 dry_run=False,
                 refresh=args.refresh,
                 retry_fallbacks=args.retry_fallbacks,
+                items=["1.03", "2.04"] if target == PAYMENT_FAILURE_TARGET else ["2.04"],
+                payment_failure_only=payment_target,
+                batch_max_requests=getattr(args, "batch_max_requests", 200),
             )
         )
 
@@ -98,7 +108,7 @@ def run(args):
             review_state.get("provider") == "openai_batch" and review_counts.get("deferred_limit", 0)
         ):
             raise ValueError(
-                "Item 2.04 reviews are pending or limited. Rerun enrichment to collect "
+                "Disclosure reviews are pending or limited. Rerun enrichment to collect "
                 "all results before building inventory, panel, and models."
             )
 
@@ -107,6 +117,8 @@ def run(args):
         root / "inventory",
         cutoff,
         item_204_results,
+        target=target,
+        episode_gap_days=config.get("episode_gap_days", 90),
     )
     panel_report = panel(
         args.dataset,
@@ -121,8 +133,8 @@ def run(args):
         smoke=args.smoke,
     )
     summary = {
-        "workflow": "payment-default-disclosure-proxy-v1",
-        "target": PAYMENT_DEFAULT_PROXY_TARGET,
+        "workflow": "bankruptcy-or-payment-failure-v1" if target == BANKRUPTCY_PAYMENT_TARGET else "disclosed-payment-failure-v1" if payment_target else "payment-default-disclosure-proxy-v1",
+        "target": target,
         "item_204_results": str(Path(item_204_results).resolve()),
         "inventory": {
             "directory": str((root / "inventory").resolve()),
@@ -140,7 +152,15 @@ def run(args):
         "models": str((root / "models").resolve()),
         "selected_model": selection["selected_model"],
         "selection_status": selection["status"],
+        "exploratory_low_event": config.get("exploratory_low_event", False),
+        "validation_status": config.get("validation_status"),
         "limitation": (
+            "All 1.03 bankruptcy/receivership or explicitly reviewed 2.04 payment-failure episodes; "
+            "not verified contractual nonpayment or cure. "
+            if target == BANKRUPTCY_PAYMENT_TARGET else
+            "Recurrent disclosed payment-failure episodes; filing dates and an operational quiet gap, "
+            "not complete actual-default coverage or verified cure."
+            if payment_target else
             "The model predicts a composite SEC disclosure proxy. It does not "
             "estimate a verified contractual payment-default probability."
         ),
@@ -156,18 +176,19 @@ def parser():
     result.add_argument(
         "--config",
         type=Path,
-        default=Path("configs/study.payment_default_proxy.json"),
+        default=Path("configs/study.bankruptcy_or_payment_failure.json"),
     )
     result.add_argument("--output-dir", type=Path, required=True)
     result.add_argument(
-        "--item-204-results",
+        "--disclosure-results", "--item-204-results", dest="item_204_results",
         type=Path,
-        help="Reuse a completed Item 2.04 final directory and skip LLM enrichment",
+        help="Reuse completed payment-specific or earlier OpenAI 2.04 reviews and skip enrichment",
     )
     result.add_argument("--user-agent", default=os.environ.get("SEC_USER_AGENT", ""))
     result.add_argument("--interval", type=float, default=0.25)
     result.add_argument("--offline", action="store_true")
     result.add_argument("--batch-id", help="Recover an interrupted OpenAI Batch submission")
+    result.add_argument("--batch-max-requests", type=int, default=200)
     add_options(result)
     result.add_argument("--model", default=DEFAULT_MODEL)
     result.add_argument("--llm-limit", type=int, default=0)

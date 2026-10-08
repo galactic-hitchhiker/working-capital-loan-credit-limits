@@ -9,6 +9,8 @@ import platform
 from datetime import date, datetime, timezone
 from pathlib import Path
 
+from mcf.data.payment_failure import RECURRENT_TARGETS
+
 FEATURES = (
     "current_ratio",
     "cash_and_equivalents_to_assets",
@@ -176,6 +178,11 @@ def load_design(path):
         raise ValueError("data_kind must be empirical or synthetic")
     if not config.get("event_type") or not config.get("event_definition"):
         raise ValueError("One explicit event type and definition are required")
+    if config["event_type"] in RECURRENT_TARGETS:
+        if config["horizon_days"] != 60:
+            raise ValueError("Disclosed payment failure requires a 60-day horizon")
+        if type(config.get("episode_gap_days")) is not int or config["episode_gap_days"] < 1:
+            raise ValueError("episode_gap_days must be a positive integer")
     for name in (
         "horizon_days",
         "max_balance_age_days",

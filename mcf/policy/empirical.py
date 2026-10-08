@@ -26,6 +26,7 @@ from pathlib import Path
 import joblib
 import numpy as np
 
+from mcf.data.payment_failure import RECURRENT_TARGETS
 from mcf.policy.credit import PolicyConfig, PolicyInputs, determine_limit
 from mcf.policy.sensitivity import scenarios
 from mcf.common import manifest, new_output, read_csv, write_csv, write_json
@@ -76,7 +77,7 @@ def replay_scenario(
             outstanding_exposure=0.0,
             previous_limit=previous_limit,
             hard_stop=row["known_disclosure"],
-            risk_target="first_sec_item_1_03_disclosure",
+            risk_target=row.get("event_type", "first_sec_item_1_03_disclosure"),
             risk_horizon_days=60,
             risk_is_illustrative=probability_stress,
         )
@@ -102,6 +103,8 @@ def replay_scenario(
             feature_available_on=row["feature_available_on"],
             assets=row["assets"],
             probability=probability,
+            risk_target=inputs.risk_target,
+            risk_horizon_days=inputs.risk_horizon_days,
             known_disclosure=row["known_disclosure"],
             revenue_annual=inputs.revenue_annual,
             operating_cashflow_annual=inputs.operating_cashflow_annual,
@@ -172,6 +175,13 @@ def run(models, features, policy_path, output):
                 or row["feature_available_on"] > row["decision_date"]
             ):
                 raise ValueError("Invalid empirical information timing")
+            if (
+                row.get("event_type", config["event_type"]) != config["event_type"]
+                or int(row.get("horizon_days", config["horizon_days"])) != config["horizon_days"]
+                or (config["event_type"] in RECURRENT_TARGETS and "event_type" not in row)
+            ):
+                raise ValueError("Feature target/horizon does not match the model; rebuild features for this target")
+            row["event_type"] = config["event_type"]
             names = (
                 "assets",
                 "revenue_annual",
@@ -217,6 +227,7 @@ def run(models, features, policy_path, output):
                 company_id=r["company_id"],
                 decision_date=r["decision_date"],
                 model=model_name,
+                event_type=config["event_type"],
                 probability=r["probability"],
                 known_disclosure=r["known_disclosure"],
             )
@@ -287,6 +298,8 @@ def run(models, features, policy_path, output):
         dict(
             model=model_name,
             selected_model=choice,
+            target=config["event_type"],
+            horizon_days=config["horizon_days"],
             excluded=dict(excluded),
             base=summaries[0],
             update_reasons=dict(Counter(r["update_reason"] for r in base_paths)),
@@ -310,6 +323,7 @@ def run(models, features, policy_path, output):
             [models, features, policy_path],
             data_kind="empirical_financials_with_policy_assumptions",
             model=model_name,
+            target=config["event_type"],
             rows=len(rows),
         ),
     )

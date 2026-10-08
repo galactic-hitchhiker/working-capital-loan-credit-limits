@@ -28,6 +28,19 @@ from mcf.enrichment.item204.reviewers.common import APIReviewError
 
 
 class BatchReviewTests(unittest.TestCase):
+    def test_payment_profile_round_trip(self):
+        self.args.payment_failure_only = True
+        self.submit()
+        path, job, lines = self.result_lines()
+        request = json.loads((path.parent / "input.jsonl").read_text().splitlines()[0])
+        self.assertIn("Bankruptcy/receivership", request["body"]["instructions"])
+        self.collect(lines)
+        for row in self.rows():
+            self.assertEqual(row["classification"], "QUALIFIED_DEFAULT")
+            self.assertEqual(row["llm_review"]["settings"]["target"], "disclosed_payment_failure")
+        with patch.object(batch, "api_request", side_effect=AssertionError("Cached collection must not call API")):
+            self.assertEqual(batch.run(self.args)["review_counts"], {"cached": 2})
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)

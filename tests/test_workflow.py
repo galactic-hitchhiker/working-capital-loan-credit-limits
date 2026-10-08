@@ -423,6 +423,13 @@ class ModelTests(unittest.TestCase):
             ]
             self.assertEqual(sum(map(len, arrays)), len(set.union(*arrays)))
 
+    def test_sparse_event_error_reports_observed_and_required_counts(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            config, _, _ = fixture(Path(tmp), companies_per_cohort=60)
+            config["min_event_companies"] = 999
+            with self.assertRaisesRegex(ValueError, r"training:.*after chronological purging.*found \d+, required 999.*positive rows="):
+                prepare(Path(tmp) / "panel.csv", config)
+
     def test_future_feature_in_panel_is_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp)

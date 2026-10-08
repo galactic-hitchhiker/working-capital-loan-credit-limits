@@ -2,7 +2,26 @@
 
 This repository contains the empirical study and thesis draft for **Dynamic Determination of Short-Term Corporate Credit Limits Using Machine Learning**. Start with the [thesis index](docs/README.md), use the [workflow](docs/workflow.md) to reproduce the study, and consult the [input contracts](docs/input_contracts.md) for required data fields.
 
-## Current Empirical Result
+## Current Prediction Target
+
+The default workflow predicts **disclosed bankruptcy/receivership or payment
+failure within 60 days**. Every Item 1.03 filing qualifies automatically. Item
+2.04-only filings qualify only with `QUALIFIED_DEFAULT / PAYMENT_FAILURE` and
+source-backed evidence; acceleration/enforcement alone remain unresolved.
+
+Both sources are outcome events for training. All qualifying filings are saved;
+reports within a rolling 90-day gap form one episode, and later episodes can
+contribute further outcomes for the same company. The quiet gap is an operational
+rule, not verified cure. The outcome is a broader disclosure proxy, not a verified
+contractual payment-default probability.
+
+Use `configs/study.bankruptcy_or_payment_failure.json` and the
+[combined-target guide](docs/bankruptcy_payment_failure_workflow.md). Your earlier
+2.04 reviews can be reused without new OpenAI calls; 1.03 needs no AI review.
+The narrower payment-only configs remain available for comparison. Existing
+results below describe the historical target and have not been retrained here.
+
+## Historical Empirical Result
 
 The study uses local SEC company-facts and submissions data. It contains 588,111 labeled company-month observations from 9,075 issuers and predicts the first recorded Form 8-K or 8-K/A Item 1.03 bankruptcy or receivership disclosure within the next 60 days. This outcome is not payment default.
 
@@ -44,12 +63,12 @@ All application Python modules live under the `mcf/` package. Tests remain in
 | Path | Purpose |
 |---|---|
 | `mcf/data/` | SEC ingestion, point-in-time facts, disclosure labels and panel construction |
-| `configs/` | Study designs and policy parameters for the Item 1.03 study, composite disclosure proxy and examples |
+| `configs/` | Current payment-failure design, historical study designs and policy parameters |
 | `mcf/models/` | Model definitions, temporal validation, training, evaluation and prediction |
 | `mcf/policy/` | Credit-limit rules, replay, examples and sensitivity analysis |
 | `mcf/reporting/` | Empirical reports, figures and thesis evidence exports |
-| `mcf/workflows/` | Composite disclosure-proxy workflow, synthetic demo and environment-aware command launcher |
-| `mcf/enrichment/item204/` | SEC filing discovery/download and OpenAI Batch classification of all Item 2.04 filings |
+| `mcf/workflows/` | Payment-failure training workflow, synthetic demo and command launcher |
+| `mcf/enrichment/item204/` | SEC Item 1.03/2.04 discovery/download and OpenAI Batch evidence review |
 | `mcf/common.py` | Shared configuration, file and serialization helpers |
 | `tests/` | Verify extraction, chronology, modeling and policy behavior |
 | `docs/` | Thesis chapters, input contracts and workflow/parameter guides |
@@ -215,7 +234,36 @@ To refresh the thesis evidence from the current completed run:
 
 The exporter copies compact evidence tables and regenerates Appendices C and D. It does not edit Google Docs.
 
-## Composite Item 1.03 + Item 2.04 Model
+## Train the Bankruptcy/Payment-Failure Target
+
+Reuse your existing 2.04 reviews and automatically include every Item 1.03:
+
+```sh
+.venv/bin/python -m mcf.workflows.launcher -m mcf.workflows.payment_default_proxy \
+  --dataset ../dataset \
+  --config configs/study.bankruptcy_or_payment_failure.json \
+  --disclosure-results results/item_204_openai_batch_review \
+  --output-dir results/bankruptcy_payment_failure_run
+```
+
+This makes no OpenAI calls and builds a fresh combined inventory, monthly panel
+and models. Use a new output root. The workflow now defaults to this config.
+The [step-by-step guide](docs/bankruptcy_payment_failure_workflow.md) explains
+label rules, recurrence, validation and separate stage commands.
+
+The 12 financial predictors and chronological validation remain the baseline.
+Standard sample minima remain 10 event companies and 10 positive/negative rows.
+Changes to the target require rebuilding the panel and retraining; they do not
+guarantee better metrics. Revised 2023–2025 evaluation is retrospective.
+
+The [narrow payment-only guide](docs/disclosed_payment_failure_workflow.md)
+and its optional exploratory sparse-event config remain available for comparison.
+
+## Historical Composite Item 1.03 + Item 2.04 Model
+
+The commands below reproduce the earlier broader target. They require its config
+explicitly; use the payment-failure guide above for the current target.
+
 
 The repository also supports a separate experimental target named
 `first_sec_payment_default_disclosure_proxy`. It combines every Item 1.03 filing
@@ -231,6 +279,7 @@ training with one command:
 ```sh
 SEC_USER_AGENT='Your Name your.email@example.com' \
 .venv/bin/python -m mcf.workflows.launcher -m mcf.workflows.payment_default_proxy \
+  --config configs/study.payment_default_proxy.json \
   --dataset ../dataset \
   --output-dir results/payment_default_proxy
 ```
@@ -272,6 +321,7 @@ Use the completed enrichment in the remaining end-to-end workflow with:
 
 ```sh
 .venv/bin/python -m mcf.workflows.launcher -m mcf.workflows.payment_default_proxy \
+  --config configs/study.payment_default_proxy.json \
   --dataset ../dataset \
   --item-204-results results/item_204_pipeline/final \
   --output-dir results/payment_default_proxy

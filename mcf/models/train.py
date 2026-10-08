@@ -187,10 +187,18 @@ def prepare(panel_path, config):
         )
         if min(positives, len(subset) - positives) < config["min_class_count"]:
             raise ValueError(
-                f"{stage}: too few positive or negative labels for the fixed design"
+                f"{stage}: too few positive or negative labels after chronological purging "
+                f"(positives={positives}, negatives={len(subset) - positives}; "
+                f"required at least {config['min_class_count']} of each). "
+                "Complete missing reviews or explicitly use an exploratory sparse-event design."
             )
         if len(event_companies) < config["min_event_companies"]:
-            raise ValueError(f"{stage}: too few distinct companies with events")
+            raise ValueError(
+                f"{stage}: too few distinct companies with events after chronological purging "
+                f"(found {len(event_companies)}, required {config['min_event_companies']}; "
+                f"positive rows={positives}). Complete missing reviews or explicitly use "
+                "an exploratory sparse-event design."
+            )
     audit["purged"] = {"rows": len(indices["purged"])}
     x = np.array(
         [
@@ -240,11 +248,14 @@ def run(config_path, panel_path, output, *, smoke=False):
             "min_class_count"
         ]:
             raise ValueError(
-                f"tuning fold {fold['validation_year']}: too few positive or negative labels"
+                f"tuning fold {fold['validation_year']}: too few positive or negative labels "
+                f"(positives={positives}, negatives={len(validation_indices) - positives}; "
+                f"required at least {config['min_class_count']} of each)"
             )
         if len(event_companies) < config["min_event_companies"]:
             raise ValueError(
-                f"tuning fold {fold['validation_year']}: too few event companies"
+                f"tuning fold {fold['validation_year']}: too few event companies "
+                f"(found {len(event_companies)}, required {config['min_event_companies']})"
             )
     audit["rolling_tuning"] = {
         "ranking_rule": "highest mean annual AP lift; then highest mean annual Brier skill; then fixed candidate order",
@@ -419,6 +430,8 @@ def run(config_path, panel_path, output, *, smoke=False):
     )
     decision = dict(
         selected_model=chosen,
+        exploratory_low_event=config.get("exploratory_low_event", False),
+        validation_status=config.get("validation_status"),
         status=(
             "selected_on_selection_period"
             if chosen

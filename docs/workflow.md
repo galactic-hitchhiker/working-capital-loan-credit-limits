@@ -8,7 +8,14 @@ Run commands from the repository root with the pinned virtual environment. Every
 .venv/bin/python -m mcf.workflows.launcher -m unittest discover -s tests -v
 ```
 
-## Full Empirical Pipeline
+## Current Bankruptcy/Payment-Failure Pipeline
+
+Use the [bankruptcy/payment-failure workflow](bankruptcy_payment_failure_workflow.md)
+for the current recurrent 60-day target. Item 1.03 qualifies automatically;
+2.04 requires payment-failure evidence. Rebuild the panel for this outcome. The commands below
+reproduce the historical first-Item-1.03 study.
+
+## Historical Empirical Pipeline
 
 ```sh
 .venv/bin/python -m mcf.data.empirical inventory \
