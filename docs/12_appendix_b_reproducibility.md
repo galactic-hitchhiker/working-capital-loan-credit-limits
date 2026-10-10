@@ -2,9 +2,9 @@
 
 ## B.1 Completed Experiment
 
-The completed study uses local SEC company-facts and submissions data and first-recorded Item 1.03 disclosure labels. Its settings are in `configs/study.sec_disclosure.json`. The chronological stages are training in 2011–2016, tuning in 2017–2018, calibration in 2019, selection and robustness in 2020–2022, and held-out evaluation in 2023–2025. Boundary observations are purged until their complete 60-day labels are observable.
+Run 006 uses local SEC company facts, submissions and imported Financial Statement and Notes facts. Its target is a new qualifying Item 1.03 bankruptcy or receivership or reviewed Item 2.04 payment-failure disclosure episode within 60 days. Settings are in `configs/study.bankruptcy_or_payment_failure.json`. The stages are training in 2011–2016, tuning in 2017–2018, calibration in 2019, selection in 2020–2022 and later evaluation in 2023–2025. Boundary observations are purged until their complete labels are observable.
 
-The reported run selects random forest with its identity probability mapping and freezes a threshold of 0.0410103. The identity mapping is the forest's raw predicted probability; it is retained because sigmoid calibration worsens selection Brier error. The base policy uses this selected model.
+The run selects random forest with its raw probability and freezes a threshold of 0.0579707. Sigmoid calibration worsens selection Brier error. The run 006 policy replay uses this selected model.
 
 ## B.2 Implementation Map
 
@@ -44,22 +44,17 @@ Company-cluster bootstrap intervals use 500 repetitions and retain all monthly r
 
 | Artifact | Location |
 |---|---|
-| Inventory, disclosure events and source hashes | results/history/item_103_model_evolution/01_initial_full_pipeline_xgboost/inventory/ |
-| Panel, model features and provenance | results/history/item_103_model_evolution/02_improved_sec_fact_coverage_xgboost/panel/ |
-| Fitted models, selection and evaluation | results/history/item_103_model_evolution/03_rolling_temporal_validation_random_forest/models/ |
-| Descriptive summaries | results/history/item_103_model_evolution/03_rolling_temporal_validation_random_forest/descriptive/ |
-| Model reports and figures | results/history/item_103_model_evolution/03_rolling_temporal_validation_random_forest/model_report/ |
-| Policy decisions and sensitivity | results/history/item_103_model_evolution/03_rolling_temporal_validation_random_forest/policy/ |
-| Policy reports and case studies | results/history/item_103_model_evolution/03_rolling_temporal_validation_random_forest/policy_report/ |
-| Worked examples | results/history/item_103_model_evolution/03_rolling_temporal_validation_random_forest/worked_examples/ |
-
-The numbered history and dependency chain are documented in
-`results/history/README.md` and `results/history/index.json`. Compact historical
-model metrics are in `results/history/model_comparison.csv`, and key artifact
-hashes are preserved in `results/history/artifact_hashes.json`.
+| Inventory, disclosure events and source hashes | results/run_006_full_statement_enrichment/inventory/ |
+| Panel, model features and provenance | results/run_006_full_statement_enrichment/panel/ |
+| Fitted models, selection and evaluation | results/run_006_full_statement_enrichment/models/ |
+| Matched panel and models without statement facts | results/run_006_full_statement_enrichment/panel_without_statements/ and models_without_statements/ |
+| Descriptive summaries and model figures | results/run_006_full_statement_enrichment/descriptive/ and model_report/ |
+| Policy decisions and sensitivity | results/run_006_full_statement_enrichment/policy/ |
+| Policy reports and case studies | results/run_006_full_statement_enrichment/policy_report/ |
+| Separate hypothetical worked examples | results/history/item_103_model_evolution/03_rolling_temporal_validation_random_forest/worked_examples/ |
 | Thesis evidence copies | docs/tables/ and docs/figures/ |
 
-The split run names record successive data and modeling revisions: `full_run` contains the inventory, `full_run_1` the improved panel, and `full_run_2` the final model and policy outputs. Every result stage writes a manifest and hashes its inputs and source files. New output directories must be empty, preventing silent overwrites.
+The matched comparison uses the same run 006 SEC snapshot and labels with and without attached statement facts. Its exact panel and paired model comparisons are in `statement_enrichment_comparison.json` and `paired_test_comparison.json`. Run 005 used a different source snapshot, so its comparison with run 006 does not isolate the statement effect. Each result stage writes a manifest and hashes its inputs. New output directories must be empty, preventing silent overwrites. The older Item 1.03-only work is retained under `results/history/`.
 
 ## B.5 Software Environment
 
@@ -81,6 +76,6 @@ The pinned packages are recorded in `requirements-lock.txt`. `mcf/workflows/laun
 
 The exact command sequence is documented in `docs/workflow.md`. The tests cover information availability, restatements, period matching, conflicting facts, disclosure windows, chronological purging, preprocessing isolation, temporal folds, selection and policy invariants.
 
-Tests establish the implemented software behavior. They do not establish the economic validity of every filing fact or the suitability of a real credit decision. The target is an Item 1.03 disclosure, not payment default. Policy outputs remain hypothetical because exposure, repayments, defaults, recoveries, losses, pricing and profitability are unobserved.
+Tests establish the implemented software behavior. They do not establish the economic validity of every filing fact or the suitability of a real credit decision. The target is a bankruptcy or reviewed payment-failure disclosure episode, not verified facility default. Policy outputs remain hypothetical because exposure, repayments, defaults, recoveries, losses, pricing and profitability are unobserved.
 
-The 2023–2025 period is excluded from all final-run model-development steps. Because the same years were examined in earlier project iterations, the thesis calls this a held-out evaluation and does not claim a pristine external validation.
+The 2023–2025 period is excluded from all run 006 model-development steps. Because the same years were examined in earlier project iterations, including before the broader target was specified, the thesis treats this evaluation as retrospective and does not claim pristine external validation.

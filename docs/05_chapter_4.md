@@ -1,10 +1,10 @@
 # 4 Risk Modeling and Validation Methodology
 
-This chapter describes how the 60-day SEC disclosure models are fitted and evaluated. The purpose is to compare models under the same information constraints. The settings were fixed before model fitting in study.sec_disclosure.json.
+This chapter describes how the 60-day SEC disclosure models are fitted and evaluated. The purpose is to compare models under the same information constraints. The run 006 settings were fixed before model fitting in `configs/study.bankruptcy_or_payment_failure.json`.
 
 ## 4.1 Modeling Framework
 
-The observation is an eligible company at a monthly decision date. The binary outcome indicates whether its first recorded Item 1.03 disclosure occurs within the following 60 calendar days. All models use current ratio, cash and equivalents to assets, liabilities to assets, 12-month asset growth, 12-month leverage change, working capital to assets, return on average assets, operating cash flow to average assets, operating cash flow to average liabilities, negative-net-income and negative-operating-cash-flow indicators, and log assets.
+The observation is an eligible company at a monthly decision date. The binary outcome indicates whether a new qualifying Item 1.03 bankruptcy or receivership or Item 2.04 payment-failure disclosure episode begins within the following 60 calendar days. All models use current ratio, cash and equivalents to assets, liabilities to assets, 12-month asset growth, 12-month leverage change, working capital to assets, return on average assets, operating cash flow to average assets, operating cash flow to average liabilities, negative-net-income and negative-operating-cash-flow indicators, and log assets.
 
 The company identifier, name, outcome source and industry code are not predictors. Dates define availability and chronological stages. Later financial information, future disclosures and realized policy outcomes are not model inputs.
 
@@ -64,7 +64,7 @@ Positive labels become usable only after the complete 60-day window. A negative 
 
 The same company may occur in several stages. This evaluates later monitoring of the observed issuer population. It does not establish generalization to an entirely separate set of borrowers. Although 2023–2025 is excluded from every model-development step in the reported run, those years were examined during earlier project development. The final results are therefore a chronological held-out evaluation rather than a completely untouched external validation.
 
-A first disclosure can produce positive labels at more than one monthly decision. The analysis reports distinct event companies as well as positive rows. These counts are not interchangeable.
+A disclosure episode can produce positive labels at more than one monthly decision. The analysis reports distinct episodes and event companies as well as positive rows. These counts are not interchangeable.
 
 ## 4.5 Class Imbalance and Decision Thresholds
 
@@ -124,10 +124,10 @@ Held-out error analysis examines false positives, missed events, annual performa
 
 A family qualifies only if its selected probability mapping has selection-period average precision above the selection event share and Brier score below the constant training-prevalence benchmark. Among qualifying families, the lowest Brier score wins. An exact tie favors the simpler family in the order logistic regression, L2 logistic regression, random forest and XGBoost.
 
-The choice is saved before held-out predictions are generated. In the completed run, random forest with its identity mapping qualifies and is selected. Its raw selection Brier score is 0.0012007, compared with 0.0012217 after sigmoid calibration, so preserving the unmodified forest probabilities gives the better probability error in that period.
+The choice is saved before held-out predictions are generated. In run 006, random forest with its identity mapping qualifies and is selected. Its raw selection Brier score is 0.0016463, compared with 0.0017675 after sigmoid calibration, so preserving the unmodified forest probabilities gives the lower error in that period.
 
 The rule combines a minimum ranking requirement with probability error. It does not require the highest average precision and does not establish statistically significant superiority. Chapter 6 reports all families to show this trade-off.
 
 The chosen probability enters the Chapter 5 rule without refitting on test outcomes. Policy coefficients are separate scenario assumptions and are not optimized against test results.
 
-File references: study.sec_disclosure.json, mcf/models/risk.py, mcf/models/train.py, mcf/models/temporal.py, mcf/models/evaluation.py, stage_audit.json, selection.json, tuning_scores.csv, tuning_fold_scores.csv.
+File references: configs/study.bankruptcy_or_payment_failure.json, mcf/models/risk.py, mcf/models/train.py, mcf/models/temporal.py, mcf/models/evaluation.py, results/run_006_full_statement_enrichment/models/.

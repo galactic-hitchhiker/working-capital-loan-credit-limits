@@ -1,43 +1,45 @@
 {
   "model": "random_forest",
   "selected_model": "random_forest",
+  "target": "disclosed_bankruptcy_or_payment_failure_within_60_days",
+  "horizon_days": 60,
   "excluded": {
-    "missing_required_financial_input": 41723,
+    "missing_required_financial_input": 41799,
     "invalid_required_financial_input": 42
   },
   "base": {
     "scenario": "base",
-    "rows": 99674,
-    "companies": 3872,
-    "segments": 5173,
-    "mean_limit_usd": 53227898.73047926,
-    "median_limit_usd": 3793210.633333334,
-    "mean_limit_to_assets": 0.0065267932470038,
-    "zero_limit_share": 0.05692557738226619,
-    "continuous_changes": 94501,
-    "increases": 16742,
-    "decreases": 9070,
-    "unchanged": 68689,
-    "mean_absolute_change_usd": 722474.3351336236,
-    "mean_absolute_change_to_assets": 0.0002845028861867799,
-    "hard_stop_rows": 2658,
-    "cap_binding_share": 0.5221923470513875
+    "rows": 99619,
+    "companies": 3869,
+    "segments": 5176,
+    "mean_limit_usd": 55086985.45469629,
+    "median_limit_usd": 4228950.0,
+    "mean_limit_to_assets": 0.006678006268970652,
+    "zero_limit_share": 0.03551531334384003,
+    "continuous_changes": 94443,
+    "increases": 17088,
+    "decreases": 9309,
+    "unchanged": 68046,
+    "mean_absolute_change_usd": 751382.1165056465,
+    "mean_absolute_change_to_assets": 0.0002903910347642272,
+    "hard_stop_rows": 262,
+    "cap_binding_share": 0.5341752075407302
   },
   "update_reasons": {
-    "initial_assessment": 5009,
-    "unchanged": 25222,
-    "phased_increase": 16742,
-    "no_new_information": 37044,
-    "immediate_reduction": 9007,
-    "increase_below_deadband": 3544,
-    "hard_stop": 2658,
-    "reopening_requires_initial_assessment": 448
+    "initial_assessment": 5162,
+    "unchanged": 25895,
+    "phased_increase": 17088,
+    "no_new_information": 37769,
+    "immediate_reduction": 9221,
+    "increase_below_deadband": 3606,
+    "hard_stop": 262,
+    "reopening_requires_initial_assessment": 616
   },
   "binding_constraints": {
-    "risk_adjusted_capacity": 42399,
-    "hard_cap": 52049,
-    "hard_stop": 2658,
-    "zero_capacity": 2568
+    "risk_adjusted_capacity": 43483,
+    "hard_cap": 53214,
+    "zero_capacity": 2660,
+    "hard_stop": 262
   },
   "assumptions": {
     "cash_eligible_fraction": 1.0,
@@ -47,7 +49,7 @@
     "missing_policy_inputs": "exclude row; no zero imputation",
     "gaps": "start a new hypothetical assessment after a missing month",
     "reopening": "no automatic reopening after zero within a continuous segment",
-    "hard_stop": "first Item 1.03 disclosure filed before decision date",
+    "hard_stop": "Recent known bankruptcy/receivership or payment-failure disclosure during the episode quiet-gap period; no claim of verified cure on re-entry.",
     "fallback": "If no model passes the predeclared selection rule, report absence of validated improvement and use the constant training-prevalence benchmark for policy scenarios."
   },
   "outcome": "Limits only; no observed exposure, loss or profitability"

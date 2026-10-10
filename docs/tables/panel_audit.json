@@ -1,91 +1,125 @@
 {
   "data_kind": "empirical",
-  "target": "first_sec_item_1_03_disclosure",
-  "candidate_companies": 10881,
-  "included_companies": 9075,
-  "distinct_positive_events": 472,
+  "target": "disclosed_bankruptcy_or_payment_failure_within_60_days",
+  "candidate_companies": 10879,
+  "included_companies": 8780,
+  "distinct_positive_events": 573,
   "counts": {
-    "missing_or_stale_financials": 335246,
-    "feature_rows": 609829,
-    "labeled_rows": 588111,
-    "positive_rows": 875,
-    "outside_observed_reporting_life": 1013505,
-    "post_first_disclosure": 15481,
-    "issuer_followup_censoring": 6237
+    "missing_or_stale_financials": 332429,
+    "feature_rows": 611705,
+    "labeled_rows": 565222,
+    "positive_rows": 1052,
+    "post_unresolved_payment_disclosure": 38664,
+    "outside_observed_reporting_life": 1014086,
+    "issuer_followup_censoring": 6011,
+    "payment_episode_washout": 1458,
+    "unresolved_payment_disclosure_in_window": 350
   },
   "annual_counts": {
     "2011": {
-      "rows": 10324,
-      "positives": 10
-    },
-    "2012": {
-      "rows": 39910,
-      "positives": 38
-    },
-    "2013": {
-      "rows": 49198,
-      "positives": 45
-    },
-    "2014": {
-      "rows": 46105,
-      "positives": 57
-    },
-    "2015": {
-      "rows": 37554,
-      "positives": 50
-    },
-    "2016": {
-      "rows": 30456,
-      "positives": 58
-    },
-    "2017": {
-      "rows": 27391,
-      "positives": 44
-    },
-    "2018": {
-      "rows": 33750,
-      "positives": 52
-    },
-    "2019": {
-      "rows": 41742,
-      "positives": 71
-    },
-    "2020": {
-      "rows": 42945,
-      "positives": 114
-    },
-    "2021": {
-      "rows": 44151,
+      "rows": 9352,
       "positives": 11
     },
+    "2012": {
+      "rows": 37698,
+      "positives": 47
+    },
+    "2013": {
+      "rows": 46809,
+      "positives": 48
+    },
+    "2014": {
+      "rows": 43899,
+      "positives": 66
+    },
+    "2015": {
+      "rows": 35801,
+      "positives": 60
+    },
+    "2016": {
+      "rows": 29179,
+      "positives": 77
+    },
+    "2017": {
+      "rows": 26384,
+      "positives": 58
+    },
+    "2018": {
+      "rows": 32526,
+      "positives": 58
+    },
+    "2019": {
+      "rows": 40339,
+      "positives": 90
+    },
+    "2020": {
+      "rows": 41654,
+      "positives": 137
+    },
+    "2021": {
+      "rows": 42830,
+      "positives": 36
+    },
     "2022": {
-      "rows": 48408,
-      "positives": 37
+      "rows": 46909,
+      "positives": 46
     },
     "2023": {
-      "rows": 48496,
-      "positives": 114
+      "rows": 46995,
+      "positives": 139
     },
     "2024": {
-      "rows": 45039,
-      "positives": 114
+      "rows": 43605,
+      "positives": 120
     },
     "2025": {
-      "rows": 42642,
-      "positives": 60
+      "rows": 41242,
+      "positives": 59
     }
   },
   "missing_predictors": {
-    "liabilities_to_assets": 104608,
-    "liabilities_to_assets_change_12m": 136913,
-    "operating_cashflow_to_average_liabilities": 108599,
-    "assets_growth_12m": 27654,
-    "return_on_average_assets": 38911,
-    "operating_cashflow_to_average_assets": 6006,
-    "cash_and_equivalents_to_assets": 52849,
-    "negative_net_income": 33573,
-    "current_ratio": 28767,
-    "working_capital_to_assets": 28649
+    "liabilities_to_assets": 52646,
+    "liabilities_to_assets_change_12m": 87963,
+    "operating_cashflow_to_average_liabilities": 59801,
+    "assets_growth_12m": 26304,
+    "return_on_average_assets": 27207,
+    "operating_cashflow_to_average_assets": 5515,
+    "cash_and_equivalents_to_assets": 51043,
+    "negative_net_income": 22284,
+    "current_ratio": 27431,
+    "working_capital_to_assets": 27296
   },
-  "limitation": "Current SIC screen; first recorded disclosure is not verified bankruptcy onset; negative labels concern reporting only"
+  "financial_exclusion_reasons": {
+    "missing_or_conflicting_annual_operating_cashflow": 195368,
+    "stale_annual_operating_cashflow": 105253,
+    "missing_or_conflicting_assets": 71310,
+    "stale_balance": 83278,
+    "nonpositive_assets": 9240
+  },
+  "financial_exclusion_note": "Reasons overlap; a company-month can fail multiple checks.",
+  "feature_row_derivations": {
+    "cash:direct": 549504,
+    "liabilities:current_plus_noncurrent": 11614,
+    "net_income:direct": 576750,
+    "liabilities:direct": 541451,
+    "statement:liabilities:reconciled_balance_sheet_calculation": 78085,
+    "liabilities:missing": 58121,
+    "assets:balance_sheet_identity": 2877,
+    "cash:missing": 54890,
+    "net_income:missing": 25186,
+    "statement:liabilities:complete_calculation_children": 444,
+    "net_income:consolidated_minus_noncontrolling": 9345,
+    "cash:combined_minus_restricted": 2820,
+    "cash:cash_plus_equivalents": 4491,
+    "net_income:common_plus_preferred_adjustments": 424,
+    "liabilities:total_minus_permanent_and_temporary_equity": 519,
+    "statement:current_liabilities:complete_calculation_children": 203,
+    "statement:liabilities:statement_custom_total": 62,
+    "statement:current_liabilities:statement_custom_total": 34,
+    "statement:current_assets:complete_calculation_children": 358,
+    "statement:cash:statement_custom_total": 54,
+    "statement:current_assets:statement_custom_total": 61
+  },
+  "statement_supplement_companies": 10759,
+  "limitation": "Bankruptcy/receivership or payment-failure disclosure episodes; 1.03 qualifies without payment review. Filing dates and episode gaps are operational, not verified failure/cure. Unresolved 2.04 censors labels. "
 }

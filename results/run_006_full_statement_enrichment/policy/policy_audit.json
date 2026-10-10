@@ -1,0 +1,56 @@
+{
+  "model": "random_forest",
+  "selected_model": "random_forest",
+  "target": "disclosed_bankruptcy_or_payment_failure_within_60_days",
+  "horizon_days": 60,
+  "excluded": {
+    "missing_required_financial_input": 41799,
+    "invalid_required_financial_input": 42
+  },
+  "base": {
+    "scenario": "base",
+    "rows": 99619,
+    "companies": 3869,
+    "segments": 5176,
+    "mean_limit_usd": 55086985.45469629,
+    "median_limit_usd": 4228950.0,
+    "mean_limit_to_assets": 0.006678006268970652,
+    "zero_limit_share": 0.03551531334384003,
+    "continuous_changes": 94443,
+    "increases": 17088,
+    "decreases": 9309,
+    "unchanged": 68046,
+    "mean_absolute_change_usd": 751382.1165056465,
+    "mean_absolute_change_to_assets": 0.0002903910347642272,
+    "hard_stop_rows": 262,
+    "cap_binding_share": 0.5341752075407302
+  },
+  "update_reasons": {
+    "initial_assessment": 5162,
+    "unchanged": 25895,
+    "phased_increase": 17088,
+    "no_new_information": 37769,
+    "immediate_reduction": 9221,
+    "increase_below_deadband": 3606,
+    "hard_stop": 262,
+    "reopening_requires_initial_assessment": 616
+  },
+  "binding_constraints": {
+    "risk_adjusted_capacity": 43483,
+    "hard_cap": 53214,
+    "zero_capacity": 2660,
+    "hard_stop": 262
+  },
+  "assumptions": {
+    "cash_eligible_fraction": 1.0,
+    "additional_debt_due_60_days": 0.0,
+    "cap_fraction_of_assets": 0.01,
+    "outstanding_exposure": 0.0,
+    "missing_policy_inputs": "exclude row; no zero imputation",
+    "gaps": "start a new hypothetical assessment after a missing month",
+    "reopening": "no automatic reopening after zero within a continuous segment",
+    "hard_stop": "Recent known bankruptcy/receivership or payment-failure disclosure during the episode quiet-gap period; no claim of verified cure on re-entry.",
+    "fallback": "If no model passes the predeclared selection rule, report absence of validated improvement and use the constant training-prevalence benchmark for policy scenarios."
+  },
+  "outcome": "Limits only; no observed exposure, loss or profitability"
+}

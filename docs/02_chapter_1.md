@@ -18,9 +18,9 @@ A risk estimate does not directly specify a monetary limit. Two companies can ha
 
 The first problem is to estimate a clearly defined event probability from information available at the decision date. The second is to translate that estimate into a limit. The third is to update the limit over time while avoiding unsupported increases and allowing prompt reductions.
 
-There is also a data problem. The supplied SEC dataset contains financial facts and filing histories, but it does not contain the payment history of the proposed facility. It cannot directly support a model of 60-day payment default, utilization or recovery. The empirical target is therefore the company's **first recorded Form 8-K or 8-K/A Item 1.03 disclosure within the next 60 calendar days**.
+There is also a data problem. The supplied SEC dataset contains financial facts and filing histories, but it does not contain the payment history of the proposed facility. It cannot directly support a model of 60-day payment default, utilization or recovery. The empirical target is therefore a **new bankruptcy or payment-failure disclosure episode within the next 60 calendar days**. Item 1.03 bankruptcy or receivership filings qualify; Item 2.04-only filings qualify when reviewed evidence explicitly describes a missed debt payment. Disclosures within 90 days are grouped into one episode, and a company may have later episodes.
 
-Item 1.03 concerns bankruptcy or receivership-related disclosures. Its filing date is a reporting event and may differ from the date of the underlying legal event. The model output is therefore called a *60-day disclosure probability*. It is not called a payment-default probability. [SEC, Form 8-K](https://www.sec.gov/files/form8-k.pdf).
+The filing date is a reporting event and may differ from the underlying event date. Item 1.03 can include reorganization-related reporting, while an Item 2.04 filing does not reveal the proposed facility's payment history. The model output is therefore called a *60-day disclosure probability*, not a verified payment-default probability. [SEC, Form 8-K](https://www.sec.gov/files/form8-k.pdf).
 
 This definition allows the study to use observed outcomes from the supplied data. It also limits the conclusions. The research can test disclosure prediction and the behavior of a proposed limit policy, but it cannot establish the losses or profits that a lender would have experienced.
 
@@ -28,7 +28,7 @@ This definition allows the study to use observed outcomes from the supplied data
 
 The thesis addresses four questions:
 
-1. Can financial information available at monthly decision dates predict a first recorded Item 1.03 disclosure within the next 60 days better than a constant event-rate benchmark?
+1. Can financial information available at monthly decision dates predict a new bankruptcy or payment-failure disclosure episode within the next 60 days better than a constant event-rate benchmark?
 2. Do random forest and gradient boosting improve prediction compared with logistic regression under the same chronological evaluation design?
 3. How can the estimated probability be combined with financial capacity and an exposure cap to produce a clear monetary limit?
 4. How do monthly limits respond to new financial information, changes in estimated risk and alternative policy assumptions?
@@ -75,4 +75,4 @@ Chapter 2 presents the credit-risk concepts and literature. Chapter 3 explains t
 
 Chapter 6 reports the empirical predictive results. Chapter 7 evaluates the resulting policy scenarios, historical paths and sensitivity analysis. Chapter 8 answers the research questions and presents the conclusions. The appendices provide variable definitions, reproducibility instructions, supplementary results and worked policy examples.
 
-File references: mcf/data/empirical.py, mcf/data/point_in_time.py, study.sec_disclosure.json, mcf/models/train.py, mcf/policy/credit.py.
+File references: mcf/data/empirical.py, mcf/data/point_in_time.py, configs/study.bankruptcy_or_payment_failure.json, mcf/models/train.py, mcf/policy/credit.py.

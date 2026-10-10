@@ -1,6 +1,6 @@
 # Dynamic short-term corporate credit limits
 
-This repository contains the thesis, SEC data pipeline, models, and credit-limit simulation for **Dynamic Determination of Short-Term Corporate Credit Limits Using Machine Learning**. See the [thesis index](docs/README.md) for chapters and the [input contracts](docs/input_contracts.md) for data requirements.
+This repository contains the thesis, SEC data pipeline, models, and credit-limit simulation for **Dynamic Determination of Short-Term Corporate Credit Limits Using Machine Learning**. See the [thesis index](docs/README.md) for chapters and the [reproduction workflow](docs/workflow.md) for data requirements.
 
 ## Current study
 
@@ -82,7 +82,18 @@ The main outputs are under `results/new_run/inventory/`, `results/new_run/panel/
   --output-dir results/new_run
 ```
 
-Use `--skip-download` with `all` if the SEC data are already present. See [reusing statement facts and reviews](docs/pipeline.md#run-everything) to avoid repeated imports or OpenAI calls. The [workflow guide](docs/workflow.md) covers reporting and the historical policy simulation.
+Use `--skip-download` with `all` if the SEC data are already present. See [reusing statement facts and reviews](docs/pipeline.md#run-everything) to avoid repeated imports or OpenAI calls. The [workflow guide](docs/workflow.md) covers reporting and the thesis policy replay.
+
+## Current thesis result
+
+Run 006 models recurrent bankruptcy or reviewed payment-failure disclosure
+episodes. Its panel has 565,222 company-months from 8,780 issuers. The selected
+random forest achieves **0.8866 ROC-AUC**, **0.02599 average precision** and
+**0.0023840 Brier score** in the retrospective 2023–2025 evaluation. Statement
+facts clearly improve feature coverage; the paired interval does not establish
+a reliable predictive gain. The hypothetical policy replay has a median limit
+of **USD 4.23 million**. See the [thesis](docs/README.md) and
+[run 006 comparison](docs/run_006_statement_comparison.md).
 
 ## Historical thesis result
 

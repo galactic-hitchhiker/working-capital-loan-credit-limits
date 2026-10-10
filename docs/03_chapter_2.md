@@ -141,7 +141,7 @@ The policy separates the review date from a change in relevant inputs. It applie
 
 Stability should be distinguished from usefulness. A limit that never changes is stable but may fail to respond to deterioration. Frequent small changes can create operational costs without improving risk control. Chapter 7 examines both movement and responsiveness.
 
-A hard stop is separate from a probability adjustment. In the historical scenario, a known Item 1.03 disclosure makes the company ineligible for further credit. This is a research rule; it does not claim that every such filing has the same legal or commercial consequences.
+A hard stop is separate from a probability adjustment. In the historical scenario, a known qualifying Item 1.03 or Item 2.04 payment-failure disclosure makes the company ineligible for further credit during the episode quiet gap. This is a research rule; it does not claim that every filing has the same legal or commercial consequences.
 
 ## 2.8 Research Gap and Position of the Study
 

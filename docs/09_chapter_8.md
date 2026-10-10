@@ -2,36 +2,38 @@
 
 ## 8.1 Main Findings
 
-The final experiment selects an unweighted random forest with 300 trees, unrestricted depth and a minimum leaf size of 20. Its raw identity probability mapping is retained because sigmoid calibration worsens selection-period Brier error. In the 2023–2025 held-out evaluation, the model achieves ROC-AUC 0.9089, average precision 0.02747 and Brier score 0.0020872. These results show strong ranking relative to the rare-event baseline and a small probability-error improvement.
+Run 006 selects an unweighted random forest with 300 trees, unrestricted depth and a minimum leaf size of 20. It retains raw probabilities because sigmoid calibration increases selection-period Brier error. In the 2023–2025 evaluation, the model reaches ROC-AUC 0.8866, average precision 0.02599 and Brier score 0.0023840. The Brier improvement over the constant benchmark is small.
 
-The fixed-threshold results are less strong. Precision is 3.97%, recall is 12.85%, and only 24 of 160 event companies have at least one detected positive row. The model is therefore more convincing as a graded risk-ranking input than as a stand-alone binary alert.
+At the frozen threshold, precision is 5.63% and recall is 9.12%. The model detects at least one monthly row for 18 of 176 test-period disclosure episodes. It is more useful as a graded risk input than as a stand-alone binary alert.
 
-The policy simulation shows how that continuous prediction can alter a transparent monthly limit. Capacity, exposure caps and assumed additional debt drive much of the aggregate result. The base mean limit is 0.653% of assets, and the median is USD 3.79 million. These figures describe the implemented assumptions, not an empirically optimized lending policy.
+Statement enrichment fills 135,692 missing predictor cells on the matched panel and increases the number of complete rows by 35,350. The paired comparison gives a small positive point difference in ROC-AUC, but its 95% interval includes zero. Better accounting coverage is established; better predictive performance remains uncertain.
+
+The policy replay shows how a continuous prediction can change a monthly limit. Capacity, exposure caps and assumed additional debt drive much of the aggregate result. The base mean limit is 0.668% of assets and the median is USD 4.23 million. These figures describe assumptions, not optimized lending decisions.
 
 ## 8.2 Contribution
 
-The research combines point-in-time SEC accounting data, a clearly dated 60-day label, chronological model development, rolling temporal tuning, an explicit probability-selection rule and an auditable credit policy. It also separates model ranking, probability quality, threshold classification and monetary decisions. That separation is useful because each answers a different question.
+The research combines dated SEC accounting and disclosure records, a 60-day episode label, chronological model development, temporal tuning, explicit probability selection and an auditable credit rule. It keeps model ranking, probability quality, threshold classification and monetary decisions separate because each answers a different question.
 
-The expanded 12-predictor design adds leverage, cash-flow coverage, cash holdings, growth and negative-performance indicators to the original liquidity and profitability variables. Tree models benefit materially from this broader information set and nonlinear interactions.
+The statement comparison also shows a practical data lesson: recovering missing financial values can improve coverage substantially without proving a corresponding improvement in predictions. The matched design isolates the statement source within the new SEC snapshot. Direct comparison with run 005 also changes the source snapshot and other construction details, so it cannot identify the statement effect.
 
 ## 8.3 Limitations
 
-The target is an Item 1.03 bankruptcy or receivership disclosure. It is not a direct payment-default label. Payment default can occur without Item 1.03, while an Item 1.03 filing does not by itself identify every contractual missed payment, cure, exposure or loss.
+The target is a new Item 1.03 bankruptcy or receivership or reviewed Item 2.04 payment-failure disclosure episode. Filing dates and the 90-day episode gap are operational definitions. They do not establish the precise onset or cure of contractual default. Item 1.03 can involve reorganization reporting; Item 2.04 evidence does not establish a missed payment on the proposed facility.
 
-The outcome is extremely rare, accounting values can contain filing and taxonomy noise, and some predictors remain missing. Monthly rows from the same company are dependent, although company-cluster bootstrap intervals partly address that dependence. The stage event rates differ, and probability quality may drift as reporting and market regimes change.
+The outcome is rare, some accounting predictors remain missing, and filing data can contain taxonomy or reporting noise. Monthly rows within a company are dependent. Company-cluster bootstrap intervals address some of this dependence, but they omit common calendar shocks and uncertainty from selecting the model and target.
 
-The 2023–2025 labels are excluded from all fitting, tuning, calibration, model selection and threshold selection in the reported run. Those years were nevertheless examined during earlier project development. The reported evaluation should therefore be read as a chronologically held-out assessment of the final run, not as a pristine external validation performed once after all research choices were fixed.
+The final run excludes 2023–2025 labels from its development stages. Those years were examined during earlier project versions, before the broader target was specified. The later-period results are therefore retrospective, not a pristine external validation. The statement comparison's paired intervals are conditional on the fitted selected models.
 
-The policy uses assumed initial limits, cash eligibility, sales conversion, additional debt and collateral behavior. No facility-level utilization, repayments, contractual defaults, recoveries, losses, pricing or customer outcomes are observed. The simulation cannot demonstrate that the policy improves profit or reduces realized credit loss.
+The policy assumes initial limits, cash eligibility, additional debt and facility exposure. No actual utilization, repayments, contractual defaults, recoveries, losses, pricing or customer outcomes are observed. The simulation cannot demonstrate improved profit or reduced realized credit loss.
 
 ## 8.4 Further Work
 
-A stronger follow-up study should obtain direct payment-performance or default labels and facility economics. It should freeze the complete pipeline before testing on a new future period or independent lender portfolio. Probability calibration should be monitored by period and recalibrated only through a predeclared governance process.
+A stronger study should obtain direct facility payment outcomes and economics. It should freeze the complete target and pipeline before testing on a future period or independent lender portfolio. Further work can review unresolved Item 2.04 filings, improve accounting reconciliation and evaluate whether the extra coverage helps in a new sample.
 
-Further model work can evaluate additional point-in-time predictors, alternative missing-data treatments and constrained or monotone models. Any larger hyperparameter search should remain nested inside temporal validation. Policy evaluation should then measure expected loss, utilization, approval effects, limit volatility and profitability under realistic operational constraints.
+Policy evaluation should then measure expected loss, utilization, approval effects, limit volatility and profitability under realistic operational constraints. Probability calibration should be monitored over time using a predeclared process.
 
 ## 8.5 Conclusion
 
-The thesis demonstrates that public accounting and filing data contain a meaningful signal for near-term Item 1.03 disclosures. The selected random forest ranks risk well relative to the rare event rate and modestly improves probability error over a constant benchmark. Its threshold classification remains incomplete, and the result does not amount to payment-default prediction.
+Public accounting and filing data provide a useful signal for near-term bankruptcy or payment-failure disclosures. Run 006 improves financial-feature coverage through statement enrichment, while its predictive gain from that enrichment remains uncertain. The selected model's threshold classification is incomplete, and its output is not a verified payment-default probability.
 
-The policy layer turns this signal into transparent, reproducible decisions and exposes which assumptions drive credit limits. That is the central practical contribution: a traceable framework linking dated information, model evidence and policy rules while keeping the limits of the available data explicit.
+The policy layer turns the signal into transparent, reproducible limit decisions and shows which assumptions matter most. The thesis provides a traceable framework linking dated information, model evidence and policy rules while keeping the limits of the data explicit.

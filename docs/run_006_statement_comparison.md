@@ -78,3 +78,13 @@ test AUC 0.88659, AP 0.02599, Brier 0.00238402, precision 5.63%, recall
 model family and threshold changed. The run 005 versus run 006 comparison
 does not isolate the effect of statement data. Both evaluations remain
 retrospective; the 2023–2025 period was examined during prior development.
+
+## Thesis policy replay
+
+The run 006 selected model was also replayed with the thesis's existing
+illustrative policy settings. After excluding missing or invalid required
+policy inputs, the base scenario covers 99,619 company-months from 3,869
+companies. Its median limit is USD 4.23 million and its mean limit is 0.6678%
+of assets. These are conditional policy outputs, not observed lending results.
+The audit and sensitivity results are under
+`results/run_006_full_statement_enrichment/policy/`.

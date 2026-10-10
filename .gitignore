@@ -20,6 +20,9 @@ results/run_*/panel/
 results/run_*/panel_without_statements/
 results/run_*/statement_facts/
 results/run_*/models*/predictions.csv
+results/run_*/policy/policy_probabilities.csv
+results/run_*/policy/limit_paths.csv
+results/run_*/policy/comparison_paths.csv
 !results/run_*/models/models.joblib
 !results/run_*/models_without_statements/models.joblib
 results/history/*

@@ -31,10 +31,10 @@ or complete inability to repay in each filing. See
 
 ```sh
 .venv/bin/python -m mcf.workflows.launcher -m mcf.workflows.payment_default_proxy \
-  --dataset ../dataset \
+  --dataset ../dataset_full \
   --config configs/study.bankruptcy_or_payment_failure.json \
   --item-204-results results/item_204_openai_batch_review \
-  --statement-facts results/statement_recovery_full/companies \
+  --statement-facts ../dataset_full/statement_facts/companies \
   --output-dir results/bankruptcy_payment_failure_run
 ```
 
@@ -73,7 +73,7 @@ For stage-by-stage operation:
 
 ```sh
 .venv/bin/python -m mcf.data.empirical inventory \
-  --dataset ../dataset \
+  --dataset ../dataset_full \
   --target disclosed_bankruptcy_or_payment_failure_within_60_days \
   --episode-gap-days 90 \
   --item-204-results results/item_204_openai_batch_review \
@@ -81,10 +81,10 @@ For stage-by-stage operation:
   --output-dir results/bankruptcy_payment_failure_run/inventory
 
 .venv/bin/python -m mcf.data.empirical panel \
-  --dataset ../dataset \
+  --dataset ../dataset_full \
   --inventory results/bankruptcy_payment_failure_run/inventory \
   --config configs/study.bankruptcy_or_payment_failure.json \
-  --statement-facts results/statement_recovery_full/companies \
+  --statement-facts ../dataset_full/statement_facts/companies \
   --output-dir results/bankruptcy_payment_failure_run/panel
 
 .venv/bin/python -m mcf.workflows.launcher -m mcf.models.train \
@@ -93,7 +93,5 @@ For stage-by-stage operation:
   --output-dir results/bankruptcy_payment_failure_run/models
 ```
 
-Earlier narrower payment-failure configs and their
-[guide](disclosed_payment_failure_workflow.md) remain available for comparison.
-The historical first-event composite is also preserved under
-`configs/study.payment_default_proxy.json`.
+Earlier comparison configurations remain under `configs/`. The current
+run 006 target is defined by `configs/study.bankruptcy_or_payment_failure.json`.

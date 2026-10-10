@@ -1,0 +1,336 @@
+{
+  "base": {
+    "parameters": {
+      "revenue_fraction": 0.2,
+      "cashflow_fraction": 0.5,
+      "cash_fraction": 0.1,
+      "risk_sensitivity": 10.0,
+      "increase_smoothing": 0.5,
+      "monthly_increase_cap": 0.1,
+      "increase_deadband": 0.02
+    },
+    "overrides": {}
+  },
+  "revenue_fraction_0.1": {
+    "parameters": {
+      "revenue_fraction": 0.1,
+      "cashflow_fraction": 0.5,
+      "cash_fraction": 0.1,
+      "risk_sensitivity": 10.0,
+      "increase_smoothing": 0.5,
+      "monthly_increase_cap": 0.1,
+      "increase_deadband": 0.02
+    },
+    "overrides": {}
+  },
+  "revenue_fraction_0.3": {
+    "parameters": {
+      "revenue_fraction": 0.3,
+      "cashflow_fraction": 0.5,
+      "cash_fraction": 0.1,
+      "risk_sensitivity": 10.0,
+      "increase_smoothing": 0.5,
+      "monthly_increase_cap": 0.1,
+      "increase_deadband": 0.02
+    },
+    "overrides": {}
+  },
+  "cashflow_fraction_0.25": {
+    "parameters": {
+      "revenue_fraction": 0.2,
+      "cashflow_fraction": 0.25,
+      "cash_fraction": 0.1,
+      "risk_sensitivity": 10.0,
+      "increase_smoothing": 0.5,
+      "monthly_increase_cap": 0.1,
+      "increase_deadband": 0.02
+    },
+    "overrides": {}
+  },
+  "cashflow_fraction_0.75": {
+    "parameters": {
+      "revenue_fraction": 0.2,
+      "cashflow_fraction": 0.75,
+      "cash_fraction": 0.1,
+      "risk_sensitivity": 10.0,
+      "increase_smoothing": 0.5,
+      "monthly_increase_cap": 0.1,
+      "increase_deadband": 0.02
+    },
+    "overrides": {}
+  },
+  "cash_fraction_0.05": {
+    "parameters": {
+      "revenue_fraction": 0.2,
+      "cashflow_fraction": 0.5,
+      "cash_fraction": 0.05,
+      "risk_sensitivity": 10.0,
+      "increase_smoothing": 0.5,
+      "monthly_increase_cap": 0.1,
+      "increase_deadband": 0.02
+    },
+    "overrides": {}
+  },
+  "cash_fraction_0.15": {
+    "parameters": {
+      "revenue_fraction": 0.2,
+      "cashflow_fraction": 0.5,
+      "cash_fraction": 0.15,
+      "risk_sensitivity": 10.0,
+      "increase_smoothing": 0.5,
+      "monthly_increase_cap": 0.1,
+      "increase_deadband": 0.02
+    },
+    "overrides": {}
+  },
+  "risk_sensitivity_5": {
+    "parameters": {
+      "revenue_fraction": 0.2,
+      "cashflow_fraction": 0.5,
+      "cash_fraction": 0.1,
+      "risk_sensitivity": 5.0,
+      "increase_smoothing": 0.5,
+      "monthly_increase_cap": 0.1,
+      "increase_deadband": 0.02
+    },
+    "overrides": {}
+  },
+  "risk_sensitivity_20": {
+    "parameters": {
+      "revenue_fraction": 0.2,
+      "cashflow_fraction": 0.5,
+      "cash_fraction": 0.1,
+      "risk_sensitivity": 20.0,
+      "increase_smoothing": 0.5,
+      "monthly_increase_cap": 0.1,
+      "increase_deadband": 0.02
+    },
+    "overrides": {}
+  },
+  "increase_smoothing_0.25": {
+    "parameters": {
+      "revenue_fraction": 0.2,
+      "cashflow_fraction": 0.5,
+      "cash_fraction": 0.1,
+      "risk_sensitivity": 10.0,
+      "increase_smoothing": 0.25,
+      "monthly_increase_cap": 0.1,
+      "increase_deadband": 0.02
+    },
+    "overrides": {}
+  },
+  "increase_smoothing_1": {
+    "parameters": {
+      "revenue_fraction": 0.2,
+      "cashflow_fraction": 0.5,
+      "cash_fraction": 0.1,
+      "risk_sensitivity": 10.0,
+      "increase_smoothing": 1.0,
+      "monthly_increase_cap": 0.1,
+      "increase_deadband": 0.02
+    },
+    "overrides": {}
+  },
+  "monthly_increase_cap_0.05": {
+    "parameters": {
+      "revenue_fraction": 0.2,
+      "cashflow_fraction": 0.5,
+      "cash_fraction": 0.1,
+      "risk_sensitivity": 10.0,
+      "increase_smoothing": 0.5,
+      "monthly_increase_cap": 0.05,
+      "increase_deadband": 0.02
+    },
+    "overrides": {}
+  },
+  "monthly_increase_cap_0.2": {
+    "parameters": {
+      "revenue_fraction": 0.2,
+      "cashflow_fraction": 0.5,
+      "cash_fraction": 0.1,
+      "risk_sensitivity": 10.0,
+      "increase_smoothing": 0.5,
+      "monthly_increase_cap": 0.2,
+      "increase_deadband": 0.02
+    },
+    "overrides": {}
+  },
+  "increase_deadband_0": {
+    "parameters": {
+      "revenue_fraction": 0.2,
+      "cashflow_fraction": 0.5,
+      "cash_fraction": 0.1,
+      "risk_sensitivity": 10.0,
+      "increase_smoothing": 0.5,
+      "monthly_increase_cap": 0.1,
+      "increase_deadband": 0.0
+    },
+    "overrides": {}
+  },
+  "increase_deadband_0.05": {
+    "parameters": {
+      "revenue_fraction": 0.2,
+      "cashflow_fraction": 0.5,
+      "cash_fraction": 0.1,
+      "risk_sensitivity": 10.0,
+      "increase_smoothing": 0.5,
+      "monthly_increase_cap": 0.1,
+      "increase_deadband": 0.05
+    },
+    "overrides": {}
+  },
+  "cash_eligible_half": {
+    "parameters": {
+      "revenue_fraction": 0.2,
+      "cashflow_fraction": 0.5,
+      "cash_fraction": 0.1,
+      "risk_sensitivity": 10.0,
+      "increase_smoothing": 0.5,
+      "monthly_increase_cap": 0.1,
+      "increase_deadband": 0.02
+    },
+    "overrides": {
+      "cash_fraction": 0.5
+    }
+  },
+  "cash_eligible_zero": {
+    "parameters": {
+      "revenue_fraction": 0.2,
+      "cashflow_fraction": 0.5,
+      "cash_fraction": 0.1,
+      "risk_sensitivity": 10.0,
+      "increase_smoothing": 0.5,
+      "monthly_increase_cap": 0.1,
+      "increase_deadband": 0.02
+    },
+    "overrides": {
+      "cash_fraction": 0.0
+    }
+  },
+  "cap_assets_0.005": {
+    "parameters": {
+      "revenue_fraction": 0.2,
+      "cashflow_fraction": 0.5,
+      "cash_fraction": 0.1,
+      "risk_sensitivity": 10.0,
+      "increase_smoothing": 0.5,
+      "monthly_increase_cap": 0.1,
+      "increase_deadband": 0.02
+    },
+    "overrides": {
+      "cap_fraction": 0.005
+    }
+  },
+  "cap_assets_0.02": {
+    "parameters": {
+      "revenue_fraction": 0.2,
+      "cashflow_fraction": 0.5,
+      "cash_fraction": 0.1,
+      "risk_sensitivity": 10.0,
+      "increase_smoothing": 0.5,
+      "monthly_increase_cap": 0.1,
+      "increase_deadband": 0.02
+    },
+    "overrides": {
+      "cap_fraction": 0.02
+    }
+  },
+  "additional_debt_assets_0.005": {
+    "parameters": {
+      "revenue_fraction": 0.2,
+      "cashflow_fraction": 0.5,
+      "cash_fraction": 0.1,
+      "risk_sensitivity": 10.0,
+      "increase_smoothing": 0.5,
+      "monthly_increase_cap": 0.1,
+      "increase_deadband": 0.02
+    },
+    "overrides": {
+      "debt_fraction": 0.005
+    }
+  },
+  "probability_doubled": {
+    "parameters": {
+      "revenue_fraction": 0.2,
+      "cashflow_fraction": 0.5,
+      "cash_fraction": 0.1,
+      "risk_sensitivity": 10.0,
+      "increase_smoothing": 0.5,
+      "monthly_increase_cap": 0.1,
+      "increase_deadband": 0.02
+    },
+    "overrides": {
+      "probability_stress": true
+    }
+  },
+  "capacity_only": {
+    "parameters": {
+      "revenue_fraction": 0.2,
+      "cashflow_fraction": 0.5,
+      "cash_fraction": 0.1,
+      "risk_sensitivity": 10.0,
+      "increase_smoothing": 0.5,
+      "monthly_increase_cap": 0.1,
+      "increase_deadband": 0.02
+    },
+    "overrides": {
+      "no_risk": true
+    }
+  },
+  "exploratory_logistic": {
+    "parameters": {
+      "revenue_fraction": 0.2,
+      "cashflow_fraction": 0.5,
+      "cash_fraction": 0.1,
+      "risk_sensitivity": 10.0,
+      "increase_smoothing": 0.5,
+      "monthly_increase_cap": 0.1,
+      "increase_deadband": 0.02
+    },
+    "overrides": {
+      "probability_column": "probability_logistic"
+    }
+  },
+  "exploratory_logistic_l2": {
+    "parameters": {
+      "revenue_fraction": 0.2,
+      "cashflow_fraction": 0.5,
+      "cash_fraction": 0.1,
+      "risk_sensitivity": 10.0,
+      "increase_smoothing": 0.5,
+      "monthly_increase_cap": 0.1,
+      "increase_deadband": 0.02
+    },
+    "overrides": {
+      "probability_column": "probability_logistic_l2"
+    }
+  },
+  "exploratory_random_forest": {
+    "parameters": {
+      "revenue_fraction": 0.2,
+      "cashflow_fraction": 0.5,
+      "cash_fraction": 0.1,
+      "risk_sensitivity": 10.0,
+      "increase_smoothing": 0.5,
+      "monthly_increase_cap": 0.1,
+      "increase_deadband": 0.02
+    },
+    "overrides": {
+      "probability_column": "probability_random_forest"
+    }
+  },
+  "exploratory_xgboost": {
+    "parameters": {
+      "revenue_fraction": 0.2,
+      "cashflow_fraction": 0.5,
+      "cash_fraction": 0.1,
+      "risk_sensitivity": 10.0,
+      "increase_smoothing": 0.5,
+      "monthly_increase_cap": 0.1,
+      "increase_deadband": 0.02
+    },
+    "overrides": {
+      "probability_column": "probability_xgboost"
+    }
+  }
+}

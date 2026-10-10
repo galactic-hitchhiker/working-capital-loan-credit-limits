@@ -6,6 +6,8 @@ Selected model: `random_forest`. The full setup is in `models/design.json`; `mod
 
 See `statement_enrichment_comparison.json`, `paired_test_comparison.json`, and `comparison_to_run_005.json`; `models_without_statements/` holds the paired fit.
 
+The thesis refresh also generated `descriptive/`, `model_report/`, `policy/` and `policy_report/` from the frozen run 006 panel and model. The base policy replay covers 99,619 company-months from 3,869 companies. Large row-level policy files are kept locally; the audit, sensitivity and reports retain the summary evidence. The policy uses explicit facility assumptions and is not an observed lending outcome.
+
 The extracted statement facts for this run are stored with the source snapshot at `../dataset_full/statement_facts/` (relative to the repository root), outside Git.
 
 `inventory/` and `panel/` (including `panel_without_statements/` where present) are local generated data and are excluded from Git. Stored manifests and workflow summaries retain the original run paths as historical provenance; after the folder rename, those paths may no longer resolve.

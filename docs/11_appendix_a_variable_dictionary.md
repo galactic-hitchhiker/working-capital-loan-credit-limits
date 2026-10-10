@@ -7,10 +7,10 @@ The empirical study uses USD, standard US-GAAP tags and Forms 10-K, 10-Q and the
 | Field | Source or definition | Timing and treatment |
 |---|---|---|
 | assets | Assets | Latest known balance-sheet date; positive assets required |
-| liabilities | Liabilities; otherwise LiabilitiesCurrent + LiabilitiesNoncurrent from the same filing accession | Same balance date as assets; derivation basis and components retained in provenance |
-| current_assets | AssetsCurrent | Same balance date as assets |
-| current_liabilities | LiabilitiesCurrent | Same balance date as assets |
-| reported_cash | CashAndCashEquivalentsAtCarryingValue | Same balance date; not verified eligible cash |
+| liabilities | Direct Liabilities; otherwise reconciled statement calculation or complete same-filing components | Same balance date as assets; derivation basis and components retained in provenance |
+| current_assets | AssetsCurrent or audited statement supplement | Same balance date as assets |
+| current_liabilities | LiabilitiesCurrent or audited statement supplement | Same balance date as assets |
+| reported_cash | CashAndCashEquivalentsAtCarryingValue or audited statement supplement | Same balance date; not verified eligible cash |
 | operating_cashflow_annual | NetCashProvidedByUsedInOperatingActivities | Latest known annual period spanning 330–400 days |
 | revenue_annual | RevenueFromContractWithCustomerExcludingAssessedTax; RevenueFromContractWithCustomerIncludingAssessedTax; Revenues; SalesRevenueNet | Exact same annual start/end as operating cash flow; conflicting same-vintage totals remain missing |
 | net_income | NetIncomeLoss | Same annual period as operating cash flow |
@@ -43,21 +43,19 @@ File references: mcf/data/sec.py, mcf/data/point_in_time.py, feature_provenance.
 |---|---|
 | company_id | Ten-digit SEC CIK |
 | decision_date | First day of the observation month |
-| event_type | first_sec_item_1_03_disclosure |
-| first_disclosure_date | Earliest recorded 8-K/8-K/A Item 1.03 filing date in combined supplied histories |
-| event_id | Company, target and first-disclosure date; present only for positive rows |
+| event_type | disclosed_bankruptcy_or_payment_failure_within_60_days |
+| episode_start | Filing date of a new qualifying Item 1.03 or reviewed Item 2.04 payment-failure episode; recorded in the disclosure inventory |
+| event_id | Company, target and disclosure-episode start; present only for positive rows |
 | horizon_days | 60 calendar days |
 | horizon_end | Decision date plus 60 days |
-| label | One for first disclosure in the forward window; zero for no recorded disclosure with qualifying follow-up |
+| label | One for a new qualifying episode in the forward window; zero for no such episode with qualifying follow-up and no unresolved candidate |
 | label_available_on | Day after full horizon for positives; day after first qualifying filing at/after horizon for negatives |
 | label_source | Positive accession number or negative reporting-history reference |
 | coverage_source | Main submissions file and referenced archives |
-| known_disclosure | First disclosure filed before the decision; used for policy hard stops |
+| known_disclosure | Recent qualifying episode known before the decision; used for policy hard stops in the separate features file |
 | data_kind | empirical for the completed study |
 
-The qualifying follow-up forms are 10-K, 10-Q, 8-K and their amendments. A zero label concerns observed reporting, not verified absence of payment default. Decisions on or after the first recorded disclosure do not enter predictive fitting or evaluation.
-
-The generic manual-event workflow has additional fields such as event_known_on and verified coverage registers. Those contracts are retained in input_contracts.md for a future legal-event study. They are not claims about the disclosure labels used here.
+The qualifying follow-up forms are 10-K, 10-Q, 8-K and their amendments. A zero label concerns observed reporting, not verified absence of payment default. Decisions during a known episode or its 90-day quiet gap do not enter predictive fitting; later episodes can enter.
 
 ## A.3 Policy inputs and outputs
 
@@ -68,10 +66,10 @@ The generic manual-event workflow has additional fields such as event_known_on a
 | Additional external debt payments within 60 days | Zero | Scenario assumption, not verified absence of payments |
 | Hard cap | 1% of reported assets | Policy assumption |
 | Outstanding facility exposure | Zero | Hypothetical facility assumption |
-| Risk probability | Selected random-forest identity probability | Estimated probability of the defined Item 1.03 disclosure within 60 days |
+| Risk probability | Selected random-forest identity probability | Estimated probability of a new qualifying disclosure episode within 60 days |
 | Previous limit | Prior assigned limit within the continuous segment | Simulation state |
 | Information changed | Financial amounts, probability, cap or hard-stop state changed numerically | Computed review condition |
-| Hard stop | First recorded disclosure known before decision | Research eligibility rule |
+| Hard stop | Recent qualifying disclosure known before decision | Research eligibility rule during the episode quiet gap |
 | New segment | First row or a gap in monthly observations | Fresh hypothetical assessment, not an observed reopening |
 
 The policy outputs capacity, multiplier, preliminary limit, assigned limit, available credit, excess exposure, binding constraint and update reason. Outstanding exposure remains separate from the assigned limit.

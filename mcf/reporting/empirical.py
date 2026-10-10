@@ -168,9 +168,9 @@ def model_report(models, output):
         events.append(
             dict(
                 model=name,
-                event_companies=len(by_event),
-                detected_event_companies=detected,
-                event_company_recall=detected / len(by_event),
+                disclosure_episodes=len(by_event),
+                detected_episodes=detected,
+                episode_recall=detected / len(by_event),
                 threshold=threshold,
             )
         )

@@ -1,76 +1,76 @@
 # 6 Empirical Results
 
-The experiment selects a random forest with its raw identity probability mapping. It produces materially better ranking than the logistic benchmarks and a small improvement in Brier score over the constant benchmark. The results support prediction of the defined SEC disclosure event, while leaving substantial classification error and no direct evidence about payment default.
+Run 006 selects a random forest with its raw probability. The model ranks the defined disclosure episodes better than the logistic benchmarks and has lower selection-period Brier error than the constant benchmark. Its fixed-threshold detection remains limited.
 
 ## 6.1 Sample and Chronological Design
 
-The labeled panel contains 588,111 company-months from 9,075 companies and 472 distinct event companies. Boundary purging removes observations whose 60-day outcome windows would cross stages.
+The labeled panel contains 565,222 company-months from 8,780 companies. It has 1,052 positive rows representing 573 disclosure episodes in 487 companies. Boundary purging removes observations whose 60-day outcome windows cross modeling stages.
 
 | Stage | Calendar period | Observations | Positive rows | Companies | Event companies |
 |---|---|---:|---:|---:|---:|
-| Training | 2011–2016 | 206,760 | 249 | 6,050 | 133 |
-| Tuning | 2017–2018 | 52,952 | 84 | 3,719 | 47 |
-| Calibration | 2019 | 32,269 | 59 | 3,928 | 35 |
-| Selection and robustness | 2020–2022 | 124,931 | 152 | 5,006 | 85 |
-| Held-out evaluation | 2023–2025 | 136,177 | 288 | 4,766 | 160 |
+| Training | 2011–2016 | 196,174 | 294 | 5,783 | 133 |
+| Tuning | 2017–2018 | 51,021 | 103 | 3,591 | 56 |
+| Calibration | 2019 | 31,165 | 74 | 3,814 | 43 |
+| Selection | 2020–2022 | 121,142 | 204 | 4,883 | 100 |
+| Later evaluation | 2023–2025 | 131,842 | 318 | 4,633 | 165 |
 
-The model-selection stages exclude 2023–2025 labels. Earlier versions of this research examined results from these years while the pipeline was being developed. The period is therefore held out within the final reported run, but it is not a completely untouched external validation sample.
+The final run excludes 2023–2025 labels from fitting, tuning, calibration and selection. Earlier project versions examined these years, and the broader target was specified after that work. The evaluation is retrospective, not an untouched external validation.
 
 ![Annual sample coverage and disclosure-label share](figures/sample_over_time.png)
 
-*Figure 6.1. Labeled panel before chronological purging. Positive rows are monthly prediction outcomes, not separate defaults. Source: panel_audit.json and mcf/reporting/empirical.py.*
+*Figure 6.1. Labeled panel before chronological purging. Positive rows are monthly prediction outcomes, not separate episodes. Source: run 006 panel audit and descriptive report.*
 
-## 6.2 Predictors and Rolling Tuning
+## 6.2 Predictors and Tuning
 
-The models use 12 point-in-time predictors: current ratio, cash and equivalents to assets, liabilities to assets, 12-month asset growth, 12-month change in liabilities to assets, working capital to assets, return on average assets, operating cash flow to average assets, operating cash flow to average liabilities, negative net income, negative operating cash flow and log assets.
+All families use the same twelve point-in-time accounting predictors described in Chapter 3. Expanding temporal folds fit through 2016 and validate in 2017, then fit through 2017 and validate in 2018. Candidate ranking uses mean annual average-precision lift and then mean Brier skill.
 
-Hyperparameters are evaluated with expanding-window temporal folds: fit through 2016 and validate in 2017, then fit through 2017 and validate in 2018. Selection uses mean average-precision lift and mean Brier skill across those folds. This design checks transfer to later years instead of mixing both tuning years into one aggregate score.
+The family winners are balanced logistic regression, balanced L2 logistic regression with C = 10, an unweighted random forest with 300 trees, unrestricted depth and minimum leaf size 20, and unweighted XGBoost with 200 trees, depth 4 and learning rate 0.05.
 
-The winning specifications are balanced logistic regression, balanced L2 logistic regression with C = 10, an unweighted random forest with 300 trees, unrestricted depth and minimum leaf size 20, and balanced XGBoost with 200 trees, depth 2 and learning rate 0.05.
+## 6.3 Probability Mapping and Selection
 
-## 6.3 Probability Mapping and Model Selection
+Sigmoid mapping lowers the logistic models' Brier errors. Raw probabilities are retained for both tree models. For the forest, the selection-period Brier score is 0.0016463 raw versus 0.0017675 after sigmoid mapping.
 
-The calibration period is 2019, before the COVID-19 regime. Sigmoid mappings are fitted for the logistic and XGBoost models. For the random forest, the selection comparison retains the raw identity mapping. Its selection Brier score is 0.0012007, while sigmoid mapping worsens it to 0.0012217.
-
-The selection benchmark is a constant probability with Brier score 0.0012152 and average precision equal to the 0.1217% event share. The predefined acceptance rule requires average precision above the event share and Brier score below the constant benchmark.
+The constant benchmark has selection Brier score 0.0016812 and average precision equal to the 0.1684% event share. A family qualifies when its average precision exceeds that share and its Brier score is below the constant benchmark.
 
 | Model and mapping | ROC-AUC | Average precision | Brier score | Accepted |
 |---|---:|---:|---:|---|
-| Logistic, sigmoid | 0.8514 | 0.005624 | 0.0012467 | No |
-| L2 logistic, sigmoid | 0.8513 | 0.005605 | 0.0012467 | No |
-| Random forest, identity | 0.8594 | 0.037377 | 0.0012007 | Yes |
-| XGBoost, sigmoid | 0.8892 | 0.034594 | 0.0012093 | Yes |
+| Logistic, sigmoid | 0.8193 | 0.006182 | 0.0017116 | No |
+| L2 logistic, sigmoid | 0.8190 | 0.006168 | 0.0017116 | No |
+| Random forest, raw | 0.8601 | 0.043005 | 0.0016463 | Yes |
+| XGBoost, raw | 0.8755 | 0.039759 | 0.0016778 | Yes |
 
-Both tree models pass. Random forest is selected because it has the lower selection Brier score. The frozen threshold chosen on the selection period is 0.0410103.
+The forest has lower selection Brier error than XGBoost and is selected. Its frozen classification threshold is 0.057971. The credit-limit rule uses the continuous probability, not the threshold.
 
-## 6.4 Held-out Evaluation
+## 6.4 Later Evaluation
 
 | Model | ROC-AUC | Average precision | Brier score | Precision at frozen threshold | Recall at frozen threshold |
 |---|---:|---:|---:|---:|---:|
-| Constant | 0.5000 | 0.002115 | 0.0021113 | 0.00% | 0.00% |
-| Logistic, sigmoid | 0.8221 | 0.009283 | 0.0021024 | 1.79% | 1.04% |
-| L2 logistic, sigmoid | 0.8219 | 0.009265 | 0.0021024 | 1.68% | 1.04% |
-| **Random forest, identity** | **0.9089** | **0.027475** | **0.0020872** | **3.97%** | **12.85%** |
-| XGBoost, sigmoid | 0.9100 | 0.035369 | 0.0020896 | 4.00% | 19.10% |
+| Constant | 0.5000 | 0.002412 | 0.0024070 | 0.00% | 0.00% |
+| Logistic, sigmoid | 0.8274 | 0.010678 | 0.0023953 | 1.49% | 23.27% |
+| L2 logistic, sigmoid | 0.8272 | 0.010671 | 0.0023953 | 1.48% | 23.27% |
+| **Random forest, raw** | **0.8866** | **0.025989** | **0.0023840** | **5.63%** | **9.12%** |
+| XGBoost, raw | 0.8946 | 0.028057 | 0.0025355 | 6.21% | 6.92% |
 
-The selected forest's average precision is 12.99 times the event share. Its Brier skill against the constant benchmark is 1.14%. XGBoost ranks slightly better, but random forest remains the model fixed by the preceding selection stage.
+The selected forest's average precision is 10.8 times the test event share. Its Brier score is about 0.95% below the constant benchmark. XGBoost ranks slightly better on these later observations but has higher probability error.
 
-The forest produces 37 true-positive and 895 false-positive rows and misses 251 positive rows. It detects at least one positive row for 24 of 160 event companies. XGBoost detects 32 event companies. These figures show why the probability output is more useful for graded policy adjustment than the frozen threshold is as a stand-alone alert.
+At the frozen threshold, the forest identifies 29 positive rows, flags 486 negative rows and misses 289 positive rows. It detects at least one monthly row for 18 of 176 test-period episodes. The 318 positive rows arise from those 176 episodes in 165 companies. This distinction matters because several monthly decisions can precede one episode.
 
-The selected forest's annual ROC-AUC is 0.9081 in 2023, 0.8969 in 2024 and 0.9294 in 2025. Annual average precision is 0.03483, 0.03533 and 0.02522, respectively. Performance varies by year but the ranking signal persists.
-
-Company-cluster bootstrap intervals for the selected forest are 0.8934–0.9243 for ROC-AUC, 0.01928–0.04957 for average precision and 0.001750–0.002420 for Brier score. The corresponding XGBoost intervals overlap, so the evaluation does not establish statistically significant superiority between the two tree models.
+The forest's annual ROC-AUC is 0.8715 in 2023, 0.8777 in 2024 and 0.9329 in 2025. Annual average precision is 0.02793, 0.02927 and 0.02904. Company-cluster 95% intervals for the full later period are 0.8668–0.9061 for ROC-AUC, 0.01817–0.04378 for average precision and 0.002040–0.002799 for Brier score. These intervals condition on fitted models and do not include model selection or shared time shocks.
 
 ![Held-out ranking and probability diagnostics](figures/model_diagnostics.png)
 
-*Figure 6.2. Precision-recall and reliability diagnostics for 2023–2025. Source: predictions.csv and quantile_calibration.csv.*
+*Figure 6.2. Precision-recall and probability diagnostics for 2023–2025. Source: run 006 model predictions and report.*
 
-## 6.5 Interpretation
+## 6.5 Statement Enrichment Comparison
 
-Permutation importance identifies log assets as the strongest predictor for the selected forest, followed by working capital to assets, 12-month asset growth and current ratio. Importance measures predictive contribution in this fitted model; it does not establish a causal relationship.
+Run 006 also fits the same workflow without imported statement facts on the same SEC snapshot. Both panels have identical labels and 565,222 rows. Adding statement facts fills 135,692 missing predictor cells, including 47,185 liabilities-to-assets values and 44,307 cash-flow-to-liabilities values. Fully observed rows increase from 362,979 to 398,329.
 
-The results are good enough to demonstrate a repeatable ranking signal for a rare SEC disclosure outcome. They are modest as a classification system: only 3.97% of flagged company-months are positive at the frozen threshold, and recall is 12.85%. The selected probabilities refer to filing an Item 1.03 bankruptcy or receivership disclosure within 60 days. Item 1.03 can accompany a bankruptcy or receivership, but it is neither a necessary nor sufficient definition of payment default. Payment defaults can occur without such a filing, and a filing does not reveal the timing or amount of every payment failure.
+Both matched fits select random forest. Without enrichment, test ROC-AUC is 0.8797, average precision 0.02555 and Brier score 0.0023850. With enrichment, these are 0.8866, 0.02599 and 0.0023840. The paired company-cluster bootstrap gives a 95% interval of −0.00184 to 0.01545 for the ROC-AUC difference, −0.00395 to 0.00298 for average precision and −0.00000444 to 0.00000230 for Brier score. All include zero. The coverage gain is clear; these tests do not establish a reliable predictive gain.
 
-These results therefore support the thesis's methodological contribution and a hypothetical policy simulation. They do not validate a payment-default probability, prove deployable lending performance or measure realized loss reduction.
+## 6.6 Interpretation
 
-File references: metrics.csv, stage_audit.json, tuning_scores.csv, tuning_fold_scores.csv, selection.json, bootstrap_intervals.json, annual_test_metrics.csv, event_detection.csv, permutation_importance.csv and mcf/reporting/empirical.py.
+Permutation importance for the selected forest is highest for log assets, followed by working capital to assets, asset growth and liabilities to assets. It measures model reliance, not causation. The low precision and recall at one threshold limit its use as a stand-alone alert.
+
+The outcome combines Item 1.03 bankruptcy or receivership filings with reviewed Item 2.04 missed-payment disclosures. It does not establish the onset of a legal event or a default on the proposed facility. The results support a reproducible disclosure-risk signal and an illustrative credit policy, not measured lending performance or loss reduction.
+
+File references: results/run_006_full_statement_enrichment/models/, model_report/, statement_enrichment_comparison.json and paired_test_comparison.json; evidence copies in docs/tables/.

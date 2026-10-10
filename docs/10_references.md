@@ -24,10 +24,10 @@ Shumway, T. (2001). Forecasting bankruptcy more accurately: A simple hazard mode
 
 U.S. Securities and Exchange Commission. (n.d.). *EDGAR application programming interfaces*. [Official source documentation](https://www.sec.gov/search-filings/edgar-application-programming-interfaces). Accessed 21 September 2026.
 
-U.S. Securities and Exchange Commission. (n.d.). *Form 8-K: Current report*, Item 1.03, Bankruptcy or Receivership. [Official form](https://www.sec.gov/files/form8-k.pdf). Accessed 21 September 2026.
+U.S. Securities and Exchange Commission. (n.d.). *Form 8-K: Current report*, Items 1.03, Bankruptcy or Receivership, and 2.04, Triggering Events That Accelerate or Increase a Direct Financial Obligation. [Official form](https://www.sec.gov/files/form8-k.pdf). Accessed 21 September 2026.
 
 ## Research data and implementation
 
-U.S. Securities and Exchange Commission. *EDGAR company facts and submissions*, local snapshot supplied for this project in September 2026. Local sources: dataset/companyfacts/ and dataset/submissions/. Observation cutoff: 7 September 2026. Individual source hashes, filing accessions and selected facts are recorded in source_hashes.jsonl, companyfacts_hashes.jsonl and feature_provenance.jsonl.
+U.S. Securities and Exchange Commission. *EDGAR company facts, submissions, and Financial Statement and Notes datasets*, local run 006 snapshot. Observation cutoff: 7 September 2026. Item 2.04 review classifications are saved under results/item_204_openai_batch_review/. Individual source hashes, filing accessions and selected facts are recorded under results/run_006_full_statement_enrichment/inventory/ and panel/.
 
-Project implementation. *Dynamic Determination of Short-Term Corporate Credit Limits Using Machine Learning*, Python research files and September 2026 empirical outputs. Chapter file references identify the implementation and result artifacts. Their full local paths are mapped in 12_appendix_b_reproducibility.md; repository URLs can replace the filename references when published.
+Project implementation. *Dynamic Determination of Short-Term Corporate Credit Limits Using Machine Learning*, Python research files and run 006 empirical outputs. Chapter file references identify the implementation and result artifacts. Their full local paths are mapped in 12_appendix_b_reproducibility.md; repository URLs can replace the filename references when published.

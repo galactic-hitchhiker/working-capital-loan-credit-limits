@@ -1,54 +1,54 @@
 # 7 Credit-Limit Policy Results
 
-The policy translates the selected random forest's 60-day Item 1.03 probability into a monthly credit limit. This is a historical simulation under explicit assumptions. The source data do not contain actual facility commitments, utilization, receivables, losses, pricing or profitability.
+The policy translates the run 006 random forest's 60-day disclosure probability into a monthly credit limit. It replays historical SEC financial information under stated facility assumptions. The source data do not contain actual commitments, utilization, repayments, losses, pricing or profitability.
 
 ## 7.1 Policy Rule
 
-For each eligible company-month, the raw capacity is the minimum of a cash-based amount and a sales-based amount. A monotone risk adjustment reduces that capacity as predicted disclosure risk rises. A hard exposure cap, additional debt, collateral assumptions, deadbands and phased increases then determine the implemented limit. Hard-stop conditions can reduce the limit to zero, and increases require fresh financial information.
+For each eligible company-month, raw capacity is the smaller of a cash-based and sales-based amount. A risk multiplier reduces capacity as predicted disclosure risk rises. An asset-based cap and monthly update safeguards determine the assigned limit. A known qualifying disclosure activates a hard stop during the episode quiet gap.
 
-The policy consumes a continuous probability. The frozen classification threshold is reported for model evaluation, but it is not required to calculate the credit limit. This distinction preserves information that would be lost by converting each prediction to a binary alert.
+The policy uses the continuous probability. The frozen classification threshold in Chapter 6 is only an evaluation convention.
 
 ## 7.2 Base Scenario
 
-After required-input exclusions, the base simulation covers 99,674 company-months from 3,872 companies and 5,173 continuous company segments.
+After excluding rows with missing or invalid required policy inputs, the run 006 replay covers 99,619 company-months from 3,869 companies and 5,176 continuous company segments in 2023–2025.
 
 | Outcome | Base result |
 |---|---:|
-| Mean limit | USD 53.23 million |
-| Median limit | USD 3.79 million |
-| Mean limit / assets | 0.653% |
-| Zero-limit share | 5.69% |
-| Hard-stop observations | 2,658 |
-| Cap-binding share | 52.22% |
-| Mean absolute monthly change / assets | 0.0285% |
+| Mean limit | USD 55.09 million |
+| Median limit | USD 4.23 million |
+| Mean limit / assets | 0.668% |
+| Zero-limit share | 3.55% |
+| Hard-stop observations | 262 |
+| Cap-binding share | 53.42% |
+| Mean absolute monthly change / assets | 0.0290% |
 
-Among 94,501 month-to-month transitions, 16,742 are phased increases, 9,070 are decreases and 68,689 are unchanged. The most common recorded reasons are no new information, unchanged within the deadband, phased increase, immediate reduction and hard stop. These fields make each simulated decision traceable.
+Among 94,443 month-to-month transitions, 17,088 are increases, 9,309 are decreases and 68,046 are unchanged. A missing month starts a new hypothetical assessment, so change statistics do not bridge gaps. The recorded reasons include unchanged inputs, phased increases, immediate reductions and hard stops.
 
 ![Policy sensitivity](figures/policy_sensitivity.png)
 
-*Figure 7.1. Base policy distribution and selected sensitivity scenarios. Source: policy_decisions.csv and policy_sensitivity.csv.*
+*Figure 7.1. Base policy and selected sensitivity scenarios. Source: run 006 policy replay.*
 
 ## 7.3 Sensitivity
 
-The average limit is most sensitive to assumptions that directly constrain financial capacity:
+The average limit changes most when assumptions affecting capacity and the cap change:
 
 | Scenario | Mean limit / assets | Zero-limit share |
 |---|---:|---:|
-| Base | 0.653% | 5.69% |
-| Capacity only | 0.659% | 0.00% |
-| Cash rate halved | 0.579% | 5.69% |
-| No cash eligibility | 0.303% | 49.66% |
-| Exposure cap 0.5% | 0.380% | 5.69% |
-| Exposure cap 2.0% | 0.933% | 5.69% |
-| Additional debt 0.5% of assets | 0.419% | 38.05% |
-| Risk sensitivity doubled | 0.645% | 5.69% |
+| Base | 0.668% | 3.55% |
+| Capacity only | 0.675% | 3.55% |
+| Eligible cash halved | 0.593% | 3.55% |
+| No eligible cash | 0.312% | 48.30% |
+| Exposure cap 0.5% of assets | 0.388% | 3.55% |
+| Exposure cap 2.0% of assets | 0.954% | 3.55% |
+| Additional debt due 0.5% of assets | 0.429% | 36.48% |
+| Risk sensitivity doubled | 0.659% | 3.55% |
 
-Changing the probability model has a smaller effect on the aggregate mean under this specification: selected random forest produces 0.6527% of assets, XGBoost 0.6500%, logistic regression 0.6522% and L2 logistic regression 0.6522%. This occurs because capacity and caps bind frequently. It does not imply that the model is irrelevant for individual firms or hard-stop decisions.
+Using another fitted model changes the mean less under this policy: random forest gives 0.6678% of assets, XGBoost 0.6658% and either logistic model 0.6669%. This aggregate pattern reflects frequent capacity and cap constraints. It does not show that the risk model is unimportant for an individual company.
 
-The fixed initial-limit assumption exceeds contemporaneous raw capacity in 19.19% of included observations. That diagnostic is a warning against interpreting the simulation as a recommended launch portfolio.
+The fixed initial-limit assumption exceeds current raw capacity in 19.80% of included rows. The replay is therefore a study of rule behavior, not a recommended starting portfolio.
 
 ## 7.4 Scope of the Evidence
 
-The policy numbers are conditional outputs from an assumed rule, not observed business results. The simulation cannot estimate expected loss, profitability, approval rates, utilization or customer effects without facility-level outcomes and economics. The selected model predicts a filing event rather than contractual payment default. Accordingly, the policy chapter demonstrates how a transparent limit engine can consume a risk signal; it does not claim that the reported dollar limits are optimal or ready for production use.
+The reported limits are conditional outputs from an assumed policy. A zero limit does not remove an outstanding balance. The simulation cannot estimate expected loss, profitability, approval rates or customer effects without facility-level data. The probability refers to a bankruptcy or payment-failure disclosure episode, not verified contractual default. The limits are not shown to be optimal or ready for production use.
 
-File references: policy_audit.json, policy_decisions.csv, policy_sensitivity.csv, case_studies.csv, policy_report.md, mcf/policy/empirical.py and mcf/policy/credit.py.
+File references: results/run_006_full_statement_enrichment/policy/ and policy_report/; policy code in mcf/policy/credit.py and mcf/policy/empirical.py.

@@ -12,8 +12,9 @@ Run commands from the repository root with the pinned virtual environment. Every
 
 Use the [bankruptcy/payment-failure workflow](bankruptcy_payment_failure_workflow.md)
 for the current recurrent 60-day target. Item 1.03 qualifies automatically;
-2.04 requires payment-failure evidence. Rebuild the panel for this outcome. The commands below
-reproduce the historical first-Item-1.03 study.
+2.04 requires reviewed payment-failure evidence. Run 006's completed inventory,
+panel and fitted models are under `results/run_006_full_statement_enrichment/`.
+The historical commands below document the earlier Item 1.03-only study.
 
 ## Historical Empirical Pipeline
 
@@ -66,18 +67,44 @@ The inventory identifies eligible issuers and first Item 1.03 disclosures. The p
   --output-dir results/new_run/worked_examples
 ```
 
+## Run 006 Policy and Reports
+
+The run 006 panel and models are frozen. From a checkout containing their local
+generated files, create the policy replay and report directories with these
+commands (each destination must be new or empty):
+
+```sh
+.venv/bin/python -m mcf.workflows.launcher -m mcf.policy.empirical \
+  --models results/run_006_full_statement_enrichment/models/models.joblib \
+  --features results/run_006_full_statement_enrichment/panel/features.csv \
+  --policy configs/policy.sec_disclosure.json \
+  --output-dir results/run_006_full_statement_enrichment/policy
+
+.venv/bin/python -m mcf.workflows.launcher -m mcf.reporting.empirical data \
+  --input results/run_006_full_statement_enrichment/panel/panel.csv \
+  --output-dir results/run_006_full_statement_enrichment/descriptive
+
+.venv/bin/python -m mcf.workflows.launcher -m mcf.reporting.empirical models \
+  --input results/run_006_full_statement_enrichment/models \
+  --output-dir results/run_006_full_statement_enrichment/model_report
+
+.venv/bin/python -m mcf.workflows.launcher -m mcf.reporting.empirical policy \
+  --input results/run_006_full_statement_enrichment/policy \
+  --output-dir results/run_006_full_statement_enrichment/policy_report
+```
+
 ## Refresh Current Thesis Evidence
 
 ```sh
 .venv/bin/python -m mcf.reporting.thesis_evidence \
   --docs docs \
-  --inventory results/history/item_103_model_evolution/01_initial_full_pipeline_xgboost/inventory \
-  --panel results/history/item_103_model_evolution/02_improved_sec_fact_coverage_xgboost/panel \
-  --models results/history/item_103_model_evolution/03_rolling_temporal_validation_random_forest/models \
-  --descriptive results/history/item_103_model_evolution/03_rolling_temporal_validation_random_forest/descriptive \
-  --model-report results/history/item_103_model_evolution/03_rolling_temporal_validation_random_forest/model_report \
-  --policy results/history/item_103_model_evolution/03_rolling_temporal_validation_random_forest/policy \
-  --policy-report results/history/item_103_model_evolution/03_rolling_temporal_validation_random_forest/policy_report \
+  --inventory results/run_006_full_statement_enrichment/inventory \
+  --panel results/run_006_full_statement_enrichment/panel \
+  --models results/run_006_full_statement_enrichment/models \
+  --descriptive results/run_006_full_statement_enrichment/descriptive \
+  --model-report results/run_006_full_statement_enrichment/model_report \
+  --policy results/run_006_full_statement_enrichment/policy \
+  --policy-report results/run_006_full_statement_enrichment/policy_report \
   --examples results/history/item_103_model_evolution/03_rolling_temporal_validation_random_forest/worked_examples
 ```
 

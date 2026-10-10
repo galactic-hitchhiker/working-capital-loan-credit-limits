@@ -1,5 +1,9 @@
 # Thesis Document Index
 
+The main text and evidence tables report run 006, including its recurrent
+bankruptcy or reviewed payment-failure disclosure target and statement
+enrichment. Earlier run investigations below remain supporting material.
+
 ## Main Text
 
 1. [Title page](00_title_page.md)
@@ -26,8 +30,6 @@
 - [Reproduction workflow](workflow.md)
 - [SEC dataset download and unpacking](sec_dataset_download.md)
 - [Current bankruptcy/payment-failure workflow](bankruptcy_payment_failure_workflow.md)
-- [Narrow payment-only workflow](disclosed_payment_failure_workflow.md)
-- [Input contracts](input_contracts.md)
 - [Run 004 feature coverage investigation](run_004_feature_coverage.md)
 - [Recovery from complete financial statements](statement_feature_recovery.md)
 - [Run 006 full statement enrichment comparison](run_006_statement_comparison.md)

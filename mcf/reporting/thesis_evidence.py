@@ -113,9 +113,11 @@ def export(args):
     appendix_c += (
         "These tables are generated from the completed real-data run. "
         "Probabilities and metrics are decimal fractions unless marked as percentages. "
-        f"The selection rule accepted {selected_model.replace('_', ' ')}.\n\n"
+        f"The selection rule accepted {selected_model.replace('_', ' ')}. "
+        "The 2023–2025 period was excluded from this run's development steps but "
+        "was examined during earlier project work.\n\n"
     )
-    appendix_c += "## C.1 Held-out probability error for raw and selected mappings\n\n"
+    appendix_c += "## C.1 2023–2025 probability error for raw and selected mappings\n\n"
 
     def test_score(model, method):
         return next(
@@ -164,27 +166,27 @@ def export(args):
         ],
     )
     appendix_c += "\nAll models use 500 valid bootstrap repetitions. These intervals condition on fitted models and omit shared time shocks and model-selection uncertainty. They are not paired confidence intervals for model differences.\n\n"
-    appendix_c += "## C.3 Held-out event detection at frozen thresholds\n\n"
+    appendix_c += "## C.3 2023–2025 episode detection at frozen thresholds\n\n"
     appendix_c += md_table(
         [
             "Model",
             "Threshold",
-            "Event companies detected",
-            "Total event companies",
-            "Company-level recall",
+            "Disclosure episodes detected",
+            "Total disclosure episodes",
+            "Episode-level recall",
         ],
         [
             [
                 r["model"],
                 f"{float(r['threshold']):.6f}",
-                r["detected_event_companies"],
-                r["event_companies"],
-                f"{100*float(r['event_company_recall']):.2f}%",
+                r["detected_episodes"],
+                r["disclosure_episodes"],
+                f"{100*float(r['episode_recall']):.2f}%",
             ]
             for r in read_csv(args.model_report / "event_detection.csv")
         ],
     )
-    appendix_c += "\nA company is detected if at least one positive monthly row meets its model's threshold. This differs from row-level recall and does not measure detection of every legal bankruptcy.\n\n"
+    appendix_c += "\nAn episode is detected if at least one of its positive monthly rows meets the model's threshold. This differs from row-level recall and does not measure detection of every legal bankruptcy or missed payment.\n\n"
     appendix_c += "## C.4 Predictor distributions before chronological purging\n\n"
     appendix_c += md_table(
         ["Predictor", "Missing", "1st percentile", "Median", "99th percentile"],
