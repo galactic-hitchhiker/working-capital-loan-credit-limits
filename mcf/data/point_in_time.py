@@ -13,6 +13,7 @@ from mcf.data.sec import (
     FLOW_FIELDS,
     TAGS,
     eligible_facts,
+    fact_priority,
     ratio,
     resolve_cash_and_equivalents,
     resolve_liabilities,
@@ -102,8 +103,7 @@ class FactIndex:
         # ties between facts that agree on the period and value.
         if len({(f.start, f.value) for f in facts}) != 1:
             return None
-        tags = TAGS.get(field, COMPONENT_TAGS.get(field))
-        return min(facts, key=lambda f: (tags.index(f.tag), f.accession))
+        return min(facts, key=lambda f: fact_priority(field, f))
 
     def get_prior_year(self, field, current_end):
         """Return the closest comparable instant fact 330–400 days earlier."""

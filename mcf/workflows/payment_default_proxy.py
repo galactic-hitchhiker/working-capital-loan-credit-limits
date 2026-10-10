@@ -125,6 +125,8 @@ def run(args):
         root / "inventory",
         args.config,
         root / "panel",
+        **({"statement_facts": args.statement_facts}
+           if getattr(args, "statement_facts", None) is not None else {}),
     )
     selection = train(
         args.config,
@@ -173,6 +175,8 @@ def run(args):
 def parser():
     result = argparse.ArgumentParser(description=__doc__)
     result.add_argument("--dataset", type=Path, default=Path("../dataset"))
+    result.add_argument("--statement-facts", type=Path,
+                        help="Optional audited statement-fact supplement directory")
     result.add_argument(
         "--config",
         type=Path,

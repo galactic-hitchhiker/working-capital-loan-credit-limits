@@ -27,7 +27,9 @@ from datetime import date
 from pathlib import Path
 
 TAGS = {
-    "assets": ("Assets",),
+    # The credit-side balance-sheet total equals total assets, including temporary
+    # equity. It is a fallback only; an observed Assets fact always takes priority.
+    "assets": ("Assets", "LiabilitiesAndStockholdersEquity"),
     "liabilities": ("Liabilities",),
     "liabilities_noncurrent": ("LiabilitiesNoncurrent",),
     "current_assets": ("AssetsCurrent",),
@@ -79,6 +81,7 @@ class Fact:
     end: str
     filed: str
     accession: str
+    source: dict | None = None
 
 
 def eligible_facts(document, field: str, as_of: date):
@@ -86,6 +89,47 @@ def eligible_facts(document, field: str, as_of: date):
     tags = TAGS.get(field, COMPONENT_TAGS.get(field))
     if tags is None:
         raise KeyError(field)
+    rows = list(raw_eligible_facts(document, tags, as_of))
+    if field == "assets":
+        first_direct = {}
+        for fact in rows:
+            if fact.tag == "Assets" and fact.start is None:
+                first_direct[fact.end] = min(first_direct.get(fact.end, fact.filed), fact.filed)
+        # Do not let a later comparative credit-side total supersede known Assets
+        # or hide conflicting Assets. Earlier fallbacks remain historically usable.
+        rows = [f for f in rows if f.tag == "Assets"
+                or f.filed < first_direct.get(f.end, "9999-12-31")]
+    yield from rows
+    first_native = {}
+    for fact in rows:
+        key = (fact.start, fact.end)
+        first_native[key] = min(first_native.get(key, fact.filed), fact.filed)
+    for record in document.get("_statement_facts", []):
+        if record.get("field") != field:
+            continue
+        try:
+            fact = Fact(**{key: record[key] for key in (
+                "value", "tag", "start", "end", "filed", "accession", "source")})
+            if (isinstance(fact.value, bool) or not math.isfinite(fact.value)
+                    or fact.start is not None or not fact.accession
+                    or date.fromisoformat(fact.end) > date.fromisoformat(fact.filed)
+                    or date.fromisoformat(fact.filed) >= as_of):
+                continue
+        except (KeyError, TypeError, ValueError):
+            continue
+        # A native fact (including a conflicting native observation) blocks later
+        # fallback vintages. Supplementary evidence cannot rewrite an observed value.
+        if fact.filed < first_native.get((fact.start, fact.end), "9999-12-31"):
+            yield fact
+
+
+def fact_priority(field, fact):
+    tags = TAGS.get(field, COMPONENT_TAGS.get(field))
+    return (tags.index(fact.tag) if fact.tag in tags else len(tags), fact.accession)
+
+
+def raw_eligible_facts(document, tags, as_of):
+    """Parse standard USD concepts before field-specific fallback rules."""
     for tag in tags:
         for r in (
             document.get("facts", {})
@@ -145,8 +189,7 @@ def latest_fact(document, field, as_of, *, annual=False, start=None, end=None):
     # Conflicting USD totals for one period are flagged missing rather than chosen.
     if len({(r.start, r.value) for r in rows}) != 1:
         return None
-    tags = TAGS.get(field, COMPONENT_TAGS.get(field))
-    return min(rows, key=lambda r: (tags.index(r.tag), r.accession))
+    return min(rows, key=lambda r: fact_priority(field, r))
 
 
 def prior_year_fact(document, field, as_of, current_end):

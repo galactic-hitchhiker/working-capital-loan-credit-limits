@@ -101,6 +101,22 @@ using `.venv/bin/python -m ...`. For command-line help:
 .venv/bin/python -m mcf.workflows.payment_default_proxy --help
 ```
 
+## Download SEC source data
+
+The standalone downloader fetches and unpacks Company Facts, submissions, and
+Financial Statement and Notes archives. It discovers the available statement
+periods, resumes interrupted downloads, and retains ZIPs for feature extraction.
+
+```sh
+export SEC_USER_AGENT="Your Name your-email@example.com"
+python3 scripts/download_sec_dataset.py \
+  --output-dir ../dataset_full --start-year 2009 --end-year 2026
+```
+
+Use a fresh directory to preserve existing research snapshots. Add `--dry-run`
+to preview the download plan. See [download instructions](docs/sec_dataset_download.md)
+for the output layout, selective downloads and feature-import commands.
+
 ## Results Structure
 
 The current local layout separates cached SEC sources, model runs and history:

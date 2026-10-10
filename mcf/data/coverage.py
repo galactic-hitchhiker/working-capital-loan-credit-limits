@@ -124,6 +124,45 @@ def compare_panels(before, after):
                 before_sha256=file_hash(before), after_sha256=file_hash(after))
 
 
+def compare_expanded_panels(before, after):
+    """Stream a merge comparison when better period coverage adds observations."""
+    counts, recovered, lost, revised, complete = (Counter() for _ in range(5))
+    key = lambda r: (r["company_id"], r["decision_date"])
+    with Path(before).open() as a, Path(after).open() as b:
+        old_rows, new_rows = csv.DictReader(a), csv.DictReader(b)
+        old, new = next(old_rows, None), next(new_rows, None)
+        while old is not None or new is not None:
+            if new is None or (old is not None and key(old) < key(new)):
+                counts["removed_rows"] += 1
+                old = next(old_rows, None)
+            elif old is None or key(new) < key(old):
+                counts["added_rows"] += 1
+                counts["added_positive_rows"] += int(new["label"])
+                if new["feature_available_on"] > new["decision_date"]:
+                    raise ValueError("Future feature in expanded panel")
+                new = next(new_rows, None)
+            else:
+                counts["shared_rows"] += 1
+                if (old["label"], old["event_id"]) != (new["label"], new["event_id"]):
+                    raise ValueError("Labels changed for a shared observation")
+                if new["feature_available_on"] > new["decision_date"]:
+                    raise ValueError("Future feature in expanded panel")
+                for field in FEATURES:
+                    if not old[field] and new[field]:
+                        recovered[field] += 1
+                    elif old[field] and not new[field]:
+                        lost[field] += 1
+                    elif old[field] != new[field]:
+                        revised[field] += 1
+                complete["before_shared"] += all(old[f] for f in FEATURES)
+                complete["after_shared"] += all(new[f] for f in FEATURES)
+                old, new = next(old_rows, None), next(new_rows, None)
+    return dict(counts=dict(counts), recovered_cells=dict(recovered), lost_cells=dict(lost),
+                revised_observed_cells=dict(revised), complete_rows=dict(complete),
+                shared_labels_unchanged=True, feature_availability_checked=True,
+                before_sha256=file_hash(before), after_sha256=file_hash(after))
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--panel", type=Path, required=True)

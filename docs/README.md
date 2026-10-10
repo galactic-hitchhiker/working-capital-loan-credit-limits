@@ -24,10 +24,12 @@
 ## Supporting Material
 
 - [Reproduction workflow](workflow.md)
+- [SEC dataset download and unpacking](sec_dataset_download.md)
 - [Current bankruptcy/payment-failure workflow](bankruptcy_payment_failure_workflow.md)
 - [Narrow payment-only workflow](disclosed_payment_failure_workflow.md)
 - [Input contracts](input_contracts.md)
 - [Run 004 feature coverage investigation](run_004_feature_coverage.md)
+- [Recovery from complete financial statements](statement_feature_recovery.md)
 - [Evidence tables](tables/)
 - [Figures](figures/)
 

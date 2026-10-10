@@ -16,6 +16,7 @@ Parameters:
         panel uses the study config instead.
     --inventory PATH: Inventory output directory; required for panel.
     --config PATH: Study-design JSON; required for panel.
+    --statement-facts PATH: Optional per-issuer statement supplement directory for panel.
     --target NAME: Inventory target; defaults to a historical target when omitted.
     --episode-gap-days N: Quiet-gap grouping for payment episodes (default: 90).
     --disclosure-results PATH: Completed review directory or classifications.jsonl;
@@ -415,9 +416,11 @@ def disclosure_label(
     return 0, "no_recorded_disclosure_in_observed_window"
 
 
-def panel(dataset, inventory_dir, config_path, output):
+def panel(dataset, inventory_dir, config_path, output, statement_facts=None):
     """Write monthly predictors, disclosure labels, source provenance and exclusions."""
     config = load_design(config_path)
+    if statement_facts is not None and not Path(statement_facts).is_dir():
+        raise ValueError(f"Statement-fact directory does not exist: {statement_facts}")
     target = config["event_type"]
     if config["data_kind"] != "empirical" or target not in SUPPORTED_TARGETS:
         raise ValueError("Unsupported empirical SEC disclosure target")
@@ -451,6 +454,7 @@ def panel(dataset, inventory_dir, config_path, output):
     )
     financial_exclusions = Counter()
     derivations = Counter()
+    supplement_hashes = []
     feature_fields = (
         "company_id",
         "decision_date",
@@ -489,6 +493,12 @@ def panel(dataset, inventory_dir, config_path, output):
             company = issuer["company_id"]
             path = Path(dataset) / "companyfacts" / f"CIK{company}.json"
             document = json.loads(path.read_text())
+            if statement_facts is not None:
+                from mcf.data.statement_facts import attach
+
+                supplement = attach(document, statement_facts)
+                if supplement:
+                    supplement_hashes.append(supplement)
             index = FactIndex(document, dates[-1])
             hashes.write(
                 json.dumps({"path": str(path), "sha256": file_hash(path)}) + "\n"
@@ -531,6 +541,12 @@ def panel(dataset, inventory_dir, config_path, output):
                 for field in ("cash", "liabilities", "net_income"):
                     source = source_facts.get(field + "_derivation")
                     derivations[f"{field}:{source['basis'] if source else 'missing'}"] += 1
+                for field in ("assets", "liabilities", "current_assets", "current_liabilities", "cash"):
+                    fact = source_facts.get(field)
+                    if fact and fact.get("source"):
+                        derivations[f"statement:{field}:{fact['source']['basis']}"] += 1
+                if source_facts.get("assets", {}).get("tag") == "LiabilitiesAndStockholdersEquity":
+                    derivations["assets:balance_sheet_identity"] += 1
                 available = max(
                     date.fromisoformat(v["filed"]) + timedelta(days=1)
                     for v in source_facts.values()
@@ -662,6 +678,7 @@ def panel(dataset, inventory_dir, config_path, output):
         financial_exclusion_reasons=dict(financial_exclusions),
         financial_exclusion_note="Reasons overlap; a company-month can fail multiple checks.",
         feature_row_derivations=dict(derivations),
+        statement_supplement_companies=len(supplement_hashes),
         limitation=(
             "Bankruptcy/receivership or payment-failure disclosure episodes; 1.03 qualifies without payment review. "
             "Filing dates and episode gaps are operational, not verified failure/cure. Unresolved 2.04 censors labels. "
@@ -680,6 +697,7 @@ def panel(dataset, inventory_dir, config_path, output):
     )
     write_json(output / "panel_audit.json", report)
     write_json(output / "design.json", config)
+    write_json(output / "statement_facts_hashes.json", supplement_hashes)
     write_json(
         output / "manifest.json",
         manifest(
@@ -688,6 +706,7 @@ def panel(dataset, inventory_dir, config_path, output):
             companyfacts_hash_list_sha256=file_hash(
                 output / "companyfacts_hashes.jsonl"
             ),
+            statement_facts_hash_list_sha256=file_hash(output / "statement_facts_hashes.json"),
             **report,
         ),
     )
@@ -702,6 +721,8 @@ def main():
     parser.add_argument("--cutoff", type=date.fromisoformat, default=date(2026, 9, 7))
     parser.add_argument("--inventory", type=Path)
     parser.add_argument("--config", type=Path)
+    parser.add_argument("--statement-facts", type=Path,
+                        help="Optional directory of per-issuer audited statement supplements")
     parser.add_argument("--target", choices=sorted(SUPPORTED_TARGETS), help="Inventory target; default derives from supplied reviews")
     parser.add_argument("--episode-gap-days", type=int, default=90, help="Quiet-gap grouping for recurrent payment disclosures (default: 90)")
     parser.add_argument(
@@ -726,7 +747,7 @@ def main():
             parser.error("panel requires --inventory and --config")
         if args.item_204_results is not None:
             parser.error("--item-204-results applies only to inventory")
-        result = panel(args.dataset, args.inventory, args.config, args.output_dir)
+        result = panel(args.dataset, args.inventory, args.config, args.output_dir, args.statement_facts)
     print(json.dumps(result, indent=2))
 
 
