@@ -26,9 +26,16 @@ from datetime import date
 from pathlib import Path
 
 from mcf.policy.backtest import replay
-from mcf.data.panel import outcome, build, UNIVERSE_FIELDS, EVENT_FIELDS, COVERAGE_FIELDS
+from mcf.data.panel import (
+    outcome,
+    build,
+    UNIVERSE_FIELDS,
+    EVENT_FIELDS,
+    COVERAGE_FIELDS,
+)
+from mcf.data.payment_failure import BANKRUPTCY_PAYMENT_TARGET
 from mcf.policy.credit import PolicyConfig
-from mcf.common import boolean, load_design, read_csv, write_csv, write_json
+from mcf.common import boolean, file_hash, load_design, read_csv, write_csv, write_json
 
 try:
     import numpy as np
@@ -40,7 +47,12 @@ try:
         cluster_intervals,
     )
     from mcf.models.risk import estimator, fit
-    from mcf.models.train import prepare, rolling_tuning_folds, select_calibration
+    from mcf.models.train import (
+        prepare,
+        require_empirical_sources,
+        rolling_tuning_folds,
+        select_calibration,
+    )
 
     HAS_ML = True
 except ModuleNotFoundError:
@@ -78,6 +90,51 @@ class InputContractTests(unittest.TestCase):
             path.write_text("a,b\n1,2,3\n")
             with self.assertRaises(ValueError):
                 read_csv(path)
+
+    @unittest.skipUnless(HAS_ML, "Model dependencies are unavailable")
+    def test_empirical_training_requires_review_and_statement_provenance(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            panel = root / "panel.csv"
+            panel.write_text("label\n1\n")
+            statements = root / "statement_facts_hashes.json"
+            write_json(statements, [{"path": "CIK0000000001.json", "sha256": "source"}])
+            audit = dict(
+                target=BANKRUPTCY_PAYMENT_TARGET,
+                item_204_results="reviews/classifications.jsonl",
+                item_204_resolved_reviews=1,
+                statement_facts_directory="statements/companies",
+                statement_supplement_companies=1,
+            )
+            provenance = dict(
+                panel_sha256=file_hash(panel),
+                statement_facts_hash_list_sha256=file_hash(statements),
+            )
+            write_json(root / "panel_audit.json", audit)
+            write_json(root / "manifest.json", provenance)
+            require_empirical_sources(panel, BANKRUPTCY_PAYMENT_TARGET)
+
+            with self.assertRaisesRegex(ValueError, "Item 2.04 disclosure target"):
+                require_empirical_sources(panel, "first_sec_item_1_03_disclosure")
+
+            write_json(root / "panel_audit.json", {**audit, "item_204_results": None})
+            with self.assertRaisesRegex(ValueError, "Item 2.04"):
+                require_empirical_sources(panel, BANKRUPTCY_PAYMENT_TARGET)
+            write_json(
+                root / "panel_audit.json", {**audit, "item_204_resolved_reviews": 0}
+            )
+            with self.assertRaisesRegex(ValueError, "Item 2.04"):
+                require_empirical_sources(panel, BANKRUPTCY_PAYMENT_TARGET)
+            write_json(
+                root / "panel_audit.json",
+                {**audit, "statement_supplement_companies": 0},
+            )
+            with self.assertRaisesRegex(ValueError, "statement facts"):
+                require_empirical_sources(panel, BANKRUPTCY_PAYMENT_TARGET)
+            write_json(root / "panel_audit.json", audit)
+            panel.write_text("label\n0\n")
+            with self.assertRaisesRegex(ValueError, "provenance has changed"):
+                require_empirical_sources(panel, BANKRUPTCY_PAYMENT_TARGET)
 
 
 class OutcomeTests(unittest.TestCase):
@@ -366,15 +423,11 @@ class ModelTests(unittest.TestCase):
 
     def test_calibration_selection_uses_brier_and_prefers_identity_on_tie(self):
         self.assertEqual(
-            select_calibration(
-                {"identity": {"brier": 0.1}, "sigmoid": {"brier": 0.2}}
-            ),
+            select_calibration({"identity": {"brier": 0.1}, "sigmoid": {"brier": 0.2}}),
             "identity",
         )
         self.assertEqual(
-            select_calibration(
-                {"identity": {"brier": 0.1}, "sigmoid": {"brier": 0.1}}
-            ),
+            select_calibration({"identity": {"brier": 0.1}, "sigmoid": {"brier": 0.1}}),
             "identity",
         )
 
@@ -427,7 +480,10 @@ class ModelTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             config, _, _ = fixture(Path(tmp), companies_per_cohort=60)
             config["min_event_companies"] = 999
-            with self.assertRaisesRegex(ValueError, r"training:.*after chronological purging.*found \d+, required 999.*positive rows="):
+            with self.assertRaisesRegex(
+                ValueError,
+                r"training:.*after chronological purging.*found \d+, required 999.*positive rows=",
+            ):
                 prepare(Path(tmp) / "panel.csv", config)
 
     def test_future_feature_in_panel_is_rejected(self):

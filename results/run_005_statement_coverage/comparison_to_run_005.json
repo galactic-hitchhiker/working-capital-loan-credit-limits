@@ -1,0 +1,45 @@
+{
+  "counts": {
+    "shared_rows": 563596,
+    "added_rows": 2621,
+    "added_positive_rows": 0,
+    "removed_rows": 11
+  },
+  "recovered_cells": {
+    "liabilities_to_assets": 1590,
+    "assets_growth_12m": 966,
+    "liabilities_to_assets_change_12m": 846,
+    "operating_cashflow_to_average_liabilities": 951,
+    "return_on_average_assets": 474,
+    "operating_cashflow_to_average_assets": 488,
+    "current_ratio": 23,
+    "working_capital_to_assets": 23,
+    "cash_and_equivalents_to_assets": 1
+  },
+  "lost_cells": {
+    "liabilities_to_assets": 22,
+    "liabilities_to_assets_change_12m": 32,
+    "assets_growth_12m": 12,
+    "current_ratio": 3,
+    "cash_and_equivalents_to_assets": 10,
+    "working_capital_to_assets": 2
+  },
+  "revised_observed_cells": {
+    "current_ratio": 68,
+    "assets_growth_12m": 73,
+    "working_capital_to_assets": 69,
+    "log_assets": 92,
+    "liabilities_to_assets_change_12m": 180,
+    "operating_cashflow_to_average_liabilities": 333,
+    "liabilities_to_assets": 99,
+    "cash_and_equivalents_to_assets": 61
+  },
+  "complete_rows": {
+    "before_shared": 363029,
+    "after_shared": 363595
+  },
+  "shared_labels_unchanged": true,
+  "feature_availability_checked": true,
+  "before_sha256": "5842e51cb7e3639884de902d145a543e1ad0e9ed14e9a1494375ae44cef6f5e6",
+  "after_sha256": "e96ac743930dc311a64399678d02093dd0bb16d3e7203a2996b726452b018e3a"
+}

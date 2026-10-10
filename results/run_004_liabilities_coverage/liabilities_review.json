@@ -1,0 +1,197 @@
+{
+  "counts": {
+    "missing_liabilities_rows": 99083,
+    "same_filing_equity_pair": 93947,
+    "parent_equity_requires_noncontrolling_scope_review": 61424,
+    "no_standard_tag_evidence_of_temporary_equity_not_proof_of_zero": 73637,
+    "known_temporary_or_redeemable_evidence": 20310,
+    "consolidated_equity": 32523,
+    "no_unambiguous_same_filing_equity_pair": 5136
+  },
+  "examples": [
+    {
+      "company_id": "0000001961",
+      "decision_date": "2012-05-01",
+      "period_end": "2011-12-31",
+      "accession": "0001264931-12-000261",
+      "basis": "parent_equity_requires_noncontrolling_scope_review",
+      "residual_before_temporary_equity": 3438259,
+      "temporary_or_redeemable_evidence": false
+    },
+    {
+      "company_id": "0000003570",
+      "decision_date": "2012-04-01",
+      "period_end": "2011-12-31",
+      "accession": "0000003570-12-000023",
+      "basis": "consolidated_equity",
+      "residual_before_temporary_equity": 3088317000,
+      "temporary_or_redeemable_evidence": false
+    },
+    {
+      "company_id": "0000004515",
+      "decision_date": "2011-03-01",
+      "period_end": "2010-12-31",
+      "accession": "0000950123-11-014740",
+      "basis": "parent_equity_requires_noncontrolling_scope_review",
+      "residual_before_temporary_equity": 28758000000,
+      "temporary_or_redeemable_evidence": false
+    },
+    {
+      "company_id": "0000005133",
+      "decision_date": "2011-05-01",
+      "period_end": "2011-02-28",
+      "accession": "0000950123-11-041637",
+      "basis": "parent_equity_requires_noncontrolling_scope_review",
+      "residual_before_temporary_equity": 783491000,
+      "temporary_or_redeemable_evidence": false
+    },
+    {
+      "company_id": "0000006201",
+      "decision_date": "2011-03-01",
+      "period_end": "2010-12-31",
+      "accession": "0000950123-11-014726",
+      "basis": "parent_equity_requires_noncontrolling_scope_review",
+      "residual_before_temporary_equity": 29033000000,
+      "temporary_or_redeemable_evidence": false
+    },
+    {
+      "company_id": "0000006732",
+      "decision_date": "2015-09-01",
+      "period_end": "2015-06-30",
+      "accession": "0001213900-15-006358",
+      "basis": "parent_equity_requires_noncontrolling_scope_review",
+      "residual_before_temporary_equity": 2044685,
+      "temporary_or_redeemable_evidence": false
+    },
+    {
+      "company_id": "0000006769",
+      "decision_date": "2011-01-01",
+      "period_end": "2010-09-30",
+      "accession": "0000950123-10-102963",
+      "basis": "consolidated_equity",
+      "residual_before_temporary_equity": 14982967000,
+      "temporary_or_redeemable_evidence": true
+    },
+    {
+      "company_id": "0000006845",
+      "decision_date": "2020-05-01",
+      "period_end": "2020-02-29",
+      "accession": "0000006845-20-000008",
+      "basis": "parent_equity_requires_noncontrolling_scope_review",
+      "residual_before_temporary_equity": 612213000,
+      "temporary_or_redeemable_evidence": false
+    },
+    {
+      "company_id": "0000006955",
+      "decision_date": "2011-11-01",
+      "period_end": "2011-08-31",
+      "accession": "0001193125-11-285382",
+      "basis": "consolidated_equity",
+      "residual_before_temporary_equity": 1137668000,
+      "temporary_or_redeemable_evidence": false
+    },
+    {
+      "company_id": "0000007032",
+      "decision_date": "2012-01-01",
+      "period_end": "2011-09-30",
+      "accession": "0001193125-11-342477",
+      "basis": "consolidated_equity",
+      "residual_before_temporary_equity": 9032589000,
+      "temporary_or_redeemable_evidence": true
+    },
+    {
+      "company_id": "0000007536",
+      "decision_date": "2011-03-01",
+      "period_end": "2010-12-31",
+      "accession": "0001144204-11-005380",
+      "basis": "consolidated_equity",
+      "residual_before_temporary_equity": 6349343000,
+      "temporary_or_redeemable_evidence": false
+    },
+    {
+      "company_id": "0000008818",
+      "decision_date": "2011-03-01",
+      "period_end": "2011-01-01",
+      "accession": "0000950123-11-018967",
+      "basis": "parent_equity_requires_noncontrolling_scope_review",
+      "residual_before_temporary_equity": 3453700000,
+      "temporary_or_redeemable_evidence": false
+    },
+    {
+      "company_id": "0000008947",
+      "decision_date": "2012-08-01",
+      "period_end": "2012-05-31",
+      "accession": "0001193125-12-293657",
+      "basis": "parent_equity_requires_noncontrolling_scope_review",
+      "residual_before_temporary_equity": 306912368,
+      "temporary_or_redeemable_evidence": false
+    },
+    {
+      "company_id": "0000009092",
+      "decision_date": "2012-04-01",
+      "period_end": "2011-12-31",
+      "accession": "0001193125-12-103471",
+      "basis": "parent_equity_requires_noncontrolling_scope_review",
+      "residual_before_temporary_equity": 39629000,
+      "temporary_or_redeemable_evidence": false
+    },
+    {
+      "company_id": "0000009892",
+      "decision_date": "2011-01-01",
+      "period_end": "2010-09-30",
+      "accession": "0001193125-10-235721",
+      "basis": "consolidated_equity",
+      "residual_before_temporary_equity": 928500000,
+      "temporary_or_redeemable_evidence": false
+    },
+    {
+      "company_id": "0000009984",
+      "decision_date": "2011-03-01",
+      "period_end": "2010-12-31",
+      "accession": "0001193125-11-040385",
+      "basis": "parent_equity_requires_noncontrolling_scope_review",
+      "residual_before_temporary_equity": 691138000,
+      "temporary_or_redeemable_evidence": false
+    },
+    {
+      "company_id": "0000010456",
+      "decision_date": "2011-01-01",
+      "period_end": "2010-09-30",
+      "accession": "0000950123-10-100201",
+      "basis": "consolidated_equity",
+      "residual_before_temporary_equity": 10800000000,
+      "temporary_or_redeemable_evidence": false
+    },
+    {
+      "company_id": "0000010795",
+      "decision_date": "2016-12-01",
+      "period_end": "2016-09-30",
+      "accession": "0001628280-16-021658",
+      "basis": "parent_equity_requires_noncontrolling_scope_review",
+      "residual_before_temporary_equity": 17953000000,
+      "temporary_or_redeemable_evidence": false
+    },
+    {
+      "company_id": "0000012040",
+      "decision_date": "2012-01-01",
+      "period_end": "2011-10-01",
+      "accession": "0000914317-11-001658",
+      "basis": "consolidated_equity",
+      "residual_before_temporary_equity": 14242000,
+      "temporary_or_redeemable_evidence": false
+    },
+    {
+      "company_id": "0000012400",
+      "decision_date": "2019-09-01",
+      "period_end": "2019-06-30",
+      "accession": "0000012400-19-000009",
+      "basis": "consolidated_equity",
+      "residual_before_temporary_equity": 775810000,
+      "temporary_or_redeemable_evidence": false
+    }
+  ],
+  "review_periods": 32856,
+  "review_queue": "results/run_004_coverage/liabilities_review_queue.csv",
+  "panel_sha256": "f5abc451c2476ab0f4d2209baffb22a87b44ff04e47dc867c195f5dc52230df2",
+  "interpretation": "Review opportunities only. Parent equity excludes noncontrolling interests; permanent equity excludes temporary equity. No candidate values were inserted into the ML panel."
+}

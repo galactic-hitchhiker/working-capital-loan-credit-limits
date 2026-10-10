@@ -129,19 +129,19 @@ Download archives from the SEC page, using your identifying `SEC_USER_AGENT`. Th
   --archives results/sec/financial_statements/2017q4_notes.zip \
              results/sec/financial_statements/2025q3_notes.zip \
   --dataset ../dataset \
-  --inventory results/run_005/inventory/issuer_inventory.csv \
+  --inventory results/run_005_recurrent_disclosures_retrained/inventory/issuer_inventory.csv \
   --output-dir results/statement_recovery_2017_2025
 
 .venv/bin/python -m mcf.data.empirical panel \
   --dataset ../dataset \
-  --inventory results/run_005/inventory \
-  --config results/run_005/panel/design.json \
+  --inventory results/run_005_recurrent_disclosures_retrained/inventory \
+  --config results/run_005_recurrent_disclosures_retrained/panel/design.json \
   --statement-facts results/statement_recovery_2017_2025/companies \
   --output-dir results/run_005_statement_coverage/panel
 ```
 
 Choose new output directories when rerunning. The end-to-end
-`mcf.workflows.payment_default_proxy` command also accepts `--statement-facts`.
+`mcf.workflows.payment_default_proxy` requires `--statement-facts` for training.
 For broader historical coverage, supply additional SEC notes ZIPs to the same
 importer. Both the input archives and per-issuer supplements are hashed, and the
 panel records the supplement hashes alongside the Company Facts hashes.

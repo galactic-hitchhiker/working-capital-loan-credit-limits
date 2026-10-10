@@ -1,0 +1,167 @@
+{
+  "constant": {
+    "intervals": {
+      "roc_auc": {
+        "lower_95": 0.5,
+        "upper_95": 0.5
+      },
+      "average_precision": {
+        "lower_95": 0.002128216643140022,
+        "upper_95": 0.0028859817839533087
+      },
+      "brier": {
+        "lower_95": 0.0021243504216750296,
+        "upper_95": 0.0028801242821445594
+      },
+      "recall": {
+        "lower_95": 0.0,
+        "upper_95": 0.0
+      },
+      "precision": {
+        "lower_95": 0.0,
+        "upper_95": 0.0
+      },
+      "f1": {
+        "lower_95": 0.0,
+        "upper_95": 0.0
+      }
+    },
+    "replicates_requested": 500,
+    "replicates_used": 500,
+    "single_class_replicates_skipped": 0,
+    "method": "company_cluster_percentile_bootstrap",
+    "limitation": "Conditional on fitted model; common time shocks and model-selection uncertainty are not captured"
+  },
+  "logistic": {
+    "intervals": {
+      "roc_auc": {
+        "lower_95": 0.8214074445452545,
+        "upper_95": 0.8698766035931821
+      },
+      "average_precision": {
+        "lower_95": 0.009760124439716121,
+        "upper_95": 0.01874494734452243
+      },
+      "brier": {
+        "lower_95": 0.002113314334335639,
+        "upper_95": 0.002858826820809151
+      },
+      "recall": {
+        "lower_95": 0.28547917599641737,
+        "upper_95": 0.43273169435946285
+      },
+      "precision": {
+        "lower_95": 0.011688188893503013,
+        "upper_95": 0.019982289812869484
+      },
+      "f1": {
+        "lower_95": 0.022531314822379387,
+        "upper_95": 0.03804364521902833
+      }
+    },
+    "replicates_requested": 500,
+    "replicates_used": 500,
+    "single_class_replicates_skipped": 0,
+    "method": "company_cluster_percentile_bootstrap",
+    "limitation": "Conditional on fitted model; common time shocks and model-selection uncertainty are not captured"
+  },
+  "logistic_l2": {
+    "intervals": {
+      "roc_auc": {
+        "lower_95": 0.8213716997795069,
+        "upper_95": 0.869875982111614
+      },
+      "average_precision": {
+        "lower_95": 0.009753348838720166,
+        "upper_95": 0.018726692641118207
+      },
+      "brier": {
+        "lower_95": 0.002113335435062617,
+        "upper_95": 0.002858834638191868
+      },
+      "recall": {
+        "lower_95": 0.28547917599641737,
+        "upper_95": 0.43273169435946285
+      },
+      "precision": {
+        "lower_95": 0.011590485732122359,
+        "upper_95": 0.01981589290512304
+      },
+      "f1": {
+        "lower_95": 0.02233703680930925,
+        "upper_95": 0.03772116714266487
+      }
+    },
+    "replicates_requested": 500,
+    "replicates_used": 500,
+    "single_class_replicates_skipped": 0,
+    "method": "company_cluster_percentile_bootstrap",
+    "limitation": "Conditional on fitted model; common time shocks and model-selection uncertainty are not captured"
+  },
+  "random_forest": {
+    "intervals": {
+      "roc_auc": {
+        "lower_95": 0.866051509142286,
+        "upper_95": 0.8991905334279385
+      },
+      "average_precision": {
+        "lower_95": 0.016261387141217182,
+        "upper_95": 0.04156338678733341
+      },
+      "brier": {
+        "lower_95": 0.0021119249425542008,
+        "upper_95": 0.0028633617754774813
+      },
+      "recall": {
+        "lower_95": 0.060758171985901215,
+        "upper_95": 0.1616540388794977
+      },
+      "precision": {
+        "lower_95": 0.02726150847843405,
+        "upper_95": 0.06919898234523165
+      },
+      "f1": {
+        "lower_95": 0.03829313840012991,
+        "upper_95": 0.09414534423634924
+      }
+    },
+    "replicates_requested": 500,
+    "replicates_used": 500,
+    "single_class_replicates_skipped": 0,
+    "method": "company_cluster_percentile_bootstrap",
+    "limitation": "Conditional on fitted model; common time shocks and model-selection uncertainty are not captured"
+  },
+  "xgboost": {
+    "intervals": {
+      "roc_auc": {
+        "lower_95": 0.8801389690544744,
+        "upper_95": 0.9129459432483604
+      },
+      "average_precision": {
+        "lower_95": 0.017503636078899706,
+        "upper_95": 0.0343552662332492
+      },
+      "brier": {
+        "lower_95": 0.002217409112348179,
+        "upper_95": 0.0029494362420317403
+      },
+      "recall": {
+        "lower_95": 0.10033790540753919,
+        "upper_95": 0.203136803874092
+      },
+      "precision": {
+        "lower_95": 0.026637912834352222,
+        "upper_95": 0.05545552185999494
+      },
+      "f1": {
+        "lower_95": 0.04227303912010457,
+        "upper_95": 0.08599623261991018
+      }
+    },
+    "replicates_requested": 500,
+    "replicates_used": 500,
+    "single_class_replicates_skipped": 0,
+    "method": "company_cluster_percentile_bootstrap",
+    "limitation": "Conditional on fitted model; common time shocks and model-selection uncertainty are not captured"
+  }
+}

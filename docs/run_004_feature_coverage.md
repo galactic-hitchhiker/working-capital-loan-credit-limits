@@ -2,8 +2,8 @@
 
 The main opportunities are accounting-component recovery and the annual cash-flow
 eligibility gate. Merely adding similar-looking tags would mix accounting scopes.
-This investigation preserves the original `results/run_004` and creates a separate
-rebuild at `results/run_004_coverage/panel`.
+This investigation preserves the original `results/run_004_recurrent_disclosures_initial` and creates a separate
+rebuild at `results/run_004_liabilities_coverage/panel`.
 
 ## What is actually missing?
 
@@ -125,15 +125,15 @@ Use a new output directory for each panel rebuild:
 ```sh
 .venv/bin/python -m mcf.data.empirical panel \
   --dataset ../dataset \
-  --inventory results/run_004/inventory \
-  --config results/run_004/panel/design.json \
-  --output-dir results/run_004_coverage/panel
+  --inventory results/run_004_recurrent_disclosures_initial/inventory \
+  --config results/run_004_recurrent_disclosures_initial/panel/design.json \
+  --output-dir results/run_004_liabilities_coverage/panel
 
 .venv/bin/python -m mcf.data.coverage \
-  --panel results/run_004/panel/panel.csv \
+  --panel results/run_004_recurrent_disclosures_initial/panel/panel.csv \
   --dataset ../dataset \
-  --output results/run_004_coverage/liabilities_review.json \
-  --compare-panel results/run_004_coverage/panel/panel.csv
+  --output results/run_004_liabilities_coverage/liabilities_review.json \
+  --compare-panel results/run_004_liabilities_coverage/panel/panel.csv
 
 .venv/bin/python -m unittest discover -s tests -q
 ```

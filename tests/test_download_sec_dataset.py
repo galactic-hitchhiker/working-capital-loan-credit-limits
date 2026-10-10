@@ -10,6 +10,7 @@ import zipfile
 
 from scripts.download_sec_dataset import (
     Downloader,
+    face_statement_archives,
     main,
     sha256,
     statement_archives,
@@ -46,6 +47,18 @@ class DownloadTests(unittest.TestCase):
         self.assertEqual([r["stem"] for r in statement_archives(html, 2010, 2010)], ["2010q1_notes_1"])
         with self.assertRaisesRegex(ValueError, "No statement archives"):
             statement_archives(html, 2011, 2011)
+
+    def test_face_statement_discovery_selects_latest_quarter_version(self):
+        base = "/files/dera/data/financial-statement-data-sets/"
+        html = "".join(
+            f'<a href="{base}{name}.zip">zip</a>'
+            for name in ["2024q4", "2025q1", "2025q1_1", "2025q2", "2026q1"]
+        )
+        html += '<a href="https://evil.example/2025q3.zip">ignore</a>'
+        actual = face_statement_archives(html, 2025, 2025)
+        self.assertEqual([r["stem"] for r in actual], ["2025q1_1", "2025q2"])
+        with self.assertRaisesRegex(ValueError, "No face financial statement"):
+            face_statement_archives(html, 2011, 2011)
 
     def test_resume_uses_if_range_and_validates_complete_zip(self):
         body = zipped({"CIK1.json": "{}"})
@@ -157,13 +170,14 @@ class DownloadTests(unittest.TestCase):
 
     def test_all_datasets_cli_layout_and_manifest_with_local_fixture_downloads(self):
         html = '<a href="/files/dera/data/financial-statement-notes-data-sets/2025q1_notes.zip">Q1</a>'
+        face_html = '<a href="/files/dera/data/financial-statement-data-sets/2025q1.zip">Q1</a>'
 
         def download(client, url, target):
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(
                 zipped(
                     {"sub.tsv": "adsh\n"}
-                    if "notes.zip" in url
+                    if "notes.zip" in url or "2025q1.zip" in url
                     else {"CIK0001.json": "{}"}
                 )
             )
@@ -181,14 +195,14 @@ class DownloadTests(unittest.TestCase):
                 "2025",
             ]
             with (
-                patch.object(Downloader, "index", return_value=html),
+                patch.object(Downloader, "index", side_effect=lambda url=None: face_html if url else html),
                 patch.object(Downloader, "download", download),
             ):
                 self.assertEqual(main([*args, "--dry-run"]), 0)
                 self.assertFalse(root.exists())
                 self.assertEqual(main(args), 0)
             manifest = json.loads((root / "download_manifest.json").read_text())
-            self.assertEqual(len(manifest["archives"]), 3)
+            self.assertEqual(len(manifest["archives"]), 4)
             self.assertTrue((root / "companyfacts/CIK0001.json").exists())
             self.assertTrue((root / "submissions/CIK0001.json").exists())
             self.assertTrue(
@@ -196,6 +210,12 @@ class DownloadTests(unittest.TestCase):
             )
             self.assertTrue(
                 (root / "financial_statements/archives/2025q1_notes.zip").exists()
+            )
+            self.assertTrue(
+                (root / "financial_statements/face/2025q1/sub.tsv").exists()
+            )
+            self.assertTrue(
+                (root / "financial_statements/face/archives/2025q1.zip").exists()
             )
 
 

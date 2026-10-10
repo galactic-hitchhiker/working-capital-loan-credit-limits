@@ -1,0 +1,79 @@
+{
+  "version": "item204-llm-v6-all-filings",
+  "model": "gpt-6-sol",
+  "provider": "openai_batch",
+  "settings": {
+    "context_version": "item204-openai-v1-source-bounded",
+    "reasoning_effort": "medium",
+    "max_output_tokens": 3000
+  },
+  "review_log": "/Users/djvelickovic/Projects/mcf/mcf-master-thesis/results/item_204_openai_batch_review/review_log.jsonl",
+  "input": "/Users/djvelickovic/Projects/mcf/mcf-master-thesis/results/sec/item204/filings.jsonl",
+  "input_sha256": "f03265e7a95fa18abe813862c4d9dbaa66ba6768eb8aff62e05c5a62c028b753",
+  "dry_run": false,
+  "start": null,
+  "cutoff": null,
+  "input_records": 2968,
+  "selected_records": 2968,
+  "excluded_records": 0,
+  "api_stop_reason": null,
+  "interrupted": false,
+  "html_dir": "/Users/djvelickovic/Projects/mcf/mcf-master-thesis/results/sec/item204/html",
+  "limit": 0,
+  "review_counts": {
+    "cached": 2764,
+    "reviewed": 154,
+    "fallback_validation_error": 50
+  },
+  "final_labels": {
+    "NON_DEFAULT": 1281,
+    "QUALIFIED_DEFAULT": 961,
+    "MANUAL_REVIEW": 726
+  },
+  "batch_jobs": [
+    {
+      "batch_id": "batch_6ac789a899bc819088ce7148522c7a7a",
+      "status": "completed",
+      "requests": 124,
+      "consumed": 124
+    },
+    {
+      "batch_id": "batch_6ac6c2e0820c81908ec1216af1407340",
+      "status": "completed",
+      "requests": 2880,
+      "consumed": 2880
+    },
+    {
+      "batch_id": "batch_6ac785aeb5948190873b70d62f72dcbd",
+      "status": "failed",
+      "requests": 924,
+      "consumed": 924
+    },
+    {
+      "batch_id": "batch_6ac798298a708190b6b64b6bc65b5d25",
+      "status": "completed",
+      "requests": 200,
+      "consumed": 200
+    },
+    {
+      "batch_id": "batch_6ac7ab2d63b88190bd05472480a07b19",
+      "status": "completed",
+      "requests": 200,
+      "consumed": 200
+    },
+    {
+      "batch_id": "batch_6ac7ac462910819085210b6b091a31ad",
+      "status": "completed",
+      "requests": 200,
+      "consumed": 200
+    },
+    {
+      "batch_id": "batch_6ac7adec97a08190889129e9edf26193",
+      "status": "completed",
+      "requests": 200,
+      "consumed": 200
+    }
+  ],
+  "batch_pending": 0,
+  "review_attempts": 204
+}

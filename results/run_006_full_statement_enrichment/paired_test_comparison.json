@@ -1,0 +1,25 @@
+{
+  "method": "paired_company_cluster_bootstrap",
+  "replicates": 300,
+  "test_rows": 131842,
+  "test_companies": 4633,
+  "delta": "enriched minus same-snapshot unenriched",
+  "intervals": {
+    "auc": {
+      "lower_95": -0.001843921982189503,
+      "upper_95": 0.015454998167184262,
+      "mean": 0.00655522753196153
+    },
+    "average_precision": {
+      "lower_95": -0.003948602140881714,
+      "upper_95": 0.002977358997349158,
+      "mean": 0.00012482793132085427
+    },
+    "brier": {
+      "lower_95": -4.444049030829003e-06,
+      "upper_95": 2.296133844667814e-06,
+      "mean": -9.321825928904533e-07
+    }
+  },
+  "limitation": "Conditional on fitted selected models; does not account for model selection, target revision, or calendar shocks."
+}

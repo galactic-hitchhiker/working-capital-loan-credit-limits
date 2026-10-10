@@ -17,6 +17,10 @@ reproduce the historical first-Item-1.03 study.
 
 ## Historical Empirical Pipeline
 
+The commands below document the earlier Item 1.03-only study. The current
+trainer requires an Item 2.04 disclosure target and attached audited statement
+facts; use the current pipeline above for new model runs.
+
 ```sh
 .venv/bin/python -m mcf.data.empirical inventory \
   --dataset dataset \
@@ -89,6 +93,7 @@ and trains the model families:
 SEC_USER_AGENT='Your Name your.email@example.com' \
 .venv/bin/python -m mcf.workflows.launcher -m mcf.workflows.payment_default_proxy \
   --dataset ../dataset \
+  --statement-facts results/statement_recovery_full/companies \
   --output-dir results/payment_default_proxy
 ```
 

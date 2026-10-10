@@ -1,0 +1,26 @@
+{
+  "rows": 563607,
+  "filled_feature_cells": {
+    "return_on_average_assets": 8550,
+    "negative_net_income": 8601,
+    "liabilities_to_assets": 801,
+    "liabilities_to_assets_change_12m": 332,
+    "operating_cashflow_to_average_liabilities": 355
+  },
+  "total_filled_cells": 18639,
+  "changed_existing_cells": {},
+  "complete_rows": {
+    "before": 356967,
+    "after": 363033
+  },
+  "baseline_missingness_by_label": {
+    "rows_label_0": 562555,
+    "incomplete_label_0": 206276,
+    "rows_label_1": 1052,
+    "incomplete_label_1": 364
+  },
+  "labels_and_row_keys_unchanged": true,
+  "feature_availability_checked": true,
+  "before_sha256": "f5abc451c2476ab0f4d2209baffb22a87b44ff04e47dc867c195f5dc52230df2",
+  "after_sha256": "5842e51cb7e3639884de902d145a543e1ad0e9ed14e9a1494375ae44cef6f5e6"
+}

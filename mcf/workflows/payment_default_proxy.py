@@ -11,6 +11,7 @@ Parameters:
     --config PATH: Payment-disclosure study-design JSON; also supplies the disclosure cutoff
         (default: configs/study.bankruptcy_or_payment_failure.json).
     --output-dir PATH: Required fresh root for inventory, panel and model outputs.
+    --statement-facts PATH: Required directory of audited per-issuer statement facts.
     --disclosure-results PATH: Completed payment-specific or earlier OpenAI 2.04 reviews;
         skips enrichment; 1.03 qualifies automatically in the default composite design.
     --item-204-results PATH: Backward-compatible alias for --disclosure-results.
@@ -63,6 +64,8 @@ from mcf.models.train import run as train
 def run(args):
     """Create reviewed disclosures, episode inventory, panel, and fitted models."""
     config = load_design(args.config)
+    if not args.statement_facts or not args.statement_facts.is_dir():
+        raise ValueError("Model training requires an existing --statement-facts directory")
     target = config["event_type"]
     payment_target = target in RECURRENT_TARGETS
     if target not in {PAYMENT_DEFAULT_PROXY_TARGET, *RECURRENT_TARGETS}:
@@ -125,8 +128,7 @@ def run(args):
         root / "inventory",
         args.config,
         root / "panel",
-        **({"statement_facts": args.statement_facts}
-           if getattr(args, "statement_facts", None) is not None else {}),
+        statement_facts=args.statement_facts,
     )
     selection = train(
         args.config,
@@ -134,8 +136,26 @@ def run(args):
         root / "models",
         smoke=args.smoke,
     )
+    if target == BANKRUPTCY_PAYMENT_TARGET:
+        workflow = "bankruptcy-or-payment-failure-v1"
+        limitation = (
+            "All 1.03 bankruptcy/receivership or explicitly reviewed 2.04 payment-failure episodes; "
+            "not verified contractual nonpayment or cure. "
+        )
+    elif payment_target:
+        workflow = "disclosed-payment-failure-v1"
+        limitation = (
+            "Recurrent disclosed payment-failure episodes; filing dates and an operational quiet gap, "
+            "not complete actual-default coverage or verified cure."
+        )
+    else:
+        workflow = "payment-default-disclosure-proxy-v1"
+        limitation = (
+            "The model predicts a composite SEC disclosure proxy. It does not "
+            "estimate a verified contractual payment-default probability."
+        )
     summary = {
-        "workflow": "bankruptcy-or-payment-failure-v1" if target == BANKRUPTCY_PAYMENT_TARGET else "disclosed-payment-failure-v1" if payment_target else "payment-default-disclosure-proxy-v1",
+        "workflow": workflow,
         "target": target,
         "item_204_results": str(Path(item_204_results).resolve()),
         "inventory": {
@@ -156,16 +176,7 @@ def run(args):
         "selection_status": selection["status"],
         "exploratory_low_event": config.get("exploratory_low_event", False),
         "validation_status": config.get("validation_status"),
-        "limitation": (
-            "All 1.03 bankruptcy/receivership or explicitly reviewed 2.04 payment-failure episodes; "
-            "not verified contractual nonpayment or cure. "
-            if target == BANKRUPTCY_PAYMENT_TARGET else
-            "Recurrent disclosed payment-failure episodes; filing dates and an operational quiet gap, "
-            "not complete actual-default coverage or verified cure."
-            if payment_target else
-            "The model predicts a composite SEC disclosure proxy. It does not "
-            "estimate a verified contractual payment-default probability."
-        ),
+        "limitation": limitation,
     }
     (root / "workflow_summary.json").write_text(json.dumps(summary, indent=2) + "\n")
     print(json.dumps(summary, indent=2))
@@ -175,8 +186,8 @@ def run(args):
 def parser():
     result = argparse.ArgumentParser(description=__doc__)
     result.add_argument("--dataset", type=Path, default=Path("../dataset"))
-    result.add_argument("--statement-facts", type=Path,
-                        help="Optional audited statement-fact supplement directory")
+    result.add_argument("--statement-facts", type=Path, required=True,
+                        help="Required audited per-issuer statement-fact directory")
     result.add_argument(
         "--config",
         type=Path,

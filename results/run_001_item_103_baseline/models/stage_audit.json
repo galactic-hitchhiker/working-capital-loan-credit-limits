@@ -1,0 +1,64 @@
+{
+  "training": {
+    "rows": 206760,
+    "positives": 249,
+    "negatives": 206511,
+    "companies": 6050,
+    "event_companies": 133,
+    "distinct_events": 133
+  },
+  "tuning": {
+    "rows": 52952,
+    "positives": 84,
+    "negatives": 52868,
+    "companies": 3719,
+    "event_companies": 47,
+    "distinct_events": 47
+  },
+  "calibration": {
+    "rows": 32269,
+    "positives": 59,
+    "negatives": 32210,
+    "companies": 3928,
+    "event_companies": 35,
+    "distinct_events": 35
+  },
+  "selection": {
+    "rows": 124931,
+    "positives": 152,
+    "negatives": 124779,
+    "companies": 5006,
+    "event_companies": 85,
+    "distinct_events": 85
+  },
+  "test": {
+    "rows": 136177,
+    "positives": 288,
+    "negatives": 135889,
+    "companies": 4766,
+    "event_companies": 160,
+    "distinct_events": 160
+  },
+  "purged": {
+    "rows": 35022
+  },
+  "rolling_tuning": {
+    "ranking_rule": "highest mean annual AP lift; then highest mean annual Brier skill; then fixed candidate order",
+    "folds": [
+      {
+        "validation_year": 2017,
+        "fit_rows": 206760,
+        "fit_positives": 249,
+        "validation_rows": 27268,
+        "validation_positives": 44
+      },
+      {
+        "validation_year": 2018,
+        "fit_rows": 228258,
+        "fit_positives": 287,
+        "validation_rows": 25684,
+        "validation_positives": 40
+      }
+    ]
+  }
+}

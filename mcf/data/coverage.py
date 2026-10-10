@@ -1,7 +1,7 @@
 """Audit missing liabilities for source-recovery opportunities, without imputation.
 
-Run: python -m mcf.data.coverage --panel results/run_004/panel/panel.csv
-     --dataset ../dataset --output results/run_004_coverage/liabilities_review.json
+Run: python -m mcf.data.coverage --panel results/run_004_recurrent_disclosures_initial/panel/panel.csv
+     --dataset ../dataset --output results/run_004_liabilities_coverage/liabilities_review.json
 
 These are review candidates, not permission to treat absent equity components as
 zero. Input must be company-grouped, as produced by the empirical panel builder.

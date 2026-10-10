@@ -1,0 +1,47 @@
+{
+  "workflow": "bankruptcy-or-payment-failure-v1",
+  "target": "disclosed_bankruptcy_or_payment_failure_within_60_days",
+  "item_204_results": "/Users/djvelickovic/Projects/mcf/mcf-master-thesis/results/item_204_openai_batch_review",
+  "inventory": {
+    "directory": "/Users/djvelickovic/Projects/mcf/mcf-master-thesis/results/run_004/inventory",
+    "companies": 20335,
+    "disclosure_records": 2287,
+    "item_204_counts": {
+      "payment_failure_disclosures": 384,
+      "combined_disclosures": 2287,
+      "missing_review": 818,
+      "non_default": 1197,
+      "legacy_item_204_reviews": 2167,
+      "legacy_non_default_reused": 1197,
+      "item_103_automatic": 1915,
+      "episodes": 1671,
+      "manual_review": 477,
+      "qualified_default": 493,
+      "legacy_payment_failure_reused": 372,
+      "legacy_non_payment_unresolved": 121
+    },
+    "errors": 0
+  },
+  "panel": {
+    "directory": "/Users/djvelickovic/Projects/mcf/mcf-master-thesis/results/run_004/panel",
+    "included_companies": 8770,
+    "distinct_positive_events": 573,
+    "counts": {
+      "missing_or_stale_financials": 335246,
+      "feature_rows": 609829,
+      "labeled_rows": 563607,
+      "positive_rows": 1052,
+      "post_unresolved_payment_disclosure": 38431,
+      "outside_observed_reporting_life": 1013505,
+      "issuer_followup_censoring": 5983,
+      "payment_episode_washout": 1458,
+      "unresolved_payment_disclosure_in_window": 350
+    }
+  },
+  "models": "/Users/djvelickovic/Projects/mcf/mcf-master-thesis/results/run_004/models",
+  "selected_model": "xgboost",
+  "selection_status": "selected_on_selection_period",
+  "exploratory_low_event": false,
+  "validation_status": "Broader bankruptcy-or-payment-failure target specified after examination of earlier target results, including 2023-2025. Evaluation is retrospective, not untouched external validation. Standard sample minima retained.",
+  "limitation": "All 1.03 bankruptcy/receivership or explicitly reviewed 2.04 payment-failure episodes; not verified contractual nonpayment or cure. "
+}

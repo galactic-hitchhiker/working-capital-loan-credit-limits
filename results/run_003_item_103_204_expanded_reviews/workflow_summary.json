@@ -1,0 +1,37 @@
+{
+  "workflow": "payment-default-disclosure-proxy-v1",
+  "target": "first_sec_payment_default_disclosure_proxy",
+  "item_204_results": "/Users/djvelickovic/Projects/mcf/mcf-master-thesis/results/item_204_openai_batch_review",
+  "inventory": {
+    "directory": "/Users/djvelickovic/Projects/mcf/mcf-master-thesis/results/run_003/inventory",
+    "companies": 20335,
+    "disclosure_records": 2408,
+    "item_204_counts": {
+      "item_204_non_default": 1219,
+      "item_204_missing_review": 864,
+      "item_204_qualified_default": 858,
+      "item_204_manual_review": 654
+    },
+    "errors": 0
+  },
+  "panel": {
+    "directory": "/Users/djvelickovic/Projects/mcf/mcf-master-thesis/results/run_003/panel",
+    "included_companies": 8675,
+    "distinct_positive_events": 510,
+    "counts": {
+      "missing_or_stale_financials": 335246,
+      "feature_rows": 609829,
+      "labeled_rows": 549790,
+      "positive_rows": 944,
+      "post_unresolved_item_204": 36587,
+      "outside_observed_reporting_life": 1013505,
+      "post_first_disclosure": 17394,
+      "issuer_followup_censoring": 5800,
+      "unresolved_item_204_in_window": 258
+    }
+  },
+  "models": "/Users/djvelickovic/Projects/mcf/mcf-master-thesis/results/run_003/models",
+  "selected_model": "xgboost",
+  "selection_status": "selected_on_selection_period",
+  "limitation": "The model predicts a composite SEC disclosure proxy. It does not estimate a verified contractual payment-default probability."
+}

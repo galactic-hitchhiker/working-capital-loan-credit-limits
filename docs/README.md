@@ -30,6 +30,7 @@
 - [Input contracts](input_contracts.md)
 - [Run 004 feature coverage investigation](run_004_feature_coverage.md)
 - [Recovery from complete financial statements](statement_feature_recovery.md)
+- [Run 006 full statement enrichment comparison](run_006_statement_comparison.md)
 - [Evidence tables](tables/)
 - [Figures](figures/)
 

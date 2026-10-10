@@ -1,0 +1,26 @@
+{
+  "counts": {
+    "shared_rows": 566217
+  },
+  "recovered_cells": {
+    "liabilities_to_assets": 1610,
+    "liabilities_to_assets_change_12m": 527,
+    "operating_cashflow_to_average_liabilities": 961,
+    "current_ratio": 7,
+    "working_capital_to_assets": 7
+  },
+  "lost_cells": {},
+  "revised_observed_cells": {
+    "liabilities_to_assets_change_12m": 148,
+    "operating_cashflow_to_average_liabilities": 333,
+    "liabilities_to_assets": 51
+  },
+  "complete_rows": {
+    "before_shared": 363700,
+    "after_shared": 364096
+  },
+  "shared_labels_unchanged": true,
+  "feature_availability_checked": true,
+  "before_sha256": "cff04b911692fa2bf96477f2671976787bdeec02362be0a3bea7e7fdf7f6fccc",
+  "after_sha256": "e96ac743930dc311a64399678d02093dd0bb16d3e7203a2996b726452b018e3a"
+}

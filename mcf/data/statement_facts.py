@@ -5,7 +5,7 @@ anchors in Company Facts, and complete calculation groups. Original source files
 are never modified. Output is an optional supplement for mcf.data.empirical.
 
 python -m mcf.data.statement_facts --archives ARCHIVE.zip ... --dataset ../dataset
-    --inventory results/run_005/inventory/issuer_inventory.csv --output-dir OUTPUT
+    --inventory results/run_005_recurrent_disclosures_retrained/inventory/issuer_inventory.csv --output-dir OUTPUT
 """
 
 import argparse

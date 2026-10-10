@@ -45,7 +45,7 @@ from mcf.common import (
     write_csv,
     write_json,
 )
-from mcf.data.sec import filing_rows
+from mcf.data.sec import filing_items, filing_rows
 from mcf.data.point_in_time import FactIndex
 from mcf.data.payment_failure import (
     TARGET as PAYMENT_FAILURE_TARGET,
@@ -66,12 +66,12 @@ SUPPORTED_TARGETS = {ITEM_103_TARGET, PAYMENT_DEFAULT_PROXY_TARGET, *RECURRENT_T
 
 def item_103(value):
     """Match the exact disclosure item across the separators used in SEC files."""
-    return "1.03" in str(value).replace(";", ",").replace(" ", ",").split(",")
+    return "1.03" in filing_items(value)
 
 
 def item_204(value):
     """Match the exact Item 2.04 token across SEC item separators."""
-    return "2.04" in str(value).replace(";", ",").replace(" ", ",").split(",")
+    return "2.04" in filing_items(value)
 
 
 def load_item_204_results(path):
@@ -678,6 +678,17 @@ def panel(dataset, inventory_dir, config_path, output, statement_facts=None):
         financial_exclusion_reasons=dict(financial_exclusions),
         financial_exclusion_note="Reasons overlap; a company-month can fail multiple checks.",
         feature_row_derivations=dict(derivations),
+        item_204_results=inventory_audit.get("item_204_results"),
+        item_204_resolved_reviews=sum(
+            inventory_audit.get("item_204_counts", {}).get(name, 0)
+            for name in (
+                "qualified_default", "non_default",
+                "item_204_qualified_default", "item_204_non_default",
+            )
+        ),
+        statement_facts_directory=(
+            str(Path(statement_facts).resolve()) if statement_facts is not None else None
+        ),
         statement_supplement_companies=len(supplement_hashes),
         limitation=(
             "Bankruptcy/receivership or payment-failure disclosure episodes; 1.03 qualifies without payment review. "

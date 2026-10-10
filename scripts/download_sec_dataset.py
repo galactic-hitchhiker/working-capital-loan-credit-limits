@@ -5,10 +5,10 @@ Run: python3 scripts/download_sec_dataset.py --output-dir ../dataset_full
      --start-year 2009 --end-year 2026 --user-agent 'Name email@example.com'
 
 Required: --output-dir and --user-agent (or SEC_USER_AGENT environment variable).
-Optional: --datasets companyfacts submissions statements (default: all),
+Optional: --datasets companyfacts submissions statements face_statements (default: all),
 --start-year (2009), --end-year (current year), --download-only, --dry-run,
 --retries (4), --interval (0.5 seconds), --timeout (120 seconds).
-Year filters apply only to statements. Existing completed archives are reused;
+Year filters apply only to statement archives. Existing completed archives are reused;
 use a new output directory for a refreshed snapshot. ZIPs are retained.
 """
 
@@ -34,6 +34,7 @@ import zipfile
 
 
 INDEX = "https://www.sec.gov/data-research/sec-markets-data/financial-statement-notes-data-sets"
+FACE_INDEX = "https://www.sec.gov/data-research/sec-markets-data/financial-statement-data-sets"
 BULK = {
     "companyfacts": "https://www.sec.gov/Archives/edgar/daily-index/xbrl/companyfacts.zip",
     "submissions": "https://www.sec.gov/Archives/edgar/daily-index/bulkdata/submissions.zip",
@@ -57,14 +58,15 @@ def sha256(path):
 
 
 class ArchiveLinks(HTMLParser):
-    def __init__(self):
+    def __init__(self, base_url=INDEX):
         super().__init__()
+        self.base_url = base_url
         self.links = set()
 
     def handle_starttag(self, tag, attrs):
         href = dict(attrs).get("href")
         if tag == "a" and href:
-            self.links.add(urljoin(INDEX, href))
+            self.links.add(urljoin(self.base_url, href))
 
 
 def statement_archives(html, start_year, end_year):
@@ -104,6 +106,32 @@ def statement_archives(html, start_year, end_year):
     if not selected:
         raise ValueError("No statement archives found for these years on the SEC index")
     return sorted(selected, key=lambda a: (a["year"], a["months"][0]))
+
+
+def face_statement_archives(html, start_year, end_year):
+    """Find quarterly face-financial ZIPs on the SEC's separate download page."""
+    parser = ArchiveLinks(FACE_INDEX)
+    parser.feed(html)
+    archives = {}
+    for url in sorted(parser.links):
+        parsed = urlsplit(url)
+        if parsed.scheme != "https" or parsed.netloc != "www.sec.gov":
+            continue
+        match = re.fullmatch(
+            r"/files/dera/data/financial-statement-data-sets/"
+            r"((\d{4})q([1-4])(?:_([0-9]+))?)\.zip",
+            parsed.path,
+        )
+        if not match or not start_year <= int(match[2]) <= end_year:
+            continue
+        stem, year, quarter, version = match.groups()
+        period = (int(year), int(quarter))
+        candidate = dict(url=url, year=int(year), quarter=int(quarter), stem=stem)
+        if period not in archives or int(version or 0) > archives[period][0]:
+            archives[period] = (int(version or 0), candidate)
+    if not archives:
+        raise ValueError("No face financial statement archives found for these years on the SEC index")
+    return [archives[period][1] for period in sorted(archives)]
 
 
 class Downloader:
@@ -153,10 +181,10 @@ class Downloader:
         print(f"Request failed: {exc}. Retrying in {delay}s.", flush=True)
         time.sleep(delay)
 
-    def index(self):
+    def index(self, url=INDEX):
         for attempt in range(self.retries + 1):
             try:
-                with self.open(INDEX) as response:
+                with self.open(url) as response:
                     return response.read().decode("utf-8")
             except (
                 URLError,
@@ -339,8 +367,8 @@ def main(argv=None):
     parser.add_argument(
         "--datasets",
         nargs="+",
-        choices=[*BULK, "statements"],
-        default=[*BULK, "statements"],
+        choices=[*BULK, "statements", "face_statements"],
+        default=[*BULK, "statements", "face_statements"],
     )
     parser.add_argument("--start-year", type=int, default=2009)
     parser.add_argument("--end-year", type=int, default=datetime.now().year)
@@ -384,6 +412,19 @@ def main(argv=None):
                     root / "financial_statements" / item["stem"],
                 )
             )
+    face_index_html = None
+    if "face_statements" in args.datasets:
+        face_index_html = client.index(FACE_INDEX)
+        for item in face_statement_archives(
+            face_index_html, args.start_year, args.end_year
+        ):
+            jobs.append(
+                (
+                    item["url"],
+                    root / "financial_statements" / "face" / "archives" / f"{item['stem']}.zip",
+                    root / "financial_statements" / "face" / item["stem"],
+                )
+            )
     print(f"Plan: {len(jobs)} archives; output {root.resolve()}", flush=True)
     for url, archive, destination in jobs:
         print(
@@ -395,6 +436,8 @@ def main(argv=None):
     root.mkdir(parents=True, exist_ok=True)
     if index_html is not None:
         (root / "statement_archive_index.html").write_text(index_html)
+    if face_index_html is not None:
+        (root / "face_statement_archive_index.html").write_text(face_index_html)
     manifest_path = root / "download_manifest.json"
     manifest = (
         json.loads(manifest_path.read_text())

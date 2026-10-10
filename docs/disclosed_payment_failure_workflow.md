@@ -24,6 +24,7 @@ new requests:
   --dataset ../dataset \
   --config configs/study.disclosed_payment_failure.json \
   --disclosure-results results/item_204_openai_batch_review \
+  --statement-facts results/statement_recovery_full/companies \
   --output-dir results/disclosed_payment_failure_run
 ```
 
@@ -134,6 +135,7 @@ After pending and deferred counts reach zero, reuse the completed reviews:
   --dataset ../dataset \
   --config configs/study.disclosed_payment_failure.json \
   --disclosure-results results/sec/payment_failure_review \
+  --statement-facts results/statement_recovery_full/companies \
   --output-dir results/disclosed_payment_failure_run
 ```
 
@@ -158,6 +160,7 @@ To build each stage separately:
   --dataset ../dataset \
   --inventory results/disclosed_payment_failure_run/inventory \
   --config configs/study.disclosed_payment_failure.json \
+  --statement-facts results/statement_recovery_full/companies \
   --output-dir results/disclosed_payment_failure_run/panel
 
 .venv/bin/python -m mcf.workflows.launcher -m mcf.models.train \
@@ -193,7 +196,7 @@ The standard config requires at least 10 event companies and 10 positive and
 negative company-months in each stage and each annual tuning validation fold.
 Repeated positive months for one company do not create more independent companies.
 
-In the current `run_004` panel, tuning has 8 event companies, calibration has 9,
+In the current `run_004_recurrent_disclosures_initial` panel, tuning has 8 event companies, calibration has 9,
 and the annual tuning folds have 3 (2017) and 5 (2018). The standard design therefore
 stops before fitting. More payment-specific evidence review, especially for missing
 1.03 filings and unresolved 2.04 cases, is the stronger way to improve coverage.
@@ -211,8 +214,8 @@ Reuse the already built panel; no discovery, inventory rebuild or OpenAI calls:
 ```sh
 .venv/bin/python -m mcf.workflows.launcher -m mcf.models.train \
   --config configs/study.disclosed_payment_failure.exploratory.json \
-  --panel results/run_004/panel/panel.csv \
-  --output-dir results/run_004/models_exploratory
+  --panel results/run_004_recurrent_disclosures_initial/panel/panel.csv \
+  --output-dir results/run_004_recurrent_disclosures_initial/models_exploratory
 ```
 
 Use a fresh model output directory. The standard config retains its original

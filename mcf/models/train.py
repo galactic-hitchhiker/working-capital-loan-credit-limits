@@ -1,7 +1,7 @@
 """Fit, calibrate and compare Chapter 4 models with strictly chronological stages.
 
-The empirical SEC disclosure study uses mcf.data.empirical and the fixed design
-in configs/study.sec_disclosure.json. Synthetic mode is only a software check.
+Empirical training requires a panel built with Item 2.04 reviews and audited
+statement facts. Synthetic mode is only a software check.
 
 Run from the repository root:
     .venv/bin/python -m mcf.models.train [parameters]
@@ -28,6 +28,8 @@ from sklearn.frozen import FrozenEstimator
 from sklearn.inspection import permutation_importance
 
 from mcf.data.panel import PANEL_FIELDS
+from mcf.data.empirical import PAYMENT_DEFAULT_PROXY_TARGET
+from mcf.data.payment_failure import RECURRENT_TARGETS
 from mcf.models.evaluation import (
     choose_threshold,
     cluster_intervals,
@@ -50,6 +52,32 @@ from mcf.models.risk import MODEL_ORDER, candidates, estimator, fit
 from mcf.models.temporal import LabeledObservation, chronological_partition
 
 CALIBRATION_ORDER = ("identity", "sigmoid")
+
+
+def require_empirical_sources(panel_path, target):
+    """Reject empirical panels that lack either mandatory source enrichment."""
+    panel_path = Path(panel_path)
+    panel_dir = panel_path.parent
+    audit = json.loads((panel_dir / "panel_audit.json").read_text())
+    provenance = json.loads((panel_dir / "manifest.json").read_text())
+    statement_hashes = panel_dir / "statement_facts_hashes.json"
+    if target not in {PAYMENT_DEFAULT_PROXY_TARGET, *RECURRENT_TARGETS}:
+        raise ValueError("Empirical training requires an Item 2.04 disclosure target")
+    if audit.get("target") != target:
+        raise ValueError("Empirical panel target does not match the study design")
+    if not audit.get("item_204_results") or audit.get("item_204_resolved_reviews", 0) < 1:
+        raise ValueError("Empirical training requires Item 2.04 review results")
+    if (
+        not audit.get("statement_facts_directory")
+        or audit.get("statement_supplement_companies", 0) < 1
+        or not json.loads(statement_hashes.read_text())
+    ):
+        raise ValueError("Empirical training requires attached statement facts")
+    if (
+        provenance.get("panel_sha256") != file_hash(panel_path)
+        or provenance.get("statement_facts_hash_list_sha256") != file_hash(statement_hashes)
+    ):
+        raise ValueError("Empirical panel or statement provenance has changed")
 
 
 def select_calibration(scores):
@@ -223,6 +251,8 @@ def run(config_path, panel_path, output, *, smoke=False):
     config = load_design(config_path)
     if smoke and config["data_kind"] != "synthetic":
         raise ValueError("Smoke mode is only available for synthetic data")
+    if config["data_kind"] == "empirical":
+        require_empirical_sources(panel_path, config["event_type"])
     rows, x, y, stage_indices, audit = prepare(panel_path, config)
     output = new_output(output)
     write_json(output / "design.json", config)

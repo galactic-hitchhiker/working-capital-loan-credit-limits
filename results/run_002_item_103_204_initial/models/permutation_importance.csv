@@ -1,0 +1,13 @@
+model,feature,mean_brier_increase,std
+xgboost,current_ratio,-1.8427050385080118e-06,1.2657526543761424e-06
+xgboost,cash_and_equivalents_to_assets,-2.843552267787195e-06,6.299190308167358e-07
+xgboost,liabilities_to_assets,4.121121464006005e-06,2.1493044912386276e-06
+xgboost,assets_growth_12m,1.5715220294472888e-05,3.3873025352721565e-06
+xgboost,liabilities_to_assets_change_12m,-9.280339239459731e-07,1.1468873506535937e-06
+xgboost,working_capital_to_assets,6.600775803996434e-05,6.4073296112443855e-06
+xgboost,return_on_average_assets,4.8661305041375814e-06,2.120957331893572e-06
+xgboost,operating_cashflow_to_average_assets,-1.0134002877125806e-06,6.888377876657345e-07
+xgboost,operating_cashflow_to_average_liabilities,5.431656480499922e-07,5.763473398494381e-07
+xgboost,negative_net_income,0.0,0.0
+xgboost,negative_operating_cashflow,-1.5423087941369442e-06,1.0277304979871408e-06
+xgboost,log_assets,0.004827341360160305,9.001155006998555e-05

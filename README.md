@@ -15,6 +15,10 @@ contribute further outcomes for the same company. The quiet gap is an operationa
 rule, not verified cure. The outcome is a broader disclosure proxy, not a verified
 contractual payment-default probability.
 
+Run the study with the [staged pipeline](docs/pipeline.md): `download`,
+`inventory`, `classify`, `panel`, and `train` can run separately, or `all` can
+coordinate them. Existing feature, label, and model functions remain in use.
+
 Use `configs/study.bankruptcy_or_payment_failure.json` and the
 [combined-target guide](docs/bankruptcy_payment_failure_workflow.md). Your earlier
 2.04 reviews can be reused without new OpenAI calls; 1.03 needs no AI review.
@@ -103,8 +107,8 @@ using `.venv/bin/python -m ...`. For command-line help:
 
 ## Download SEC source data
 
-The standalone downloader fetches and unpacks Company Facts, submissions, and
-Financial Statement and Notes archives. It discovers the available statement
+The standalone downloader fetches and unpacks Company Facts, submissions, both
+Financial Statement and Notes archives and the separate face-financial series. It discovers the available statement
 periods, resumes interrupted downloads, and retains ZIPs for feature extraction.
 
 ```sh
@@ -127,7 +131,7 @@ results/
 │   ├── filings.jsonl           # Item 2.04 source inventory
 │   ├── html/                   # Cached filing documents
 │   └── audit.json              # Discovery audit
-├── run_001/
+├── run_001_item_103_baseline/
 │   ├── inventory/              # Issuer inventory and disclosure events
 │   ├── panel/                  # Monthly features and labels
 │   └── models/                 # Training outputs
@@ -167,6 +171,9 @@ The following steps rebuild the Item 1.03 study. Each output directory must be
 new or empty. Item 2.04 enrichment, described later, uses resumable directories.
 Set `--dataset` to your local SEC dataset root; the examples below use `dataset`,
 while the composite examples use `../dataset`.
+These steps document the historical study. The current trainer requires an
+Item 2.04 disclosure target and attached audited statement facts; use the
+combined workflow below for new model training.
 
 ### 1. Build the issuer inventory
 
@@ -259,11 +266,13 @@ Reuse your existing 2.04 reviews and automatically include every Item 1.03:
   --dataset ../dataset \
   --config configs/study.bankruptcy_or_payment_failure.json \
   --disclosure-results results/item_204_openai_batch_review \
+  --statement-facts results/statement_recovery_full/companies \
   --output-dir results/bankruptcy_payment_failure_run
 ```
 
 This makes no OpenAI calls and builds a fresh combined inventory, monthly panel
-and models. Use a new output root. The workflow now defaults to this config.
+and models. Use a new output root. Training requires completed Item 2.04 reviews
+and attached audited statement facts. The workflow now defaults to this config.
 The [step-by-step guide](docs/bankruptcy_payment_failure_workflow.md) explains
 label rules, recurrence, validation and separate stage commands.
 
@@ -297,6 +306,7 @@ SEC_USER_AGENT='Your Name your.email@example.com' \
 .venv/bin/python -m mcf.workflows.launcher -m mcf.workflows.payment_default_proxy \
   --config configs/study.payment_default_proxy.json \
   --dataset ../dataset \
+  --statement-facts results/statement_recovery_full/companies \
   --output-dir results/payment_default_proxy
 ```
 
@@ -340,6 +350,7 @@ Use the completed enrichment in the remaining end-to-end workflow with:
   --config configs/study.payment_default_proxy.json \
   --dataset ../dataset \
   --item-204-results results/item_204_pipeline/final \
+  --statement-facts results/statement_recovery_full/companies \
   --output-dir results/payment_default_proxy
 ```
 
@@ -405,6 +416,7 @@ Build the point-in-time panel:
   --dataset ../dataset \
   --inventory results/payment_default_proxy/inventory \
   --config configs/study.payment_default_proxy.json \
+  --statement-facts results/statement_recovery_full/companies \
   --output-dir results/payment_default_proxy/panel
 ```
 

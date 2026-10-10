@@ -26,6 +26,12 @@ from dataclasses import asdict, dataclass
 from datetime import date
 from pathlib import Path
 
+
+def filing_items(value):
+    """Split SEC item lists without matching partial item numbers."""
+    return set(str(value).replace(";", ",").replace(" ", ",").split(","))
+
+
 TAGS = {
     # The credit-side balance-sheet total equals total assets, including temporary
     # equity. It is a fallback only; an observed Assets fact always takes priority.
@@ -618,7 +624,7 @@ def main():
                     or f["filingDate"] >= args.as_of.isoformat()
                 ):
                     continue
-                items = str(f["items"]).replace(";", ",").replace(" ", ",").split(",")
+                items = filing_items(f["items"])
                 if "1.03" in items:
                     accession_without_dashes = f["accessionNumber"].replace("-", "")
                     events.append(

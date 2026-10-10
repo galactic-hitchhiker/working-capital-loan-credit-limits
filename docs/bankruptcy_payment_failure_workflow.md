@@ -34,13 +34,19 @@ or complete inability to repay in each filing. See
   --dataset ../dataset \
   --config configs/study.bankruptcy_or_payment_failure.json \
   --disclosure-results results/item_204_openai_batch_review \
+  --statement-facts results/statement_recovery_full/companies \
   --output-dir results/bankruptcy_payment_failure_run
 ```
 
 Use a fresh output directory. This command makes **no OpenAI calls**. It reads
 all 1.03 dates from local submissions and the saved 2.04 classifications, rebuilds
-`inventory/` and `panel/`, then trains into `models/`. Check
-`models/selection.json` for selection and metrics, and `workflow_summary.json`
+`inventory/` and `panel/`, then trains into `models/`. Confirm
+that statement import has completed and its `companies/` directory contains
+audited facts before starting. Training requires Item 2.04 review provenance
+and at least one attached statement supplement. See the
+[statement import guide](sec_dataset_download.md).
+
+Check `models/selection.json` for selection and metrics, and `workflow_summary.json`
 for the full run summary. A payment-only panel cannot be reused under this target;
 its labels and censoring are different.
 
@@ -50,7 +56,7 @@ stage and annual tuning validation fold. Chronological splits, purging,
 calibration and company-clustered uncertainty remain in place. Evaluation on
 2023–2025 is retrospective because earlier results were examined.
 
-A preflight reconstruction using the local `run_003` financial feature histories
+A preflight reconstruction using the local `run_003_item_103_204_expanded_reviews` financial feature histories
 and current saved reviews found 56 event companies in tuning (103 positive
 company-months) and 43 in calibration. The annual tuning validation folds contain
 31 (2017) and 26 (2018) event companies. All standard stage/fold sample minima pass.
@@ -78,6 +84,7 @@ For stage-by-stage operation:
   --dataset ../dataset \
   --inventory results/bankruptcy_payment_failure_run/inventory \
   --config configs/study.bankruptcy_or_payment_failure.json \
+  --statement-facts results/statement_recovery_full/companies \
   --output-dir results/bankruptcy_payment_failure_run/panel
 
 .venv/bin/python -m mcf.workflows.launcher -m mcf.models.train \

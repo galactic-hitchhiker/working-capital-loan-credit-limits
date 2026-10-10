@@ -28,6 +28,9 @@ Sources:
   The script discovers current links, using quarterly archives when both a quarter
   and constituent monthly files are listed. It downloads only published archives;
   selecting the current year does not imply full-year availability.
+- [Financial Statement Data Sets](https://www.sec.gov/data-research/sec-markets-data/financial-statement-data-sets):
+  the separate, smaller quarterly face-financial archives. These are included
+  by default alongside the Notes archives.
 
 The layout is:
 
@@ -42,8 +45,11 @@ dataset_full/
     archives/2010q1_notes_1.zip
     2010q1_notes_1/sub.tsv
     2010q1_notes_1/num.tsv
+    face/archives/2010q1.zip
+    face/2010q1/sub.tsv
     ...
   statement_archive_index.html
+  face_statement_archive_index.html
   download_manifest.json
 ```
 
@@ -52,7 +58,9 @@ The downloader preserves these names. Use `*notes*.zip` when passing all
 archives to the statement importer so those periods are included.
 
 All ZIP contents are unpacked, with each statement period kept separate. The
-original ZIPs are retained because `mcf.data.statement_facts` reads them directly.
+original ZIPs are retained because `mcf.data.statement_facts` reads the Notes
+archives directly. Face-financial archives remain separate and are not used by
+that importer.
 The full dataset requires substantial disk space, especially unpacked notes.
 Free space is checked against each ZIP's declared unpacked size before extraction.
 
@@ -62,9 +70,13 @@ Useful options:
 # Preview URLs and destinations; fetches only the SEC index.
 python3 scripts/download_sec_dataset.py --output-dir ../dataset_full --dry-run
 
-# Fetch only statement data, leaving Company Facts/submissions untouched.
+# Fetch both statement series, leaving Company Facts/submissions untouched.
 python3 scripts/download_sec_dataset.py --output-dir ../dataset_full \
-  --datasets statements --start-year 2010 --end-year 2026
+  --datasets statements face_statements --start-year 2010 --end-year 2026
+
+# Fetch only the smaller quarterly face-financial series.
+python3 scripts/download_sec_dataset.py --output-dir ../dataset_full \
+  --datasets face_statements --start-year 2010 --end-year 2026
 
 # Keep only ZIPs initially; rerun without this flag to unpack later.
 python3 scripts/download_sec_dataset.py --output-dir ../dataset_full --download-only
@@ -95,7 +107,7 @@ run 005 candidate universe, use:
 .venv/bin/python -m mcf.data.statement_facts \
   --archives ../dataset_full/financial_statements/archives/*notes*.zip \
   --dataset ../dataset_full \
-  --inventory results/run_005/inventory/issuer_inventory.csv \
+  --inventory results/run_005_recurrent_disclosures_retrained/inventory/issuer_inventory.csv \
   --output-dir results/statement_recovery_full
 ```
 
