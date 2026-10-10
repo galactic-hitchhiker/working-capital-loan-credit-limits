@@ -248,7 +248,6 @@ def parser():
         "--statement-facts", type=Path, help="Reuse imported statement facts"
     )
     command.add_argument(
-        "--disclosure-results",
         "--item-204-results",
         dest="item_204_results",
         type=Path,

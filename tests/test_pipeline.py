@@ -63,7 +63,7 @@ class PipelineTests(unittest.TestCase):
             args = pipeline.parser().parse_args([
                 "panel", "--dataset", str(root / "dataset"),
                 "--output-dir", str(output),
-                "--disclosure-results", str(reviews),
+                "--item-204-results", str(reviews),
                 "--statement-facts", str(statements),
             ])
             with patch.object(pipeline, "inventory") as inventory, patch.object(
@@ -88,7 +88,7 @@ class PipelineTests(unittest.TestCase):
             }) + "\n")
             args = pipeline.parser().parse_args([
                 "classify", "--output-dir", str(root / "run"),
-                "--disclosure-results", str(reviews),
+                "--item-204-results", str(reviews),
             ])
             with patch.object(pipeline, "review_item_204") as review:
                 self.assertEqual(pipeline.classify(args), reviews)
@@ -105,7 +105,7 @@ class PipelineTests(unittest.TestCase):
             }))
             args = pipeline.parser().parse_args([
                 "panel", "--output-dir", str(root / "run"),
-                "--disclosure-results", str(reviews),
+                "--item-204-results", str(reviews),
             ])
             with patch.object(pipeline, "inventory") as inventory:
                 with self.assertRaisesRegex(ValueError, "pending"):

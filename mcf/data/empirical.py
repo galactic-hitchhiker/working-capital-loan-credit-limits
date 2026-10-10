@@ -19,9 +19,8 @@ Parameters:
     --statement-facts PATH: Optional per-issuer statement supplement directory for panel.
     --target NAME: Inventory target; defaults to a historical target when omitted.
     --episode-gap-days N: Quiet-gap grouping for payment episodes (default: 90).
-    --disclosure-results PATH: Completed review directory or classifications.jsonl;
+    --item-204-results PATH: Completed review directory or classifications.jsonl;
         inventory only; accepts payment-specific or earlier OpenAI Item 2.04 reviews.
-    --item-204-results PATH: Alias for --disclosure-results.
     -h, --help: Show command usage and exit.
 """
 
@@ -737,7 +736,7 @@ def main():
     parser.add_argument("--target", choices=sorted(SUPPORTED_TARGETS), help="Inventory target; default derives from supplied reviews")
     parser.add_argument("--episode-gap-days", type=int, default=90, help="Quiet-gap grouping for recurrent payment disclosures (default: 90)")
     parser.add_argument(
-        "--disclosure-results", "--item-204-results", dest="item_204_results",
+        "--item-204-results", dest="item_204_results",
         type=Path,
         help=(
             "Completed disclosure-review directory or classifications.jsonl"

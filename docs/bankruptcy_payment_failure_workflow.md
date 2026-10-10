@@ -33,7 +33,7 @@ or complete inability to repay in each filing. See
 .venv/bin/python -m mcf.workflows.launcher -m mcf.workflows.payment_default_proxy \
   --dataset ../dataset \
   --config configs/study.bankruptcy_or_payment_failure.json \
-  --disclosure-results results/item_204_openai_batch_review \
+  --item-204-results results/item_204_openai_batch_review \
   --statement-facts results/statement_recovery_full/companies \
   --output-dir results/bankruptcy_payment_failure_run
 ```
@@ -62,7 +62,7 @@ company-months) and 43 in calibration. The annual tuning validation folds contai
 31 (2017) and 26 (2018) event companies. All standard stage/fold sample minima pass.
 These are label/sample checks, not fitted-model performance results.
 
-Without `--disclosure-results`, the workflow discovers/reviews only 2.04 using
+Without `--item-204-results`, the workflow discovers/reviews only 2.04 using
 the payment-specific prompt; 1.03 needs no AI review. Rerun to collect pending
 Batch jobs before training. For separate discovery/review parameters, see the
 [Batch guide](item_204_workflow.md); use `--items 2.04` for discovery and
@@ -76,7 +76,7 @@ For stage-by-stage operation:
   --dataset ../dataset \
   --target disclosed_bankruptcy_or_payment_failure_within_60_days \
   --episode-gap-days 90 \
-  --disclosure-results results/item_204_openai_batch_review \
+  --item-204-results results/item_204_openai_batch_review \
   --cutoff 2026-09-07 \
   --output-dir results/bankruptcy_payment_failure_run/inventory
 

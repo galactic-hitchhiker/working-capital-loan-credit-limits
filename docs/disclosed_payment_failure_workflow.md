@@ -23,7 +23,7 @@ new requests:
 .venv/bin/python -m mcf.workflows.launcher -m mcf.workflows.payment_default_proxy \
   --dataset ../dataset \
   --config configs/study.disclosed_payment_failure.json \
-  --disclosure-results results/item_204_openai_batch_review \
+  --item-204-results results/item_204_openai_batch_review \
   --statement-facts results/statement_recovery_full/companies \
   --output-dir results/disclosed_payment_failure_run
 ```
@@ -134,12 +134,12 @@ After pending and deferred counts reach zero, reuse the completed reviews:
 .venv/bin/python -m mcf.workflows.launcher -m mcf.workflows.payment_default_proxy \
   --dataset ../dataset \
   --config configs/study.disclosed_payment_failure.json \
-  --disclosure-results results/sec/payment_failure_review \
+  --item-204-results results/sec/payment_failure_review \
   --statement-facts results/statement_recovery_full/companies \
   --output-dir results/disclosed_payment_failure_run
 ```
 
-Use a fresh output root. With `--disclosure-results`, this command makes no OpenAI
+Use a fresh output root. With `--item-204-results`, this command makes no OpenAI
 calls; it builds `inventory/`, `panel/`, `models/` and `workflow_summary.json`.
 Without this argument, the workflow discovers both items, reviews them with the
 payment-specific prompt and stops while batches are pending. To run this narrower design, specify its config explicitly; the default config
@@ -152,7 +152,7 @@ To build each stage separately:
   --dataset ../dataset \
   --target disclosed_payment_failure_within_60_days \
   --episode-gap-days 90 \
-  --disclosure-results results/sec/payment_failure_review \
+  --item-204-results results/sec/payment_failure_review \
   --cutoff 2026-09-07 \
   --output-dir results/disclosed_payment_failure_run/inventory
 

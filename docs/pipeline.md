@@ -49,7 +49,7 @@ statement facts and classifications without new statement import or OpenAI calls
   --skip-download \
   --dataset ../dataset_full \
   --statement-facts ../dataset_full/statement_facts/companies \
-  --disclosure-results results/item_204_openai_batch_review/final \
+  --item-204-results results/item_204_openai_batch_review/classifications.jsonl \
   --output-dir results/new_run
 ```
 
@@ -73,7 +73,7 @@ statement facts and classifications without new statement import or OpenAI calls
 ```
 
 The `classify` step uses the existing [Item 2.04 Batch workflow](item_204_workflow.md).
-Supply `--disclosure-results PATH` to reuse a completed classifications file or
+Supply `--item-204-results PATH` to reuse a completed Item 2.04 classifications file or
 directory. `panel` accepts the same option when run alone. Supply
 `--statement-facts PATH` to reuse a statement supplement directory. Each stage
 uses the study configuration passed with `--config`; the current combined target

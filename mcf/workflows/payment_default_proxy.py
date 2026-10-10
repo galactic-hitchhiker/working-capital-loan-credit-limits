@@ -12,9 +12,8 @@ Parameters:
         (default: configs/study.bankruptcy_or_payment_failure.json).
     --output-dir PATH: Required fresh root for inventory, panel and model outputs.
     --statement-facts PATH: Required directory of audited per-issuer statement facts.
-    --disclosure-results PATH: Completed payment-specific or earlier OpenAI 2.04 reviews;
+    --item-204-results PATH: Completed payment-specific or earlier OpenAI 2.04 reviews;
         skips enrichment; 1.03 qualifies automatically in the default composite design.
-    --item-204-results PATH: Backward-compatible alias for --disclosure-results.
     --batch-max-requests N: Maximum requests per sequential Batch job (default: 200).
     --user-agent TEXT: SEC identification with contact email (default: SEC_USER_AGENT).
     --interval SECONDS: SEC request spacing, at least 0.1 (default: 0.25).
@@ -195,7 +194,7 @@ def parser():
     )
     result.add_argument("--output-dir", type=Path, required=True)
     result.add_argument(
-        "--disclosure-results", "--item-204-results", dest="item_204_results",
+        "--item-204-results", dest="item_204_results",
         type=Path,
         help="Reuse completed payment-specific or earlier OpenAI 2.04 reviews and skip enrichment",
     )
