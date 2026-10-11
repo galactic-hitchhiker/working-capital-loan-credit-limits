@@ -31,7 +31,7 @@ from mcf.policy.credit import (
 )
 from mcf.data.sec import filing_rows, latest_fact, snapshot
 from mcf.data.point_in_time import FactIndex
-from mcf.models.temporal import chronological_partition, make_label
+from mcf.models.temporal import LabeledObservation, chronological_partition, make_label
 
 
 class PolicyTests(unittest.TestCase):
@@ -528,6 +528,30 @@ class TemporalTests(unittest.TestCase):
         )
         self.assertEqual(parts["training"], [early])
         self.assertEqual(parts["purged"], [crossing])
+
+    def test_excluded_gap_and_calibration_cutoff(self):
+        def row(decision, available):
+            return LabeledObservation(
+                "company", decision, decision + timedelta(days=60), available, 0
+            )
+
+        calibration = row(date(2019, 9, 1), date(2019, 11, 1))
+        crossing = row(date(2019, 12, 1), date(2020, 2, 1))
+        excluded = row(date(2021, 6, 1), date(2021, 8, 1))
+        selection = row(date(2023, 1, 1), date(2023, 3, 3))
+        parts = chronological_partition(
+            [calibration, crossing, excluded, selection],
+            tuning_start=date(2018, 1, 1),
+            calibration_start=date(2019, 1, 1),
+            calibration_end=date(2020, 1, 1),
+            selection_start=date(2023, 1, 1),
+            test_start=date(2025, 1, 1),
+            observed_as_of=date(2026, 9, 7),
+        )
+        self.assertEqual(parts["calibration"], [calibration])
+        self.assertEqual(parts["purged"], [crossing])
+        self.assertEqual(parts["excluded"], [excluded])
+        self.assertEqual(parts["selection"], [selection])
 
     def test_bad_boundaries_rejected(self):
         with self.assertRaises(ValueError):

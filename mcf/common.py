@@ -205,6 +205,16 @@ def load_design(path):
     ]
     if boundaries != sorted(set(boundaries)) or any(d.day != 1 for d in boundaries):
         raise ValueError("Study boundaries must be strictly increasing month starts")
+    if config.get("calibration_end") is not None:
+        calibration_end = date.fromisoformat(config["calibration_end"])
+        if (
+            calibration_end.day != 1
+            or not boundaries[2] < calibration_end <= boundaries[3]
+        ):
+            raise ValueError(
+                "calibration_end must be a month start after calibration_start "
+                "and no later than selection_start"
+            )
     end = date.fromisoformat(config["end"])
     observed = date.fromisoformat(config["observed_as_of"])
     if end.day != 1 or end < boundaries[-1] or observed <= end:

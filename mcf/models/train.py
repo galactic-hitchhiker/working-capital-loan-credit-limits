@@ -193,6 +193,10 @@ def prepare(panel_path, config):
                 "observed_as_of",
             )
         },
+        calibration_end=(
+            date.fromisoformat(config["calibration_end"])
+            if config.get("calibration_end") else None
+        ),
     )
     indices = {
         stage: np.array(
@@ -228,6 +232,8 @@ def prepare(panel_path, config):
                 "an exploratory sparse-event design."
             )
     audit["purged"] = {"rows": len(indices["purged"])}
+    if "excluded" in indices:
+        audit["excluded"] = {"rows": len(indices["excluded"])}
     x = np.array(
         [
             [

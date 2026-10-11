@@ -71,11 +71,14 @@ def chronological_partition(
     selection_start: date,
     test_start: date,
     observed_as_of: date,
+    calibration_end: date | None = None,
 ):
     """Five stages with horizon/availability purging; no random row splitting.
 
     Boundaries are inclusive for the following stage and must be month starts.
     Fit/calibration/selection labels must be known strictly before the next stage.
+    An optional calibration_end excludes decisions until selection_start and
+    purges calibration labels unavailable before that excluded interval.
     Returns purged observations explicitly; callers must audit event counts before
     fitting and must not move boundaries in response to final-test model scores.
     """
@@ -84,8 +87,16 @@ def chronological_partition(
         raise ValueError("Stage boundaries must be increasing distinct month starts")
     if observed_as_of <= test_start:
         raise ValueError("Observation cutoff must be after test start")
+    if calibration_end is None:
+        calibration_end = selection_start
+    if (
+        calibration_end.day != 1
+        or not calibration_start < calibration_end <= selection_start
+    ):
+        raise ValueError("Invalid calibration end")
+    has_gap = calibration_end < selection_start
     names = ["training", "tuning", "calibration", "selection", "test"]
-    result = {name: [] for name in names + ["purged"]}
+    result = {name: [] for name in names + ["purged"] + (["excluded"] if has_gap else [])}
     seen = set()
     for row in observations:
         key = (row.company_id, row.decision_date)
@@ -98,9 +109,15 @@ def chronological_partition(
             or row.label_available_on <= row.horizon_end
         ):
             raise ValueError("Invalid label timing or outcome")
+        if has_gap and calibration_end <= row.decision_date < selection_start:
+            result["excluded"].append(row)
+            continue
         # Count crossed boundaries to locate the decision's chronological stage.
         stage = sum(row.decision_date >= b for b in boundaries)
-        cutoff = boundaries[stage] if stage < 4 else observed_as_of
+        if stage == 2:
+            cutoff = calibration_end
+        else:
+            cutoff = boundaries[stage] if stage < 4 else observed_as_of
         if row.label_available_on >= cutoff:
             result["purged"].append(row)
         else:

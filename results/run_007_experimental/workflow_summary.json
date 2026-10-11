@@ -1,0 +1,48 @@
+{
+  "workflow": "bankruptcy-or-payment-failure-v1",
+  "target": "disclosed_bankruptcy_or_payment_failure_within_60_days",
+  "item_204_results": "/Users/djvelickovic/Projects/mcf/mcf-master-thesis/results/item_204_openai_batch_review",
+  "inventory": {
+    "directory": "/Users/djvelickovic/Projects/mcf/mcf-master-thesis/results/run_007_experimental/inventory",
+    "companies": 20443,
+    "disclosure_records": 2287,
+    "item_204_counts": {
+      "payment_failure_disclosures": 384,
+      "combined_disclosures": 2287,
+      "missing_review": 818,
+      "non_default": 1197,
+      "legacy_item_204_reviews": 2167,
+      "legacy_non_default_reused": 1197,
+      "item_103_automatic": 1915,
+      "episodes": 1671,
+      "manual_review": 477,
+      "qualified_default": 493,
+      "legacy_payment_failure_reused": 372,
+      "legacy_non_payment_unresolved": 121
+    },
+    "errors": 0
+  },
+  "panel": {
+    "directory": "/Users/djvelickovic/Projects/mcf/mcf-master-thesis/results/run_007_experimental/panel",
+    "included_companies": 8923,
+    "distinct_positive_events": 599,
+    "counts": {
+      "missing_or_stale_financials": 335714,
+      "feature_rows": 639530,
+      "labeled_rows": 585070,
+      "positive_rows": 1094,
+      "issuer_followup_censoring": 9544,
+      "outside_observed_reporting_life": 1070008,
+      "post_unresolved_payment_disclosure": 40219,
+      "cutoff_censoring": 2824,
+      "payment_episode_washout": 1513,
+      "unresolved_payment_disclosure_in_window": 360
+    }
+  },
+  "models": "/Users/djvelickovic/Projects/mcf/mcf-master-thesis/results/run_007_experimental/models",
+  "selected_model": "xgboost",
+  "selection_status": "selected_on_selection_period",
+  "exploratory_low_event": false,
+  "validation_status": "Experimental stage redesign after run 006 results were examined. Decisions from 2020-2022 are excluded. The 2025 period was previously examined, so this is retrospective evaluation rather than untouched external validation. The observation cutoff is 2026-09-07; a full 60-day label cannot be observed for August or September 2026 decisions.",
+  "limitation": "All 1.03 bankruptcy/receivership or explicitly reviewed 2.04 payment-failure episodes; not verified contractual nonpayment or cure. "
+}
