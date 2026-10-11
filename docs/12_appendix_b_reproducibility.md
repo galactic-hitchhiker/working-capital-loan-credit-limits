@@ -2,7 +2,7 @@
 
 ## B.1 Completed Experiment
 
-Run 006 uses local SEC company facts, submissions and imported Financial Statement and Notes facts. Its target is a new qualifying Item 1.03 bankruptcy or receivership or reviewed Item 2.04 payment-failure disclosure episode within 60 days. Settings are in `configs/study.bankruptcy_or_payment_failure.json`. The stages are training in 2011–2016, tuning in 2017–2018, calibration in 2019, selection in 2020–2022 and later evaluation in 2023–2025. Boundary observations are purged until their complete labels are observable.
+The run 006 dataset combines local SEC Company Facts, Financial Statement and Notes facts, and submissions in one panel. Its target is a new qualifying Item 1.03 bankruptcy or receivership or reviewed Item 2.04 payment-failure disclosure episode within 60 days. Settings are in `configs/study.bankruptcy_or_payment_failure.json`. The stages are training in 2011–2016, tuning in 2017–2018, calibration in 2019, selection in 2020–2022 and later evaluation in 2023–2025. Boundary observations are purged until their complete labels are observable.
 
 The run selects random forest with its raw probability and freezes a threshold of 0.0579707. Sigmoid calibration worsens selection Brier error. The run 006 policy replay uses this selected model.
 
@@ -52,14 +52,13 @@ Company-cluster bootstrap intervals use 500 repetitions and retain all monthly r
 | Saved Item 2.04 reviews and audit | results/item_204_openai_batch_review/ |
 | Panel, model features and provenance | results/run_006_full_statement_enrichment/panel/ |
 | Fitted models, selection and evaluation | results/run_006_full_statement_enrichment/models/ |
-| Matched panel and models without statement facts | results/run_006_full_statement_enrichment/panel_without_statements/ and models_without_statements/ |
 | Descriptive summaries and model figures | results/run_006_full_statement_enrichment/descriptive/ and model_report/ |
 | Policy decisions and sensitivity | results/run_006_full_statement_enrichment/policy/ |
 | Policy reports and case studies | results/run_006_full_statement_enrichment/policy_report/ |
 | Separate hypothetical worked examples | results/history/item_103_model_evolution/03_rolling_temporal_validation_random_forest/worked_examples/ |
 | Thesis evidence copies | docs/tables/ and docs/figures/ |
 
-The matched comparison uses the same run 006 SEC snapshot and labels with and without attached statement facts. Its exact panel and paired model comparisons are in `statement_enrichment_comparison.json` and `paired_test_comparison.json`. Run 005 used a different source snapshot, so its comparison with run 006 does not isolate the statement effect. Each result stage writes a manifest and hashes its inputs. New output directories must be empty, preventing silent overwrites. The older Item 1.03-only work is retained under `results/history/`.
+Each result stage writes a manifest and hashes its inputs. New output directories must be empty, preventing silent overwrites. The older Item 1.03-only work is retained under `results/history/`.
 
 ## B.5 Software Environment
 

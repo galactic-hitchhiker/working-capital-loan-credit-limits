@@ -7,7 +7,7 @@
 	"settings": {
 		"workbench.editorAssociations": {
 			"*.copilotmd": "vscode.markdown.preview.editor",
-			"*.md": "vscode.markdown.preview.editor"
+			"*.md": "vscode.markdown.editor"
 		},
 		"editor.formatOnSave": true
 	}

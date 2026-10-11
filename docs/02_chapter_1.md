@@ -31,13 +31,13 @@ The first two questions concern prediction. The last two concern policy design a
 
 ## 1.4 Objectives and Contribution
 
-The first objective is to construct a monthly dataset from SEC company facts, submissions and imported statement data. Each financial observation retains its reporting period, filing date and source. Only information available at the decision date can enter a prediction.
+The first objective is to construct a monthly dataset using SEC Company Facts, Financial Statement and Notes data, and submissions as the study's source set. Each financial observation retains its reporting period, filing date and source. Only information available at the decision date can enter a prediction.
 
 The study then compares logistic regression, L2-regularized logistic regression, random forest and XGBoost using twelve accounting predictors. Separate chronological periods support fitting, tuning, calibration, model selection and later evaluation. This design evaluates both the ranking of companies and the quality of their estimated probabilities.
 
 The policy combines annual revenue, annual operating cash flow and eligible cash into a capacity measure. A decreasing risk multiplier and an exposure cap determine the preliminary limit. Monthly rules restrict increases and apply reductions immediately. Historical replay examines limit movements, binding constraints and sensitivity to the assumed policy settings.
 
-The contribution is a reproducible framework connecting dated financial information, disclosure prediction and monetary limits. It preserves the distinction between observed accounting data and assumed facility inputs. A matched comparison also examines whether additional statement facts improve predictor coverage and model performance. Supporting Python files, tables and figures allow the analysis to be checked and reproduced.
+The contribution is a reproducible framework connecting dated financial information, disclosure prediction and monetary limits. It combines Company Facts and Financial Statement and Notes facts in one accounting panel and preserves the distinction between observed accounting data and assumed facility inputs. Supporting Python files, tables and figures allow the analysis to be checked and reproduced.
 
 ## 1.5 Scope and Limitations
 

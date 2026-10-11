@@ -24,6 +24,8 @@ Shumway, T. (2001). Forecasting bankruptcy more accurately: A simple hazard mode
 
 U.S. Securities and Exchange Commission. (n.d.). *EDGAR application programming interfaces*. [Official source documentation](https://www.sec.gov/search-filings/edgar-application-programming-interfaces). Accessed 21 September 2026.
 
+U.S. Securities and Exchange Commission. (n.d.). *Financial Statement and Notes Data Sets: Documentation*. [Official dataset documentation](https://www.sec.gov/dera/data/fsnds.pdf). Accessed 11 October 2026.
+
 U.S. Securities and Exchange Commission. (n.d.). *Form 8-K: Current report*, Items 1.03, Bankruptcy or Receivership, and 2.04, Triggering Events That Accelerate or Increase a Direct Financial Obligation. [Official form](https://www.sec.gov/files/form8-k.pdf). Accessed 21 September 2026.
 
 ## Research data and implementation

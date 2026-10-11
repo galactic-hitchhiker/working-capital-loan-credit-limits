@@ -61,13 +61,7 @@ The forest's annual ROC-AUC is 0.8715 in 2023, 0.8777 in 2024 and 0.9329 in 2025
 
 *Figure 6.2. Precision-recall and probability diagnostics for 2023–2025. Source: run 006 model predictions and report.*
 
-## 6.5 Statement Enrichment Comparison
-
-Run 006 also fits the same workflow without imported statement facts on the same SEC snapshot. Both panels have identical labels and 565,222 rows. Adding statement facts fills 135,692 missing predictor cells, including 47,185 liabilities-to-assets values and 44,307 cash-flow-to-liabilities values. Fully observed rows increase from 362,979 to 398,329.
-
-Both matched fits select random forest. Without enrichment, test ROC-AUC is 0.8797, average precision 0.02555 and Brier score 0.0023850. With enrichment, these are 0.8866, 0.02599 and 0.0023840. The paired company-cluster bootstrap gives a 95% interval of −0.00184 to 0.01545 for the ROC-AUC difference, −0.00395 to 0.00298 for average precision and −0.00000444 to 0.00000230 for Brier score. All include zero. The coverage gain is clear; these tests do not establish a reliable predictive gain.
-
-## 6.6 Interpretation
+## 6.5 Interpretation
 
 Permutation importance for the selected forest is highest for log assets, followed by working capital to assets, asset growth and liabilities to assets. It measures model reliance, not causation. The low precision and recall at one threshold limit its use as a stand-alone alert.
 

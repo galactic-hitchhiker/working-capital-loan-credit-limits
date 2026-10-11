@@ -8,9 +8,9 @@ The empirical study uses USD, standard US-GAAP tags and Forms 10-K, 10-Q and the
 |---|---|---|
 | assets | Assets | Latest known balance-sheet date; positive assets required |
 | liabilities | Direct Liabilities; otherwise reconciled statement calculation or complete same-filing components | Same balance date as assets; derivation basis and components retained in provenance |
-| current_assets | AssetsCurrent or audited statement supplement | Same balance date as assets |
-| current_liabilities | LiabilitiesCurrent or audited statement supplement | Same balance date as assets |
-| reported_cash | CashAndCashEquivalentsAtCarryingValue or audited statement supplement | Same balance date; not verified eligible cash |
+| current_assets | AssetsCurrent or SEC Financial Statement and Notes facts | Same balance date as assets |
+| current_liabilities | LiabilitiesCurrent or SEC Financial Statement and Notes facts | Same balance date as assets |
+| reported_cash | CashAndCashEquivalentsAtCarryingValue or SEC Financial Statement and Notes facts | Same balance date; not verified eligible cash |
 | operating_cashflow_annual | NetCashProvidedByUsedInOperatingActivities | Latest known annual period spanning 330–400 days |
 | revenue_annual | RevenueFromContractWithCustomerExcludingAssessedTax; RevenueFromContractWithCustomerIncludingAssessedTax; Revenues; SalesRevenueNet | Exact same annual start/end as operating cash flow; conflicting same-vintage totals remain missing |
 | net_income | NetIncomeLoss | Same annual period as operating cash flow |

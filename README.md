@@ -87,13 +87,12 @@ Use `--skip-download` with `all` if the SEC data are already present. See [reusi
 ## Current thesis result
 
 Run 006 models recurrent bankruptcy or reviewed payment-failure disclosure
-episodes. Its panel has 565,222 company-months from 8,780 issuers. The selected
+episodes. Its panel combines Company Facts and Financial Statement and
+Notes facts, with 565,222 company-months from 8,780 issuers. The selected
 random forest achieves **0.8866 ROC-AUC**, **0.02599 average precision** and
-**0.0023840 Brier score** in the retrospective 2023–2025 evaluation. Statement
-facts clearly improve feature coverage; the paired interval does not establish
-a reliable predictive gain. The hypothetical policy replay has a median limit
-of **USD 4.23 million**. See the [thesis](docs/README.md) and
-[run 006 comparison](docs/run_006_statement_comparison.md).
+**0.0023840 Brier score** in the retrospective 2023–2025 evaluation.
+The hypothetical policy replay has a median limit of **USD 4.23 million**.
+See the [thesis](docs/README.md).
 
 ## Historical thesis result
 

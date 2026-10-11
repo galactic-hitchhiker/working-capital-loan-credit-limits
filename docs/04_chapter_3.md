@@ -24,11 +24,35 @@ Current ticker status is not required. The inventory nevertheless does not recon
 
 ## 3.2 Sources and Information Availability
 
-Company facts provide structured accounting values, units, reporting periods and filing references. Submissions provide filing forms, filing dates, accession numbers and reported item codes. The main submission record is combined with every historical file referenced by it. [SEC, EDGAR API documentation](https://www.sec.gov/search-filings/edgar-application-programming-interfaces).
+The dataset combines SEC Company Facts, Financial Statement and Notes data, and submissions in one monthly company panel. Company Facts and Financial Statement and Notes data supply accounting information from corporate filings; submissions supply the filing history used to define disclosure outcomes and reporting follow-up. CIK identifies the company, while the accession number identifies the individual filing.
 
-The local SEC snapshot was extracted before run 006. The study cutoff is 7 September 2026. The inventory identified 2,287 qualifying Item 1.03 or reviewed Item 2.04 filing records before episode grouping. This count includes excluded issuers; it is not the number of model events. The SEC Financial Statement and Notes importer added dated statement facts to the accounting source, subject to the same decision-date availability rules.
+| Source | Information used in this study | Role in the panel |
+|---|---|---|
+| Company Facts | Accounting values under standard tags, units, reporting periods, filing dates and accession numbers | Provides the main histories of balance-sheet values and annual income, revenue and operating cash flow |
+| Financial Statement and Notes data | Numeric statement facts, standard and custom tag definitions, presentation labels and calculation relationships | Supports identification and reconciliation of assets, liabilities, current assets, current liabilities and cash |
+| Submissions | Filing forms, dates, accession numbers and reported item codes, including referenced historical archives | Identifies qualifying disclosures and the issuer's observed reporting history |
 
-Financial extraction primarily uses USD values under standard US-GAAP tags from Forms 10-K, 10-Q and their amendments. The statement supplement also allows narrowly mapped custom totals and reconciled calculations. A fact becomes available on the calendar day after its filing date. The fiscal period, fiscal-year label and XBRL frame are not treated as publication dates.
+### 3.2.1 Why Both Accounting Sources Are Needed
+
+Company Facts provides a convenient history of reported values organized by accounting concept. However, the SEC's XBRL APIs aggregate facts using non-custom taxonomies that apply to the whole filing entity. They do not provide the complete presentation and calculation structure of the statements. A required amount may therefore be reported in a filing without appearing as a usable value under the standard tag sought by the extractor. [SEC, EDGAR API documentation](https://www.sec.gov/search-filings/edgar-application-programming-interfaces).
+
+This matters for financial-ratio construction. For example, a balance sheet may report individual liability components or a custom liabilities total without a usable standard `Liabilities` value. The extractor needs enough context to identify the intended total and avoid combining overlapping components. Missing a standard tag alone does not establish that the company failed to report the underlying amount.
+
+The Financial Statement and Notes datasets provide tag definitions, statement labels and arithmetic relationships within filings alongside numeric values. These records allow the study to check what a reported line represents and how it relates to other amounts. The datasets are extracts from filings and can contain inconsistencies; they do not guarantee complete or accurate accounting information. [SEC, Financial Statement and Notes dataset documentation](https://www.sec.gov/dera/data/fsnds.pdf).
+
+### 3.2.2 Combining the Sources in One Panel
+
+The extraction procedure uses both accounting sources when constructing each company-month observation. Direct Company Facts totals take priority. Financial Statement and Notes records support a value when the required total can be identified from statement labels or reconciled from complete calculation components. For example, total liabilities can be derived from a liabilities-and-equity equation only when the relevant components are recognized and the reported equation reconciles. This supports the liabilities-to-assets, leverage-change and cash-flow-to-liabilities predictors.
+
+The statement importer uses consolidated USD balance-sheet facts from domestic periodic filings. It matches them to exact reporting dates using Company Facts anchors from the same accession. Custom totals require agreement between tag and statement labels; incomplete or conflicting calculations remain unresolved. The procedure records the source and derivation of each accepted amount rather than summing all available components indiscriminately.
+
+Although the source is named Financial Statement and Notes, its use here concerns numeric accounting facts and statement structure. Narrative note text is not a model predictor. Annual revenue, net income and operating cash flow use Company Facts records with exact annual start and end dates; the importer does not infer annual flows from the bulk statement dataset's quarter-count durations. Both accounting sources contribute to the same panel under common rules for currency, reporting period and information availability.
+
+### 3.2.3 Information Availability and Provenance
+
+The local SEC snapshot was extracted before run 006. The study cutoff is 7 September 2026. The inventory identified 2,287 qualifying Item 1.03 or reviewed Item 2.04 filing records before episode grouping. This count includes excluded issuers; it is not the number of model events. The main submissions record is combined with every historical file referenced by it.
+
+Financial extraction primarily uses USD values under standard US-GAAP tags from Forms 10-K, 10-Q and their amendments, with the statement-based mappings described above. A fact becomes available on the calendar day after its filing date. The fiscal period, fiscal-year label and XBRL frame are not treated as publication dates.
 
 At each decision, the extractor chooses the latest eligible reporting period and then the latest filing vintage already known. A later restatement can affect a later decision but cannot change an earlier snapshot. Conflicting totals at the selected period and filing vintage remain missing.
 
