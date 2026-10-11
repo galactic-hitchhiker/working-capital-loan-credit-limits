@@ -91,6 +91,28 @@ The full minima/maxima and quality flags are in feature_summary.csv and data_sum
 
 The base scenario uses the selected random-forest disclosure probability. The base and capacity-only scenarios share monthly safeguards. The independent unsmoothed formula can reopen after zero, while the base cannot do so automatically. Other model mappings are comparisons. Additional-debt, cash, exposure and cap values remain assumptions rather than observed facility terms.
 
-## C.6 Evidence files
+## C.6 Annual panel counts before chronological purging
 
-Full local paths and hashes are in tables/source_crosswalk.csv. Small evidence copies are in tables/. Complete row-level predictions and policy histories remain under results/. File references: metrics.csv, bootstrap_intervals.json, annual_test_metrics.csv, event_detection.csv, feature_summary.csv, feature_correlations.csv, sector_summary.csv, policy_sensitivity.csv.
+| Decision year | Observations | Positive rows |
+|---|---|---|
+| 2011 | 9,352 | 11 |
+| 2012 | 37,698 | 47 |
+| 2013 | 46,809 | 48 |
+| 2014 | 43,899 | 66 |
+| 2015 | 35,801 | 60 |
+| 2016 | 29,179 | 77 |
+| 2017 | 26,384 | 58 |
+| 2018 | 32,526 | 58 |
+| 2019 | 40,339 | 90 |
+| 2020 | 41,654 | 137 |
+| 2021 | 42,830 | 36 |
+| 2022 | 46,909 | 46 |
+| 2023 | 46,995 | 139 |
+| 2024 | 43,605 | 120 |
+| 2025 | 41,242 | 59 |
+
+Positive rows are monthly outcomes, not distinct episodes. A December decision can refer to a disclosure in the following year. Figure 6.1 summarizes these counts.
+
+## C.7 Evidence files
+
+Full local paths and hashes are in tables/source_crosswalk.csv. Small evidence copies are in tables/. Complete row-level predictions and policy histories remain under results/. File references: panel_audit.json, metrics.csv, bootstrap_intervals.json, annual_test_metrics.csv, event_detection.csv, feature_summary.csv, feature_correlations.csv, sector_summary.csv, policy_sensitivity.csv.

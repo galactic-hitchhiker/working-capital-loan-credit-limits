@@ -2,27 +2,21 @@
 
 ## 1.1 Background
 
-Companies often pay suppliers before they receive money from customers. Short-term credit can help them manage this timing difference and continue their daily operations. The lender must decide both whether to provide credit and how much credit the company can use. A limit that is too high may create exposure that the borrower cannot repay. A limit that is too low may restrict useful business activity.
+Companies often pay suppliers before receiving money from customers. Short-term credit helps them manage this timing difference, but the lender must decide how much credit the company can use. A limit that is too high may create exposure the borrower cannot repay; a limit that is too low may restrict useful business activity.
 
-This thesis studies a corporate facility with a 30-day statement period and up to 30 additional days for payment. A transaction made at the beginning of a statement period can therefore remain outstanding for about 60 days before its scheduled payment date. This is the exposure horizon used to motivate the study. It is not a period of overdue payment. If payment is missed, actual exposure can continue for longer.
+This thesis studies a corporate facility with a 30-day statement period and up to 30 additional days for payment. A transaction at the beginning of a statement period can therefore remain outstanding for about 60 days before its scheduled payment date. This schedule motivates the prediction horizon. Exposure can continue for longer if payment is missed.
 
-The credit limit is the maximum total outstanding balance on the facility. It includes unpaid amounts from earlier statement periods. Available credit is the part of the limit that has not already been used. This distinction is important because a limit reduction does not remove an existing debt.
+The credit limit is the maximum permitted total outstanding balance, including unpaid amounts from earlier periods. Available credit is the unused part of that limit. Reducing a limit restricts further borrowing but does not remove existing debt.
 
-Financial statements provide information about liquidity, profitability, cash generation and company size. However, they are published with a delay, and they do not directly show how a particular facility will be used or repaid. Credit assessment must distinguish between the information observed in the data and the assumptions needed to make a lending decision.
-
-Statistical and machine learning models can combine financial indicators into a risk estimate. The historical literature includes financial-ratio classification, logistic bankruptcy prediction and models that account for changes through time. These approaches provide the background for this thesis. [Altman (1968)](https://doi.org/10.1111/j.1540-6261.1968.tb00843.x), [Ohlson (1980)](https://www.jstor.org/stable/2490395), [Shumway (2001)](https://www.jstor.org/stable/10.1086/209665).
+Financial statements provide information about liquidity, profitability and cash generation. Statistical models can combine these measures into a risk estimate. Financial-ratio classification, logistic bankruptcy prediction and models that account for changing information provide the background for this study. [Altman (1968)](https://doi.org/10.1111/j.1540-6261.1968.tb00843.x), [Ohlson (1980)](https://www.jstor.org/stable/2490395), [Shumway (2001)](https://www.jstor.org/stable/10.1086/209665).
 
 ## 1.2 Research Problem
 
-A risk estimate does not directly specify a monetary limit. Two companies can have similar estimated risk but very different revenue, cash resources and repayment capacity. A practical limit framework needs to combine these dimensions and explain how each affects the final amount.
+A risk estimate does not directly specify a monetary limit. Companies with similar estimated risk can have different revenue, cash resources and repayment capacity. The research problem is to combine these dimensions in a clear limit rule and update it as information changes. Increases require support from new information, while reductions should respond promptly to deterioration.
 
-The first problem is to estimate a clearly defined event probability from information available at the decision date. The second is to translate that estimate into a limit. The third is to update the limit over time while avoiding unsupported increases and allowing prompt reductions.
+The available data also constrain the analysis. SEC financial statements and filing histories do not contain payment records for the proposed facility. The empirical target is therefore a **new bankruptcy or payment-failure disclosure episode within the next 60 calendar days**. Item 1.03 bankruptcy or receivership filings qualify; Item 2.04-only filings qualify when reviewed evidence explicitly describes a missed debt payment. Chapter 3 defines episode grouping and eligibility.
 
-There is also a data problem. The supplied SEC dataset contains financial facts and filing histories, but it does not contain the payment history of the proposed facility. It cannot directly support a model of 60-day payment default, utilization or recovery. The empirical target is therefore a **new bankruptcy or payment-failure disclosure episode within the next 60 calendar days**. Item 1.03 bankruptcy or receivership filings qualify; Item 2.04-only filings qualify when reviewed evidence explicitly describes a missed debt payment. Disclosures within 90 days are grouped into one episode, and a company may have later episodes.
-
-The filing date is a reporting event and may differ from the underlying event date. Item 1.03 can include reorganization-related reporting, while an Item 2.04 filing does not reveal the proposed facility's payment history. The model output is therefore called a *60-day disclosure probability*, not a verified payment-default probability. [SEC, Form 8-K](https://www.sec.gov/files/form8-k.pdf).
-
-This definition allows the study to use observed outcomes from the supplied data. It also limits the conclusions. The research can test disclosure prediction and the behavior of a proposed limit policy, but it cannot establish the losses or profits that a lender would have experienced.
+The model estimates a disclosure probability. Filing dates can differ from the dates of the underlying events, and the records do not establish default on the proposed facility. The study can evaluate disclosure prediction and the behavior of a limit policy, but cannot estimate the losses or profits a lender would have experienced. [SEC, Form 8-K](https://www.sec.gov/files/form8-k.pdf).
 
 ## 1.3 Research Questions
 
@@ -33,46 +27,28 @@ The thesis addresses four questions:
 3. How can the estimated probability be combined with financial capacity and an exposure cap to produce a clear monetary limit?
 4. How do monthly limits respond to new financial information, changes in estimated risk and alternative policy assumptions?
 
-The first two questions concern prediction. The last two concern policy design and historical simulation. A useful answer to one group does not automatically establish a useful answer to the other.
+The first two questions concern prediction. The last two concern policy design and historical simulation.
 
-## 1.4 Research Objectives
+## 1.4 Objectives and Contribution
 
-The first objective is to construct a monthly dataset from the downloaded SEC company facts and submissions. The construction records reporting periods, filing dates and the source of each selected financial fact. Later filings must not enter an earlier decision.
+The first objective is to construct a monthly dataset from SEC company facts, submissions and imported statement data. Each financial observation retains its reporting period, filing date and source. Only information available at the decision date can enter a prediction.
 
-The second objective is to compare unregularized logistic regression, L2-regularized logistic regression, random forest and XGBoost. All models use the same 12 point-in-time predictors covering liquidity, leverage, profitability, cash flow, growth and company size. Separate chronological periods are used for fitting, rolling temporal tuning, calibration, model selection and held-out evaluation.
+The study then compares logistic regression, L2-regularized logistic regression, random forest and XGBoost using twelve accounting predictors. Separate chronological periods support fitting, tuning, calibration, model selection and later evaluation. This design evaluates both the ranking of companies and the quality of their estimated probabilities.
 
-The third objective is to define a reproducible credit-limit policy. It combines a capacity proxy based on annual revenue, annual operating cash flow and cash with a decreasing risk multiplier and an explicit cap. Monthly rules restrict increases, while reductions follow the current calculation immediately.
+The policy combines annual revenue, annual operating cash flow and eligible cash into a capacity measure. A decreasing risk multiplier and an exposure cap determine the preliminary limit. Monthly rules restrict increases and apply reductions immediately. Historical replay examines limit movements, binding constraints and sensitivity to the assumed policy settings.
 
-The fourth objective is to evaluate the policy on real financial histories and model probabilities, with unavailable facility inputs represented by stated scenarios. The analysis examines limit movements, binding constraints, response to disclosures and sensitivity to policy parameters.
+The contribution is a reproducible framework connecting dated financial information, disclosure prediction and monetary limits. It preserves the distinction between observed accounting data and assumed facility inputs. A matched comparison also examines whether additional statement facts improve predictor coverage and model performance. Supporting Python files, tables and figures allow the analysis to be checked and reproduced.
 
-The final objective is to provide supporting Python files and result tables so that the analysis can be reviewed and reproduced. File references are included throughout the thesis.
+## 1.5 Scope and Limitations
 
-## 1.5 Contributions
+The study covers monthly decisions from January 2011 to December 2025 for eligible SEC issuers with usable financial data and filing histories. Financial amounts are reported in USD, and issuers in the current SIC range 6000–6999 are excluded. The sample is an observed reporting population rather than a complete historical listing universe. Chapter 3 gives the screening and information-availability rules.
 
-The main contribution is an implemented connection between dated financial information, a defined reporting-event probability and a monetary credit-limit rule. Each part has a clear role. The model estimates a probability; the capacity calculation describes financial resources under stated assumptions; the policy determines the limit.
+The later evaluation covers 2023–2025. These years are excluded from model development within the final run, but were examined during earlier project work. The evaluation is therefore retrospective. Companies may appear in both earlier and later periods, reflecting continued monitoring rather than evaluation on an entirely separate borrower population.
 
-A second contribution is the explicit treatment of information timing. Financial periods are separated from filing dates, labels require observable follow-up, and observations are removed from an earlier modeling stage when their outcomes are not yet available at the next stage boundary.
+The policy replay assumes cash eligibility, additional debt payments and facility exposure. It evaluates the resulting limits without observed utilization, repayments or lending losses. Chapter 8 discusses how these limitations affect the conclusions.
 
-A third contribution is the distinction between predictive evidence and policy assumptions. The model uses real SEC records. Eligible cash, near-term additional debt payments and facility exposure are not claimed to be observed when the dataset does not establish them.
+## 1.6 Structure of the Thesis
 
-The study does not claim to introduce a new prediction algorithm or to estimate an optimal lending rule. Its contribution is an auditable research implementation and an assessment of its strengths and limits.
+Chapter 2 presents the relevant concepts and literature. Chapters 3 and 4 explain the data, disclosure target, predictors and model evaluation. Chapter 5 defines the credit-limit policy and its monthly rules.
 
-## 1.6 Scope and Limitations
-
-The study covers monthly decision dates from January 2011 to December 2025. It starts from the supplied company-facts inventory and retains eligible issuers with domestic periodic filings, adequate financial data and complete referenced submission archives. The current SIC range 6000–6999 is excluded. Current ticker status is not used as a requirement, so a company is not removed simply because it is no longer listed.
-
-This is an observed SEC reporting sample, not a complete reconstruction of the historical population of listed US companies. Current industry codes may differ from historical codes. Companies without usable standard US-GAAP facts in USD are outside the implemented scope.
-
-The predictors describe liquidity, cash holdings, leverage, working capital, profitability, operating cash flow, growth and size. The study does not include market prices, payment behavior, news or macroeconomic predictors. Annual flows are the last reported annual amounts, not trailing twelve-month estimates.
-
-The held-out evaluation covers 2023–2025. Companies can appear in both earlier and later periods, which reflects monitoring existing borrowers. The evaluation does not establish performance on entirely new companies. These years were excluded from fitting, tuning, calibration, selection and threshold setting in the reported run, but they were examined during earlier project development. They are therefore not presented as a completely untouched external validation sample. Repeated observations and overlapping 60-day windows are considered when interpreting uncertainty.
-
-The limit analysis is a historical scenario simulation. Reported cash is used under an explicit eligibility assumption. Additional debt service and facility exposure are specified as assumptions. No realized loan losses, recovery rates or lending profits are estimated.
-
-## 1.7 Structure of the Thesis
-
-Chapter 2 presents the credit-risk concepts and literature. Chapter 3 explains the SEC dataset, the disclosure target and financial predictors. Chapter 4 describes the models and chronological validation. Chapter 5 defines the limit policy and its monthly rules.
-
-Chapter 6 reports the empirical predictive results. Chapter 7 evaluates the resulting policy scenarios, historical paths and sensitivity analysis. Chapter 8 answers the research questions and presents the conclusions. The appendices provide variable definitions, reproducibility instructions, supplementary results and worked policy examples.
-
-File references: mcf/data/empirical.py, mcf/data/point_in_time.py, configs/study.bankruptcy_or_payment_failure.json, mcf/models/train.py, mcf/policy/credit.py.
+Chapters 6 and 7 report predictive results and policy scenarios. Chapter 8 discusses the findings, limitations and further work. The appendices provide variable definitions, implementation details, supplementary results and worked examples.

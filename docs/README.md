@@ -10,7 +10,7 @@ enrichment. Earlier run investigations below remain supporting material.
 2. [Abstract](01_abstract.md)
 3. [Chapter 1 — Introduction](02_chapter_1.md)
 4. [Chapter 2 — Theoretical Background and Literature Review](03_chapter_2.md)
-5. [Chapter 3 — Data and Variable Construction](04_chapter_3.md)
+5. [Chapter 3 — Data and Target Definition](04_chapter_3.md)
 6. [Chapter 4 — Risk Modeling and Validation Methodology](05_chapter_4.md)
 7. [Chapter 5 — Credit Limit Methodology](06_chapter_5.md)
 8. [Chapter 6 — Empirical Results](07_chapter_6.md)

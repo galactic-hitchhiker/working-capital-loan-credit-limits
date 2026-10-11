@@ -2,11 +2,9 @@
 
 The policy translates the run 006 random forest's 60-day disclosure probability into a monthly credit limit. It replays historical SEC financial information under stated facility assumptions. The source data do not contain actual commitments, utilization, repayments, losses, pricing or profitability.
 
-## 7.1 Policy Rule
+## 7.1 Replay Design
 
-For each eligible company-month, raw capacity is the smaller of a cash-based and sales-based amount. A risk multiplier reduces capacity as predicted disclosure risk rises. An asset-based cap and monthly update safeguards determine the assigned limit. A known qualifying disclosure activates a hard stop during the episode quiet gap.
-
-The policy uses the continuous probability. The frozen classification threshold in Chapter 6 is only an evaluation convention.
+The replay applies the capacity, risk, cap and monthly update rules in Chapter 5. It uses continuous probabilities and the stated assumptions about cash eligibility, debt payments and facility exposure.
 
 ## 7.2 Base Scenario
 
@@ -43,12 +41,12 @@ The average limit changes most when assumptions affecting capacity and the cap c
 | Additional debt due 0.5% of assets | 0.429% | 36.48% |
 | Risk sensitivity doubled | 0.659% | 3.55% |
 
-Using another fitted model changes the mean less under this policy: random forest gives 0.6678% of assets, XGBoost 0.6658% and either logistic model 0.6669%. This aggregate pattern reflects frequent capacity and cap constraints. It does not show that the risk model is unimportant for an individual company.
+The risk adjustment reduces mean limit/assets from 0.6751% in the capacity-only scenario to 0.6678% in the base scenario: 0.0073 percentage points, or 1.08% relative. Capacity assumptions and caps have a larger aggregate effect in these scenarios. This comparison measures policy behavior, not a lending benefit.
+
+Using another fitted model changes the mean little: random forest gives 0.6678% of assets, XGBoost 0.6658% and either logistic model 0.6669%. Aggregate means can conceal larger differences for individual companies.
 
 The fixed initial-limit assumption exceeds current raw capacity in 19.80% of included rows. The replay is therefore a study of rule behavior, not a recommended starting portfolio.
 
 ## 7.4 Scope of the Evidence
 
 The reported limits are conditional outputs from an assumed policy. A zero limit does not remove an outstanding balance. The simulation cannot estimate expected loss, profitability, approval rates or customer effects without facility-level data. The probability refers to a bankruptcy or payment-failure disclosure episode, not verified contractual default. The limits are not shown to be optimal or ready for production use.
-
-File references: results/run_006_full_statement_enrichment/policy/ and policy_report/; policy code in mcf/policy/credit.py and mcf/policy/empirical.py.

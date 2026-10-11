@@ -1,6 +1,6 @@
 # 3 Data and Target Definition
 
-This chapter describes the actual dataset used for training and testing. Financial observations come from local SEC company facts and imported Financial Statement and Notes data; disclosure labels come from submissions. Synthetic data is used only in separate software tests.
+This chapter describes the SEC accounting data and disclosure labels used in run 006. The observation is a company at a monthly decision date.
 
 ## 3.1 Study Population and Observation Unit
 
@@ -16,11 +16,11 @@ The run 006 inventory contains 20,443 company-facts files. Each company is linke
 | Candidate companies after screening | 10,879 |
 | Companies contributing labeled observations | 8,780 |
 
-The four exclusion categories are mutually exclusive under the implemented screen order. The final reduction also reflects missing or stale financial information and unavailable outcome windows.
+The four inventory exclusions are mutually exclusive. Further losses reflect missing or stale financial information and unavailable outcome windows.
 
 The unit is a company at the first day of a month. Decision dates run from January 2011 through December 2025. The completed panel has 565,222 labeled company-month observations before chronological purging. It contains 1,052 positive rows associated with 573 disclosure episodes in 487 companies.
 
-Current ticker status is not a sample requirement. This avoids deliberately selecting only companies that remain listed. Nevertheless, the local company-facts inventory does not establish a complete historical listing universe. Current SIC is also a retrospective screen rather than a point-in-time industry classification.
+Current ticker status is not required. The inventory nevertheless does not reconstruct a complete historical listing universe, and current SIC may differ from a company's historical classification.
 
 ## 3.2 Sources and Information Availability
 
@@ -36,7 +36,11 @@ Every selected fact retains its tag, value, period, filing date and accession nu
 
 ## 3.3 Outcome and Prediction Horizon
 
-The target is a new disclosure episode. Every Form 8-K or 8-K/A with exact Item 1.03 qualifies. An Item 2.04-only filing qualifies when its reviewed text gives high-certainty evidence of a missed debt principal or interest payment. Acceleration or enforcement alone, missing reviews and ambiguous records do not qualify; unresolved Item 2.04 candidates censor affected windows. Qualifying disclosures no more than 90 days apart form one episode. A later episode can enter the risk set again after the quiet gap. This gap is an operational rule, not proof that a company cured a default.
+The target is a new disclosure episode. Every Form 8-K or 8-K/A with exact Item 1.03 qualifies. An Item 2.04-only filing qualifies when its review identifies an explicit missed debt principal or interest payment, assigns high certainty and provides supporting quotations.
+
+Item 2.04 reviews were generated automatically by language models through OpenAI Batch and reused from saved results. Acceleration or enforcement alone, missing reviews and ambiguous records remain unresolved for this target. No independent human validation sample is documented in the saved run; the review's certainty flag is not a measured label-accuracy rate. Appendix B records the review models and provenance.
+
+Qualifying disclosures no more than 90 days apart form one episode. Decisions during an episode and its 90-day quiet gap are excluded from prediction; later eligible decisions can predict a new episode. The gap is an operational rule, not proof of cure.
 
 Item 1.03 covers bankruptcy or receivership matters and can also include reorganization-related reporting. It can concern the registrant or its parent. A filing date is not necessarily the start of the underlying event or the date of a missed payment. [SEC, Form 8-K, Item 1.03](https://www.sec.gov/files/form8-k.pdf).
 
@@ -46,13 +50,11 @@ $$ y_{i,t}=1 \quad \text{if} \quad t<T_i\leq t+60\ \text{calendar days}. $$
 
 A zero means that no new qualifying episode occurs in this interval and that the issuer has a qualifying filing at or after the horizon. Qualifying follow-up forms are 10-K, 10-Q, 8-K and their amendments. This establishes observed reporting follow-up, not proof that the company did not experience distress. Unresolved Item 2.04-only records prevent a negative label where their status could change the outcome.
 
-Decisions during a known episode and its 90-day quiet gap are excluded from the predictive sample. Later eligible decisions can predict a new episode. Decisions after the issuer's final qualifying filing are outside the observed reporting life.
+Decisions after the issuer's final qualifying filing are outside the observed reporting life.
 
 Positive labels wait until the full horizon has elapsed. For negatives, availability is the day after the first qualifying follow-up filing at or after the horizon. Labels must be available before the study cutoff and before the next chronological modeling stage if used in an earlier stage.
 
 This treatment removes 6,011 otherwise financially usable rows for insufficient issuer follow-up, 38,664 rows after unresolved payment disclosures, 1,458 during episode washout and 350 with unresolved payment evidence in the forward window. These categories reduce 611,705 usable feature rows to 565,222 labeled rows. Known disclosures remain relevant to policy hard stops.
-
-The target is an observed reporting proxy. An absent item code cannot prove the absence of legal default, and historical metadata may contain errors or omissions. The findings therefore apply to the specified SEC disclosure outcome.
 
 ## 3.4 Feature Construction
 
@@ -88,7 +90,7 @@ Annual flows must span 330–400 days. This accommodates some fiscal-year variat
 
 These are last reported annual values. No trailing twelve-month series is reconstructed. Cumulative year-to-date figures are not added as if they were separate quarters.
 
-Interest coverage and growth remain outside the fitted specification because reliable construction requires additional tag reconciliation and period handling. Industry and reporting age are audit fields, not model inputs.
+Interest coverage is excluded because reliable construction requires further tag reconciliation. Asset growth and leverage change are included; industry and reporting age are audit fields.
 
 ## 3.5 Data Quality and Preprocessing
 
@@ -104,38 +106,12 @@ Policy calculations use a stricter complete-input subset. Required revenue and c
 
 ## 3.6 Descriptive Analysis
 
-The number of observations and positive labels varies substantially over time:
+Annual observation counts and positive labels vary substantially. Figure 6.1 shows this variation, and Appendix C gives the full annual table. These counts precede chronological purging; a December observation can refer to a disclosure in the following year.
 
-| Decision year | Labeled rows | Positive rows |
-|---|---:|---:|
-| 2011 | 9,352 | 11 |
-| 2012 | 37,698 | 47 |
-| 2013 | 46,809 | 48 |
-| 2014 | 43,899 | 66 |
-| 2015 | 35,801 | 60 |
-| 2016 | 29,179 | 77 |
-| 2017 | 26,384 | 58 |
-| 2018 | 32,526 | 58 |
-| 2019 | 40,339 | 90 |
-| 2020 | 41,654 | 137 |
-| 2021 | 42,830 | 36 |
-| 2022 | 46,909 | 46 |
-| 2023 | 46,995 | 139 |
-| 2024 | 43,605 | 120 |
-| 2025 | 41,242 | 59 |
-
-These counts precede chronological purging. Positive rows are decision-date labels, so a row in December can refer to a disclosure in the following year.
-
-The changing counts show why a single overall event rate is insufficient. A model calibrated in a higher-event period may overstate probabilities in a later lower-event period. This possibility is examined in Chapter 6.
-
-The supplementary report provides predictor percentiles, missingness, correlations, sector counts and annual event shares. These descriptions concern the constructed sample; they should not be interpreted as population estimates for all US companies.
+Predictor percentiles, missingness and sector summaries describe the constructed sample. They are not population estimates for all US companies. Changing event shares also motivate the separate calibration and later evaluation periods.
 
 ## 3.7 Data Limitations
 
-There are five main limitations. First, the target records bankruptcy or reviewed payment-failure disclosures rather than verified legal-event onset or facility payment default. Second, snapshot coverage depends on extractable USD facts and freshness rules, which may exclude companies with unusual accounting or disrupted reporting.
+The main data limitations are incomplete accounting coverage, filing and taxonomy noise, and dependence on observed reporting activity. Unresolved Item 2.04 evidence removes some outcome windows, while the absence of independent review validation leaves classification error uncertain.
 
-Third, complete follow-up is conditional on observed filing activity. Companies that disappear from the reporting record without a usable disclosure cannot automatically be labeled negative. Fourth, current industry metadata and the downloaded inventory do not fully reconstruct historical sample membership.
-
-Finally, financial statements do not establish cash eligibility, payments due in the next 60 days, facility utilization or recoveries. The policy analysis must keep these assumptions visible. These limitations affect both external validity and the strength of conclusions about lending.
-
-File references: mcf/data/empirical.py, mcf/data/sec.py, mcf/data/point_in_time.py, issuer_inventory.csv, disclosure_events.csv, inventory_audit.json, panel_audit.json, feature_provenance.jsonl, panel.csv, features.csv, 11_appendix_a_variable_dictionary.md.
+Freshness requirements can exclude companies with disrupted reporting. These exclusions and the use of current industry metadata limit how far the findings generalize beyond the observed sample. Chapter 8 discusses the implications for prediction and lending.

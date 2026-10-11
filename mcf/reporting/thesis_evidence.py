@@ -220,7 +220,17 @@ def export(args):
         "Other model mappings are comparisons. Additional-debt, cash, exposure and cap "
         "values remain assumptions rather than observed facility terms.\n\n"
     )
-    appendix_c += "## C.6 Evidence files\n\nFull local paths and hashes are in tables/source_crosswalk.csv. Small evidence copies are in tables/. Complete row-level predictions and policy histories remain under results/. File references: metrics.csv, bootstrap_intervals.json, annual_test_metrics.csv, event_detection.csv, feature_summary.csv, feature_correlations.csv, sector_summary.csv, policy_sensitivity.csv.\n"
+    appendix_c += "## C.6 Annual panel counts before chronological purging\n\n"
+    annual_counts = json.loads((args.panel / "panel_audit.json").read_text())["annual_counts"]
+    appendix_c += md_table(
+        ["Decision year", "Observations", "Positive rows"],
+        [
+            [year, f"{counts['rows']:,}", f"{counts['positives']:,}"]
+            for year, counts in sorted(annual_counts.items())
+        ],
+    )
+    appendix_c += "\nPositive rows are monthly outcomes, not distinct episodes. A December decision can refer to a disclosure in the following year. Figure 6.1 summarizes these counts.\n\n"
+    appendix_c += "## C.7 Evidence files\n\nFull local paths and hashes are in tables/source_crosswalk.csv. Small evidence copies are in tables/. Complete row-level predictions and policy histories remain under results/. File references: panel_audit.json, metrics.csv, bootstrap_intervals.json, annual_test_metrics.csv, event_detection.csv, feature_summary.csv, feature_correlations.csv, sector_summary.csv, policy_sensitivity.csv.\n"
     (docs / "13_appendix_c.md").write_text(appendix_c)
     appendix_d = "# Appendix D: Hypothetical Worked Policy Examples\n\n"
     appendix_d += "These examples support Chapter 5 and are separate from the empirical results. The borrower, probabilities and facility amounts are hypothetical. Each row changes the original example independently; the rows are not a time sequence.\n\n"

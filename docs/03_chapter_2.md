@@ -12,9 +12,7 @@ $$ EL = PD \times LGD \times EAD. $$
 
 The Basel framework uses these components in its treatment of expected loss. This thesis uses the relationship to explain the concepts, without implementing a regulatory capital framework. Definitions and horizons must be consistent. [Basel Committee on Banking Supervision, CRE35](https://www.bis.org/basel_framework/chapter/CRE/35.htm).
 
-For example, a 2% default probability, 40% LGD and exposure of EUR 100,000 imply an expected loss of EUR 800 under those assumptions. This is an average estimated amount, not a prediction that the lender will lose exactly EUR 800 on that borrower.
-
-LGD can be understood through recoveries. In a simple completed case, if EUR 100,000 is owed and the lender ultimately recovers EUR 60,000 net of collection costs, the loss is EUR 40,000 and LGD is 40%. A more complete calculation also considers recovery timing and discounting. LGD is conditional on default; it is not the probability that default will happen.
+LGD depends on recoveries, collection costs and their timing. It is conditional on default. The expected-loss relationship therefore requires separate evidence about event probability, recoveries and exposure.
 
 The empirical outcome in this thesis is an SEC disclosure. Its probability cannot be inserted into the default-loss formula as if it were PD. The supplied data also does not establish facility recoveries or EAD. Expected loss is therefore a theoretical concept here, not an empirical result.
 
@@ -26,7 +24,7 @@ The limit applies to the total outstanding balance across statement periods. If 
 
 $$ A = \max(0,L-E). $$
 
-A limit of EUR 100,000 and outstanding exposure of EUR 65,000 leave EUR 35,000 available. If the limit is later reduced below EUR 65,000, the existing debt remains. A lower limit can restrict further use, but it cannot by itself recover the amount already lent.
+A reduction in the limit restricts further use but leaves the outstanding debt in place. The policy therefore records the assigned limit and existing exposure separately.
 
 The 60-day prediction horizon is motivated by this payment schedule. It does not establish that all transactions last exactly 60 days or that a disclosure during that period causes a missed payment on the facility.
 
@@ -34,9 +32,11 @@ The 60-day prediction horizon is motivated by this payment schedule. It does not
 
 Credit scoring combines borrower information into a measure of credit quality. The output can be a score, a category or an event probability. A score and a calibrated probability are different objects.
 
-Altman (1968) combined financial ratios through multiple discriminant analysis to classify bankrupt and non-bankrupt companies. Ohlson (1980) used a logit framework for bankruptcy prediction. Shumway (2001) studied a hazard approach that accounts for the timing of bankruptcy and changing company information. Their work supports the use of financial information and careful treatment of time, although their coefficients and outcomes do not transfer automatically to this dataset. [Altman (1968)](https://doi.org/10.1111/j.1540-6261.1968.tb00843.x), [Ohlson (1980)](https://www.jstor.org/stable/2490395), [Shumway (2001)](https://www.jstor.org/stable/10.1086/209665).
+Altman (1968), Ohlson (1980) and Shumway (2001) provide three relevant approaches. Altman combines financial ratios through discriminant analysis to classify bankrupt and non-bankrupt firms. Ohlson uses logistic regression to express bankruptcy risk as a probability. Shumway uses a hazard approach that accounts for event timing and changing company information. [Altman (1968)](https://doi.org/10.1111/j.1540-6261.1968.tb00843.x), [Ohlson (1980)](https://www.jstor.org/stable/2490395), [Shumway (2001)](https://www.jstor.org/stable/10.1086/209665).
 
-The present implementation is a monthly fixed-horizon classifier. It estimates the chance of a disclosure within the next 60 days for each eligible decision date. It is not a fitted survival model and does not estimate a separate daily hazard.
+These approaches motivate different parts of this study: accounting ratios describe financial condition, logistic regression provides a probability benchmark, and attention to time supports repeated borrower assessment. Their published coefficients and performance cannot be transferred directly because the target, population and horizon differ. The thesis therefore compares models on one common dataset and outcome.
+
+The present model is a monthly classifier for a disclosure within the next 60 days. It uses changing company information but does not estimate a survival model or daily hazard. This choice matches the proposed review schedule while retaining a simple binary outcome.
 
 Two qualities matter. Discrimination describes how well a model ranks event observations above non-event observations. Calibration describes the relationship between estimated probabilities and observed event rates. A model may rank companies reasonably well while systematically overstating their probability.
 
@@ -46,22 +46,7 @@ This distinction matters when a probability enters a limit formula. A ranking ca
 
 Financial ratios help compare companies with different sizes. Their meaning still depends on the business model, accounting policies and reporting period. The same current ratio can describe different positions when one company holds mainly cash and another holds mainly slow-moving inventory.
 
-The implemented study uses 12 measures that can be constructed consistently enough from the supplied standard tags:
-
-| Measure | Calculation | Role |
-|---|---|---|
-| Current ratio | Current assets divided by current liabilities | Short-term balance-sheet liquidity |
-| Cash and equivalents to assets | Cash and cash equivalents divided by assets | Immediately visible liquid resources relative to size |
-| Liabilities to assets | Total liabilities divided by assets | Balance-sheet leverage |
-| Asset growth, 12 months | Change in assets from the comparable prior annual period | Expansion or contraction |
-| Change in liabilities to assets, 12 months | Change in leverage from the comparable prior annual period | Direction of balance-sheet risk |
-| Working capital to assets | Current assets less current liabilities, divided by assets | Net short-term financial position relative to size |
-| Return on average assets | Annual net income divided by average opening and closing assets | Annual profitability |
-| Operating cash flow to average assets | Annual operating cash flow divided by average assets | Cash generation relative to resources |
-| Operating cash flow to average liabilities | Annual operating cash flow divided by average liabilities | Cash generation relative to obligations |
-| Negative net income | Indicator for annual net income below zero | Loss-state indicator |
-| Negative operating cash flow | Indicator for annual operating cash flow below zero | Cash-burn indicator |
-| Log assets | Natural logarithm of total assets in USD | Company size |
+The twelve predictors cover liquidity, leverage, profitability, cash generation, growth and size. Together, they describe both the current financial position and changes in that position. Chapter 3 defines their construction; Appendix A records source fields and timing rules.
 
 Profitability is not the same as cash generation. A company can report profit while cash remains tied up in receivables. Reported cash also does not prove that all cash is available for repayment. Restrictions, business needs and legal arrangements may reduce the usable amount.
 
@@ -99,7 +84,7 @@ A random forest combines decision trees fitted to bootstrap samples. Random subs
 
 For example, liquidity may be more informative among companies with negative profitability than among profitable companies. A tree can represent this conditional relationship without a manually specified interaction.
 
-The flexibility has costs. Large trees can fit patterns that do not persist in later years. Their outputs can also require calibration. The study controls tree depth and minimum leaf size through a fixed grid.
+The flexibility can also fit patterns that do not persist. Tree depth and leaf size control complexity, while later-period evaluation checks whether the ranking and probability scale remain useful.
 
 ### 2.5.4 Gradient boosting
 
@@ -117,8 +102,6 @@ The Brier score measures squared probability error. It reflects more than calibr
 
 Interpretation also has limits. A logistic coefficient describes a fitted association. Permutation importance describes how prediction changes when a variable's information is disrupted. Neither demonstrates that changing the variable would change real default risk.
 
-The implementation uses logistic coefficients and selection-period permutation importance. SHAP, mentioned in the preliminary outline, is not part of the completed experiment.
-
 ## 2.6 Credit Limit Determination
 
 A probability describes the chance of an event. A credit limit specifies a monetary exposure. The proposed framework connects them through three components:
@@ -129,7 +112,7 @@ Here, C is a capacity proxy, K is a hard exposure cap, and g is a risk multiplie
 
 The multiplier must not increase when estimated risk rises, with other inputs held constant. This property is imposed by the policy design. It is not estimated from observed lending decisions.
 
-For example, capacity of EUR 100,000 and a multiplier of 0.8 produce EUR 80,000 of risk-adjusted capacity. If the cap is EUR 70,000, the cap determines the preliminary limit. A change in risk may therefore have no effect when a tighter constraint already applies.
+When the exposure cap is below risk-adjusted capacity, the cap determines the preliminary limit. Changes in model probability can therefore have little aggregate effect even when the model distinguishes between companies.
 
 The capacity calculation must avoid counting an obligation twice. An interest payment already reflected in operating cash flow should not also be deducted as an additional payment. Chapter 5 defines the treatment used.
 
@@ -137,18 +120,14 @@ The capacity calculation must avoid counting an obligation twice. An interest pa
 
 Dynamic management means reviewing a limit as information changes. A monthly schedule does not imply new statements each month. The system can carry the same financial values through several reviews.
 
-The policy separates the review date from a change in relevant inputs. It applies a minimum increase threshold, partial adjustment and a maximum monthly increase. These restrictions apply only to increases. A lower current capacity, higher risk estimate or tighter cap can require an immediate reduction.
+The policy separates a scheduled review from a change in relevant inputs. It limits increases and applies reductions promptly. Chapter 5 specifies the update rules and the conditions for a hard stop.
 
 Stability should be distinguished from usefulness. A limit that never changes is stable but may fail to respond to deterioration. Frequent small changes can create operational costs without improving risk control. Chapter 7 examines both movement and responsiveness.
 
-A hard stop is separate from a probability adjustment. In the historical scenario, a known qualifying Item 1.03 or Item 2.04 payment-failure disclosure makes the company ineligible for further credit during the episode quiet gap. This is a research rule; it does not claim that every filing has the same legal or commercial consequences.
-
 ## 2.8 Research Gap and Position of the Study
 
-The literature provides established methods for corporate failure prediction and flexible classification. The practical question addressed here is how an explicitly defined risk estimate can be connected to capacity, exposure constraints and monthly rules in one reproducible framework.
+The reviewed literature provides methods for corporate failure prediction and flexible classification. This study uses those methods to examine a separate practical question: how can a dated disclosure-risk estimate enter a monthly credit-limit rule?
 
-The thesis does not claim that earlier research ignored credit-limit determination. Its contribution is the implemented connection and the separate evaluation of prediction and policy behavior.
+The policy adds monetary capacity and exposure constraints that a prediction score alone cannot supply. Its coefficients are research assumptions rather than parameters learned from lender outcomes. The contribution is therefore the implemented connection and the separate evaluation of prediction and policy behavior.
 
-Better ranking does not automatically imply accurate loss estimation. A well-behaved limit formula does not establish commercial lending value. The study evaluates the claims supported by its data and identifies the evidence needed for stronger conclusions.
-
-File references: mcf/models/risk.py, mcf/models/evaluation.py, mcf/policy/credit.py, 11_appendix_a_variable_dictionary.md.
+This distinction guides the empirical chapters. Model results assess ranking, probability error and event detection. Policy results assess assigned limits, changes and sensitivity. Evidence that a model predicts disclosures does not by itself establish that the resulting policy improves lending outcomes.

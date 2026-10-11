@@ -1,12 +1,10 @@
 # 4 Risk Modeling and Validation Methodology
 
-This chapter describes how the 60-day SEC disclosure models are fitted and evaluated. The purpose is to compare models under the same information constraints. The run 006 settings were fixed before model fitting in `configs/study.bankruptcy_or_payment_failure.json`.
+This chapter describes how the 60-day SEC disclosure models are fitted and evaluated. All families face the same information constraints. Appendix B records the settings fixed before fitting.
 
 ## 4.1 Modeling Framework
 
-The observation is an eligible company at a monthly decision date. The binary outcome indicates whether a new qualifying Item 1.03 bankruptcy or receivership or Item 2.04 payment-failure disclosure episode begins within the following 60 calendar days. All models use current ratio, cash and equivalents to assets, liabilities to assets, 12-month asset growth, 12-month leverage change, working capital to assets, return on average assets, operating cash flow to average assets, operating cash flow to average liabilities, negative-net-income and negative-operating-cash-flow indicators, and log assets.
-
-The company identifier, name, outcome source and industry code are not predictors. Dates define availability and chronological stages. Later financial information, future disclosures and realized policy outcomes are not model inputs.
+Each observation is an eligible company at a monthly decision date. All models use the twelve accounting predictors and 60-day disclosure-episode outcome defined in Chapter 3. Company identifiers, industry codes, future information and policy outcomes are excluded from predictors. Dates govern availability and chronological stages.
 
 Missing predictors are replaced with fitting-sample medians. A missing-value indicator is added for a predictor when missing values occur in the fitting sample. Logistic models also standardize the resulting columns using fitting-sample means and standard deviations. These fitted transformations are applied unchanged to later observations.
 
@@ -16,31 +14,11 @@ No synthetic observations, synthetic labels or oversampling are used in the empi
 
 The first benchmark assigns every observation the event share from the original training period. This is a probability benchmark, not a model of differences between companies.
 
-The first fitted model is unregularized logistic regression. The second applies L2 regularization with C equal to 0.1, 1 or 10. Both use the same imputation and standardization. The fitting algorithm is LBFGS with a maximum of 5,000 iterations. A convergence warning stops the run rather than being silently accepted.
-
-The main logistic relationship is:
-
-$$ \log\left(\frac{q_{i,t}}{1-q_{i,t}}\right)=\beta_0+\sum_{j=1}^{p}\beta_j x_{i,t,j}. $$
-
-Coefficients are reported on the standardized scale before calibration. They are not direct percentage-point changes in the final calibrated probability.
+The fitted linear benchmarks are unregularized and L2-regularized logistic regression. Both use the same preprocessing. Coefficients describe associations on standardized inputs before calibration, not percentage-point changes in final probabilities. Convergence warnings stop the run.
 
 ## 4.3 Random Forest and Gradient Boosting
 
-The random forest uses 300 trees. Maximum depth is either 3 or unrestricted, and minimum leaf size is either 5 or 20. A random subset of predictors is considered at each split. These settings give four structural combinations.
-
-XGBoost uses 200 trees with maximum depth 2 or 4 and learning rate 0.05 or 0.1. It uses the histogram tree method and binary logistic objective. Remaining settings follow the pinned XGBoost 3.0.2 implementation.
-
-Each structural combination is fitted without weights and with balanced class weights:
-
-| Model family | Structural settings | Weighting choices | Candidate fits |
-|---|---:|---:|---:|
-| Logistic regression | 1 | 2 | 2 |
-| L2 logistic regression | 3 | 2 | 6 |
-| Random forest | 4 | 2 | 8 |
-| XGBoost | 4 | 2 | 8 |
-| Total |  |  | 24 |
-
-The random seed is 42. Tree fitting uses up to four CPU threads. This computation setting does not create additional observations or change the study population.
+Random forest and XGBoost allow nonlinear relationships and predictor interactions. The grids vary tree depth and, respectively, minimum leaf size or learning rate. Each specification is fitted with and without balanced class weights, giving 24 candidates across the four families. Appendix B gives the grids and software settings.
 
 Within each family, candidates are evaluated with expanding annual tuning folds. The first fold fits the original training period through 2016 and validates on 2017. The second fold adds 2017 observations whose labels were available before January 2018 and validates on 2018. Preprocessing is refitted inside each fold. This prevents a 2018 fit from using labels that were not yet observable at its start.
 
@@ -82,7 +60,7 @@ This is a reporting convention. It is not based on lending costs and does not de
 
 ## 4.6 Performance Measures and Uncertainty
 
-ROC-AUC measures ranking across thresholds. Average precision summarizes the precision-recall relationship. The implementation uses scikit-learn's step-weighted average precision rather than a trapezoidal area under an interpolated precision-recall curve.
+ROC-AUC measures ranking across thresholds. Average precision summarizes the precision-recall relationship.
 
 The Brier score measures probability error:
 
@@ -106,7 +84,7 @@ This preserves dependence within a company. It does not capture shared calendar 
 
 Each refitted model is frozen before calibration. A sigmoid map is fitted using only the 2019 calibration observations. The calibrator does not refit the underlying trees or logistic coefficients.
 
-Separate calibration avoids fitting the underlying model and its probability correction on the same observations. On the selection period, the workflow compares the sigmoid probabilities with the unchanged raw probabilities and retains the mapping with the lower Brier score; an exact tie favors the raw mapping. The implementation uses CalibratedClassifierCV with FrozenEstimator in scikit-learn 1.6.1. [Scikit-learn, calibration API](https://scikit-learn.org/1.6/modules/generated/sklearn.calibration.CalibratedClassifierCV.html).
+Separate calibration avoids fitting the underlying model and its probability correction on the same observations. On the selection period, the workflow compares the sigmoid probabilities with the unchanged raw probabilities and retains the mapping with the lower Brier score; an exact tie favors the raw mapping.
 
 Calibration can become inaccurate when event rates or predictor relationships change. The thesis compares raw and calibrated Brier scores on later periods and compares predicted probability with observed event share.
 
@@ -124,10 +102,8 @@ Held-out error analysis examines false positives, missed events, annual performa
 
 A family qualifies only if its selected probability mapping has selection-period average precision above the selection event share and Brier score below the constant training-prevalence benchmark. Among qualifying families, the lowest Brier score wins. An exact tie favors the simpler family in the order logistic regression, L2 logistic regression, random forest and XGBoost.
 
-The choice is saved before held-out predictions are generated. In run 006, random forest with its identity mapping qualifies and is selected. Its raw selection Brier score is 0.0016463, compared with 0.0017675 after sigmoid calibration, so preserving the unmodified forest probabilities gives the lower error in that period.
+The choice is saved before held-out predictions are generated. Chapter 6 reports the selected model and probability mapping.
 
 The rule combines a minimum ranking requirement with probability error. It does not require the highest average precision and does not establish statistically significant superiority. Chapter 6 reports all families to show this trade-off.
 
 The chosen probability enters the Chapter 5 rule without refitting on test outcomes. Policy coefficients are separate scenario assumptions and are not optimized against test results.
-
-File references: configs/study.bankruptcy_or_payment_failure.json, mcf/models/risk.py, mcf/models/train.py, mcf/models/temporal.py, mcf/models/evaluation.py, results/run_006_full_statement_enrichment/models/.

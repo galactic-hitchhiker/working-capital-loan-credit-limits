@@ -4,7 +4,7 @@ Run 006 selects a random forest with its raw probability. The model ranks the de
 
 ## 6.1 Sample and Chronological Design
 
-The labeled panel contains 565,222 company-months from 8,780 companies. It has 1,052 positive rows representing 573 disclosure episodes in 487 companies. Boundary purging removes observations whose 60-day outcome windows cross modeling stages.
+The labeled panel contains 565,222 company-months from 8,780 companies. It has 1,052 positive rows representing 573 disclosure episodes in 487 companies. Boundary purging removes 33,878 observations whose labels are not available before the next stage.
 
 | Stage | Calendar period | Observations | Positive rows | Companies | Event companies |
 |---|---|---:|---:|---:|---:|
@@ -22,7 +22,7 @@ The final run excludes 2023–2025 labels from fitting, tuning, calibration and 
 
 ## 6.2 Predictors and Tuning
 
-All families use the same twelve point-in-time accounting predictors described in Chapter 3. Expanding temporal folds fit through 2016 and validate in 2017, then fit through 2017 and validate in 2018. Candidate ranking uses mean annual average-precision lift and then mean Brier skill.
+All families use the twelve predictors in Chapter 3 and the temporal tuning procedure in Chapter 4.
 
 The family winners are balanced logistic regression, balanced L2 logistic regression with C = 10, an unweighted random forest with 300 trees, unrestricted depth and minimum leaf size 20, and unweighted XGBoost with 200 trees, depth 4 and learning rate 0.05.
 
@@ -30,7 +30,7 @@ The family winners are balanced logistic regression, balanced L2 logistic regres
 
 Sigmoid mapping lowers the logistic models' Brier errors. Raw probabilities are retained for both tree models. For the forest, the selection-period Brier score is 0.0016463 raw versus 0.0017675 after sigmoid mapping.
 
-The constant benchmark has selection Brier score 0.0016812 and average precision equal to the 0.1684% event share. A family qualifies when its average precision exceeds that share and its Brier score is below the constant benchmark.
+The constant benchmark has selection Brier score 0.0016812 and average precision equal to the 0.1684% event share. Acceptance follows the rule in Section 4.9.
 
 | Model and mapping | ROC-AUC | Average precision | Brier score | Accepted |
 |---|---:|---:|---:|---|
@@ -72,5 +72,3 @@ Both matched fits select random forest. Without enrichment, test ROC-AUC is 0.87
 Permutation importance for the selected forest is highest for log assets, followed by working capital to assets, asset growth and liabilities to assets. It measures model reliance, not causation. The low precision and recall at one threshold limit its use as a stand-alone alert.
 
 The outcome combines Item 1.03 bankruptcy or receivership filings with reviewed Item 2.04 missed-payment disclosures. It does not establish the onset of a legal event or a default on the proposed facility. The results support a reproducible disclosure-risk signal and an illustrative credit policy, not measured lending performance or loss reduction.
-
-File references: results/run_006_full_statement_enrichment/models/, model_report/, statement_enrichment_comparison.json and paired_test_comparison.json; evidence copies in docs/tables/.
