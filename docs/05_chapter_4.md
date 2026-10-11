@@ -54,7 +54,9 @@ where N is the total number of fitting observations and the denominator contains
 
 Weights can increase attention to rare outcomes, but raw weighted probabilities need not match the observed event rate. Weighting is therefore a tuning choice. Every final family model compares its raw probabilities with a separately fitted sigmoid mapping.
 
-For each family, a binary threshold is chosen on the selection period to maximize F1. Ties favor higher recall and then the higher threshold. The threshold is frozen before test evaluation.
+A classification threshold is the probability cutoff used to convert a model prediction into a binary alert. An observation is flagged when its predicted probability is at least the threshold; otherwise, it is classified as negative. For each model family, the cutoff is chosen using the 2020–2022 selection period to maximize F1, which combines precision and recall as defined in Section 4.6. Ties favor higher recall and then the higher threshold.
+
+The chosen threshold is then **frozen**: the same numerical cutoff is applied to every observation in the 2023–2025 evaluation period, without adjusting it after seeing those outcomes. Predicted probabilities can change across companies and months, but the cutoff remains fixed. This allows later precision and recall to assess a rule chosen using earlier data. Choosing or revising the cutoff using evaluation outcomes would make those results part of model development and could overstate performance on unseen data.
 
 This is a reporting convention. It is not based on lending costs and does not define commercial approval. The limit policy uses the continuous probability, not this binary classification.
 

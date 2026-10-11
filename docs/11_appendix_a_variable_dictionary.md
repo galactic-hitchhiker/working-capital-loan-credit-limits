@@ -18,7 +18,7 @@ The empirical study uses USD, standard US-GAAP tags and Forms 10-K, 10-Q and the
 | cash_and_equivalents_to_assets | Cash and cash equivalents / assets | Same balance date; direct or conservatively reconstructed cash total |
 | liabilities_to_assets | Total liabilities / assets | Same balance date; leverage predictor |
 | assets_growth_12m | (Latest total assets − prior-year total assets) / prior-year total assets | Prior balance end must be 330–400 days before the current balance end |
-| liabilities_to_assets_change_12m | Current liabilities/assets − prior-year liabilities/assets | Prior assets and liabilities use the same comparable balance date |
+| liabilities_to_assets_change_12m | Latest total liabilities/assets − comparable prior-year total liabilities/assets | Prior assets and liabilities use the same comparable balance date |
 | working_capital_to_assets | (Current assets − current liabilities) / assets | Negative values allowed |
 | return_on_average_assets | Annual net income / mean of opening and closing assets | Opening date is one day before annual start; closing date is annual end |
 | operating_cashflow_to_average_assets | Annual operating cash flow / mean of opening and closing assets | Flow and stock periods are matched |

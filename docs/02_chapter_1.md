@@ -29,6 +29,8 @@ The thesis addresses four questions:
 
 The first two questions concern prediction. The last two concern policy design and historical simulation.
 
+The **event share**, also called the event rate, is the number of positive company-month rows divided by the total number of labeled rows in a given sample. For example, 10 positive rows among 1,000 observations give an event share of 1%. It counts monthly observations, so several positive rows may refer to the same episode or company. The constant benchmark assigns every observation the same probability, equal to the event share in the training sample.
+
 ## 1.4 Objectives and Contribution
 
 The first objective is to construct a monthly dataset using SEC Company Facts, Financial Statement and Notes data, and submissions as the study's source set. Each financial observation retains its reporting period, filing date and source. Only information available at the decision date can enter a prediction.

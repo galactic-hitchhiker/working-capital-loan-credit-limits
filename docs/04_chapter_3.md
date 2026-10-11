@@ -64,7 +64,7 @@ The target is a new disclosure episode. Every Form 8-K or 8-K/A with exact Item 
 
 Item 2.04 reviews were generated automatically by language models through OpenAI Batch and reused from saved results. Acceleration or enforcement alone, missing reviews and ambiguous records remain unresolved for this target. No independent human validation sample is documented in the saved run; the review's certainty flag is not a measured label-accuracy rate. Appendix B records the review models and provenance.
 
-Qualifying disclosures no more than 90 days apart form one episode. Decisions during an episode and its 90-day quiet gap are excluded from prediction; later eligible decisions can predict a new episode. The gap is an operational rule, not proof of cure.
+Qualifying disclosures no more than 90 days apart form one episode. The 90-day interval approximates one quarter: it groups follow-up filings about the same distress event and prevents decisions soon after a known disclosure from being treated as new, event-free prediction opportunities. Decisions during an episode and its 90-day quiet gap are excluded from prediction; later eligible decisions can predict a new episode. This is a pragmatic grouping rule, not an empirically established cure period or proof of cure.
 
 Item 1.03 covers bankruptcy or receivership matters and can also include reorganization-related reporting. It can concern the registrant or its parent. A filing date is not necessarily the start of the underlying event or the date of a missed payment. [SEC, Form 8-K, Item 1.03](https://www.sec.gov/files/form8-k.pdf).
 
@@ -82,31 +82,28 @@ This treatment removes 6,011 otherwise financially usable rows for insufficient 
 
 ## 3.4 Feature Construction
 
-The predictive experiment uses twelve measures:
+The predictive experiment uses twelve accounting measures. In the table below, each formula applies to one company at a monthly decision date $t$. Values indexed by $t$ are the latest eligible reported facts known before that decision, not necessarily values measured on the decision date. $CA$ means current assets, $CL$ current liabilities, $TA$ total assets, $L$ total liabilities, $Cash$ cash and cash equivalents, $NI$ net income and $OCF$ operating cash flow.
 
-$$ \operatorname{CurrentRatio}_{i,t}=\frac{CA_{i,t}}{CL_{i,t}}. $$
+The subscript $t-12$ denotes a comparable balance-sheet date about twelve months earlier. The subscript $a$ denotes the latest available annual operating-cash-flow period, to which net income is matched. $\overline{TA}_a$ and $\overline{L}_a$ are the arithmetic means of opening and closing assets and liabilities for that period. The indicator $\mathbb{1}(\cdot)$ equals one when its condition holds and zero otherwise.
 
-$$ \operatorname{CashToAssets}_{i,t}=\frac{CashAndEquivalents_{i,t}}{TA_{i,t}}. $$
+| Predictor | Formula | What it measures |
+|---|---|---|
+| Current ratio | $CA_t/CL_t$ | Current assets relative to current liabilities. A higher value indicates more short-term asset cover. |
+| Cash to assets | $Cash_t/TA_t$ | The portion of the asset base reported as cash or cash equivalents; reported cash is not necessarily available for lending purposes. |
+| Liabilities to assets | $L_t/TA_t$ | The share of assets financed by obligations rather than equity. |
+| Asset growth, 12 months | $(TA_t-TA_{t-12})/TA_{t-12}$ | The percentage expansion or contraction of the balance sheet over about a year. Growth is not assumed to be beneficial. |
+| Leverage change, 12 months | $L_t/TA_t-L_{t-12}/TA_{t-12}$ | Change in the total-liabilities-to-assets ratio over about a year; a positive value indicates more liabilities relative to assets. |
+| Working capital to assets | $(CA_t-CL_t)/TA_t$ | The short-term funding surplus or shortfall scaled by company size. Negative values mean current liabilities exceed current assets. |
+| Return on average assets (ROA) | $NI_a/\overline{TA}_a$ | Annual accounting profit or loss relative to average assets during the year. |
+| Operating cash flow to average assets | $OCF_a/\overline{TA}_a$ | Annual operating cash generation or use relative to average assets. |
+| Operating cash flow to average liabilities | $OCF_a/\overline{L}_a$ | Annual operating cash generation or use relative to average liabilities. This is not debt-service coverage. |
+| Negative income | $\mathbb{1}(NI_a<0)$ | Whether the company reported an annual accounting loss, separate from the size of that loss. |
+| Negative operating cash flow | $\mathbb{1}(OCF_a<0)$ | Whether operations used cash over the annual period. |
+| Log assets | $\ln(TA_t)$ | Company size on a compressed scale, using total assets in US dollars. |
 
-$$ \operatorname{LiabilitiesToAssets}_{i,t}=\frac{L_{i,t}}{TA_{i,t}}. $$
+*Accounting predictors used in model fitting. Ratios with nonpositive denominators remain missing, as described in Section 3.5.*
 
-$$ \operatorname{AssetGrowth12m}_{i,t}=\frac{TA_{i,t}-TA_{i,t-12}}{TA_{i,t-12}}. $$
-
-$$ \operatorname{LeverageChange12m}_{i,t}=\frac{L_{i,t}}{TA_{i,t}}-\frac{L_{i,t-12}}{TA_{i,t-12}}. $$
-
-$$ \operatorname{WorkingCapitalToAssets}_{i,t}=\frac{CA_{i,t}-CL_{i,t}}{TA_{i,t}}. $$
-
-$$ \operatorname{ROA}_{i,t}=\frac{NI_{i,\mathrm{annual}}}{(TA_{i,\mathrm{opening}}+TA_{i,\mathrm{closing}})/2}. $$
-
-$$ \operatorname{OCFToAssets}_{i,t}=\frac{OCF_{i,\mathrm{annual}}}{(TA_{i,\mathrm{opening}}+TA_{i,\mathrm{closing}})/2}. $$
-
-$$ \operatorname{OCFToLiabilities}_{i,t}=\frac{OCF_{i,\mathrm{annual}}}{(L_{i,\mathrm{opening}}+L_{i,\mathrm{closing}})/2}. $$
-
-$$ \operatorname{NegativeIncome}_{i,t}=\mathbb{1}(NI_{i,\mathrm{annual}}<0). $$
-
-$$ \operatorname{NegativeOCF}_{i,t}=\mathbb{1}(OCF_{i,\mathrm{annual}}<0). $$
-
-$$ \operatorname{LogAssets}_{i,t}=\ln(TA_{i,t}). $$
+Appendix A lists the underlying accounting fields, exact timing rules and model field names. These descriptions indicate what each constructed measure represents; they do not assign a causal effect or assume that a high or low value always has the same risk implication.
 
 Current assets, current liabilities, total liabilities and cash are matched to the selected total-assets balance date. Direct Company Facts totals take priority. When a total is absent, the extractor can use reconciled SEC statement calculations or complete same-filing components; each derivation and its source remain in provenance. The 12-month change features use the closest comparable balance date 330–400 days earlier; prior assets and liabilities must share that date. Net income is matched to the latest available annual operating-cash-flow period. Opening assets and liabilities must refer to the day before that annual period begins, and closing values must match its end. The negative-income and negative-cash-flow indicators remain missing when their source flow is unavailable rather than treating missing values as zero.
 
@@ -118,15 +115,53 @@ Interest coverage is excluded because reliable construction requires further tag
 
 ## 3.5 Data Quality and Preprocessing
 
-An observation needs positive total assets, a balance-sheet period no older than 180 days and an annual-flow period no older than 540 days. Age is measured from period end, not filing date. A usable annual operating-cash-flow record is required for the cash-flow predictors.
+### 3.5.1 Observation Eligibility
 
-The candidate company-month grid contains 1,958,220 possible rows. Of these, 1,014,086 fall outside observed reporting lives and 332,429 lack sufficiently fresh required financial information. The remaining 611,705 rows have usable snapshots; outcome exclusions reduce these to 565,222 labeled rows.
+A company-month must have positive total assets and a usable annual operating-cash-flow record. The balance-sheet period must end no more than 180 days before the decision date, and the annual-flow period no more than 540 days before it. These limits restrict the use of old financial information. Age is measured from the accounting period end; the separate filing-date rule in Section 3.2 determines whether the information was known at the decision date.
 
-Within the labeled panel, current ratio is missing in 27,431 rows, working capital to assets in 27,296 and liabilities to assets in 52,646. Log assets is available throughout because positive assets are an entry requirement. Chapter 4 describes fitting-only median imputation and missing-value indicators.
+The following table shows how the candidate company-month grid becomes the labeled panel. Exclusions are applied in sequence, so each removed row is counted once here.
 
-Ratios with nonpositive denominators remain missing. Negative working capital, net income and operating cash flow are retained. No observation is dropped merely because an observed financial ratio is unusually large.
+| Stage | Rows removed | Rows remaining |
+|---|---:|---:|
+| Candidate company-month grid | — | 1,958,220 |
+| Exclude decisions outside observed reporting lives | 1,014,086 | 944,134 |
+| Exclude missing, conflicting or stale required financial data, or nonpositive assets | 332,429 | 611,705 |
+| Apply disclosure-episode and outcome-observability exclusions from Section 3.3 | 46,483 | 565,222 |
 
-Policy calculations use a stricter complete-input subset. Required revenue and cash amounts are not filled with model medians or silently replaced with zero. This produces a different sample for Chapter 7, whose coverage is reported separately.
+*Source: run 006 panel audit. Counts precede the chronological purging described in Chapter 4.*
+
+### 3.5.2 Missing Predictors and Extreme Values
+
+Passing the eligibility checks does not require every predictor to be observed. A company can have usable total assets and annual operating cash flow while lacking another accounting field or a comparable historical balance. Ratios also remain missing when their denominator is nonpositive. The table below reports missing values in the labeled panel before imputation.
+
+| Predictor | Rows with a missing value | Share of labeled rows |
+|---|---:|---:|
+| Current ratio | 27,431 | 4.85% |
+| Cash to assets | 51,043 | 9.03% |
+| Liabilities to assets | 52,646 | 9.31% |
+| Asset growth, 12 months | 26,304 | 4.65% |
+| Leverage change, 12 months | 87,963 | 15.56% |
+| Working capital to assets | 27,296 | 4.83% |
+| Return on average assets (ROA) | 27,207 | 4.81% |
+| Operating cash flow to average assets | 5,515 | 0.98% |
+| Operating cash flow to average liabilities | 59,801 | 10.58% |
+| Negative income | 22,284 | 3.94% |
+| Negative operating cash flow | 0 | 0.00% |
+| Log assets | 0 | 0.00% |
+
+*Source: run 006 feature summary. Each percentage uses 565,222 labeled company-months as its denominator. A row can lack several predictors, so the counts overlap and must not be added to estimate excluded observations.*
+
+The 12-month leverage change has the highest missing share. Its construction requires both assets and liabilities at two comparable balance dates. Log assets and the negative-operating-cash-flow indicator are complete because their source values are required for entry. Operating cash flow to average assets can still be missing when the matched opening or closing asset balance is unavailable, even though annual cash flow itself is observed. Appendix C reports the predictor distributions alongside these missing shares.
+
+During model fitting, missing predictors are replaced with medians calculated from the fitting sample. An additional indicator records whether a value was missing when that predictor has missing values in the fitting sample. These transformations are learned within each fitting stage and applied unchanged to its later evaluation observations; Chapter 4 describes the procedure. Imputation supplies model inputs without establishing the missing accounting amounts.
+
+Negative working capital, net income and operating cash flow are retained because they can describe financial weakness. Extreme observed ratios are also retained: the experiment neither drops a row solely for an unusually large ratio nor caps extreme values through winsorization. Timing and reconciliation checks therefore do not certify that every reported amount is economically plausible. Extreme ratios remain a data-quality limitation, particularly for the logistic models.
+
+### 3.5.3 Inputs to the Credit-Limit Policy
+
+The policy replay requires observed total assets, annual revenue, annual operating cash flow and reported cash. These amounts determine monetary limits, so missing required policy inputs lead to exclusion rather than replacement with model medians or zeros. Assets must be positive, revenue and cash must be nonnegative, and all four amounts must be finite. Negative operating cash flow remains permissible.
+
+The replay draws from the usable financial snapshots in the evaluation period and can include known-disclosure cases that are excluded from predictive fitting but activate a policy hard stop. Its sample therefore differs from the labeled prediction sample. Chapter 7 reports its coverage and results separately.
 
 ## 3.6 Descriptive Analysis
 

@@ -24,9 +24,13 @@ The policy assumes initial limits, cash eligibility, additional debt and facilit
 
 ## 8.4 Further Work
 
-A stronger study should independently validate a sample of automated disclosure reviews, resolve ambiguous filings and improve accounting reconciliation. The complete target and pipeline should then be frozen before evaluation on a future period or an independent lender portfolio.
+A stronger study should independently validate a sample of automated disclosure reviews, resolve ambiguous filings and improve accounting reconciliation. This would improve confidence in both the outcome labels and the financial predictors.
 
-Direct facility data would allow evaluation of payment risk, utilization, limit changes, losses and profitability under realistic operational constraints. Probability calibration should be monitored through a predefined process.
+The predictor set could be extended with macroeconomic indicators such as interest rates, inflation, unemployment, industrial production growth and credit spreads. These variables would represent the economic conditions shared by companies at each monthly decision date. Their interactions with company characteristics could also be examined, for example whether interest-rate changes are more informative for highly indebted firms. Each value must be aligned with its publication date and the version available at that time, since subsequently revised data would introduce future information. Added predictive value should be assessed against the accounting-only model using the same chronological evaluation periods.
+
+A further priority is a richer monthly dataset. The current panel has monthly decision dates, but its accounting inputs can remain unchanged between filings and its flow measures use the last reported annual period. Where access permits, future work could combine monthly management accounts and bank transactions with sales, operating cash flow, receivables and payables, unrestricted cash, debt-payment schedules and facility utilization. Dated payment records could establish when arrears begin, whether obligations are repaid and when a borrower recovers. Such information would support more timely predictors, clearer episode boundaries and better measurement of the resources available for repayment. Each company-month should retain the source, measurement period and availability date of every input, with explicit treatment of missing or delayed reports.
+
+Direct facility data would also allow evaluation of payment risk, limit changes, losses and profitability under realistic operational constraints. The expanded target definition, predictor set and selection rules should be fixed before evaluation on a future period or an independent lender portfolio. Probability calibration should then be monitored through a predefined process.
 
 ## 8.5 Conclusion
 

@@ -37,7 +37,7 @@ $$
 
 The revenue component limits exposure relative to business activity. The cash-flow and cash component connects it to financial resources. Taking the smaller amount prevents high revenue alone from supporting a large limit when cash generation is weak.
 
-Dividing annual flows by six gives a simple two-month approximation. It does not forecast exact cash receipts over 60 days or account for seasonality. Negative operating cash flow contributes no positive flow capacity. Cash may still support a positive amount, so this rule does not fully model future cash consumption.
+Annual revenue and operating cash flow are divided by six because the policy's 60-day horizon is approximately two months, or one-sixth of a year. This assumes an even flow through the year and does not account for seasonality. Cash is an existing balance, so it is not divided by six. Negative operating cash flow contributes no positive flow capacity. Cash may still support a positive amount, so this rule does not fully model future cash consumption.
 
 The starting values are $$ a=0.20 $$, $$ b=0.50 $$ and $$ c=0.10 $$. These fractions are illustrative policy choices, not estimated coefficients or established lending standards.
 
@@ -59,7 +59,7 @@ $$
 C_{i,t}^{risk}=C_{i,t}\exp(-kq_{i,t}).
 $$
 
-The multiplier lies between zero and one. When $$ k>0 $$, higher estimated risk produces a lower amount, with capacity and other inputs held constant. The parameter $$ k $$ controls the strength of the reduction. The initial example uses $$ k=10 $$, with alternative values of 5 and 20 included in the supporting scenarios.
+The multiplier lies between zero and one. The parameter $$ k $$ controls how strongly estimated risk reduces capacity: a larger value produces a greater reduction at the same probability, while $$ k=0 $$ leaves capacity unchanged. The starting value $$ k=10 $$ is an illustrative policy assumption. For example, at a predicted probability of 5% ($$ q=0.05 $$), the multiplier is $$ e^{-10\times0.05}\approx0.607 $$, retaining about 61% of capacity. Values of 5 and 20 are examined in the sensitivity scenarios; the study does not establish that 10 is optimal.
 
 This disclosure probability is not a facility-default probability. A change in the event definition or horizon requires reassessing the mapping and its sensitivity parameter.
 

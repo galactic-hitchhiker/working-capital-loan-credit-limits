@@ -6,7 +6,7 @@ This chapter explains the concepts needed to separate credit-risk prediction fro
 
 Corporate credit risk is the risk that a company will not meet its financial obligations as agreed. Several related outcomes must be distinguished. Delinquency means that a payment is overdue. Default means that a borrower meets a defined failure-to-pay or other default condition. Financial distress describes difficulty in meeting obligations. Bankruptcy is a formal legal process. These outcomes can be related without being identical.
 
-Three terms are commonly used to describe credit loss. Probability of default, or PD, measures the likelihood of default within a specified period. Loss given default, or LGD, measures the share of exposure lost if default occurs. Exposure at default, or EAD, is the amount exposed when default occurs. A simplified expected-loss amount is:
+Three terms are commonly used to describe credit loss. Probability of default, or PD, measures the likelihood of default within a specified period. Loss given default, or LGD, measures the share of exposure lost if default occurs. Exposure at default, or EAD, is the amount exposed when default occurs. A simplified expected-loss (EL) amount is:
 
 $$ EL = PD \times LGD \times EAD. $$
 
@@ -60,7 +60,7 @@ A zero or negative denominator can make a ratio undefined or misleading. The imp
 
 ### 2.5.1 Logistic regression
 
-Logistic regression links predictors to the probability of a binary outcome. For company i at date t:
+Logistic regression links predictors to the probability of a binary outcome. For company $$i$$ at date $$t$$:
 
 $$ q_{i,t} = \frac{1}{1+\exp(-z_{i,t})}, \qquad z_{i,t} = \beta_0+\sum_{j=1}^{p}\beta_j x_{i,t,j}. $$
 

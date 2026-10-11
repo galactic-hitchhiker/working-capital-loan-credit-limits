@@ -6,13 +6,17 @@ Run 006 selects a random forest with its raw probability. The model ranks the de
 
 The labeled panel contains 565,222 company-months from 8,780 companies. It has 1,052 positive rows representing 573 disclosure episodes in 487 companies. Boundary purging removes 33,878 observations whose labels are not available before the next stage.
 
-| Stage | Calendar period | Observations | Positive rows | Companies | Event companies |
-|---|---|---:|---:|---:|---:|
-| Training | 2011–2016 | 196,174 | 294 | 5,783 | 133 |
-| Tuning | 2017–2018 | 51,021 | 103 | 3,591 | 56 |
-| Calibration | 2019 | 31,165 | 74 | 3,814 | 43 |
-| Selection | 2020–2022 | 121,142 | 204 | 4,883 | 100 |
-| Later evaluation | 2023–2025 | 131,842 | 318 | 4,633 | 165 |
+| Stage | Calendar period | Observations | Positive rows | Episodes | Companies | Event companies |
+|---|---|---:|---:|---:|---:|---:|
+| Training | 2011–2016 | 196,174 | 294 | 160 | 5,783 | 133 |
+| Tuning | 2017–2018 | 51,021 | 103 | 58 | 3,591 | 56 |
+| Calibration | 2019 | 31,165 | 74 | 45 | 3,814 | 43 |
+| Selection | 2020–2022 | 121,142 | 204 | 116 | 4,883 | 100 |
+| Later evaluation | 2023–2025 | 131,842 | 318 | 176 | 4,633 | 165 |
+
+*Source: run 006 stage audit. Counts refer to observations retained after boundary purging.*
+
+**Positive rows** count company-month observations with a new qualifying disclosure episode within the next 60 days. **Episodes** count distinct disclosure episodes represented by those positive rows in each stage. **Event companies** count distinct companies with at least one positive row in that stage. One episode can fall within the prediction windows of several monthly decisions: for example, an episode on 15 March can make both the 1 February and 1 March observations positive. This contributes two positive rows, one episode and one event company. A company can also experience multiple episodes. Thus, the 318 positive rows in the later evaluation represent 176 episodes in 165 distinct event companies.
 
 The final run excludes 2023–2025 labels from fitting, tuning, calibration and selection. Earlier project versions examined these years, and the broader target was specified after that work. The evaluation is retrospective, not an untouched external validation.
 
@@ -39,7 +43,7 @@ The constant benchmark has selection Brier score 0.0016812 and average precision
 | Random forest, raw | 0.8601 | 0.043005 | 0.0016463 | Yes |
 | XGBoost, raw | 0.8755 | 0.039759 | 0.0016778 | Yes |
 
-The forest has lower selection Brier error than XGBoost and is selected. Its frozen classification threshold is 0.057971. The credit-limit rule uses the continuous probability, not the threshold.
+The forest has lower selection Brier error than XGBoost and is selected. Its classification threshold, chosen on the 2020–2022 selection period, is 0.057971 (approximately 5.8%). A predicted disclosure probability at or above this cutoff produces an alert. The threshold is frozen throughout the 2023–2025 evaluation: it is not adjusted using the later outcomes. For example, a predicted probability of 6% produces an alert, while 5% does not. The credit-limit rule uses the continuous probability, not the threshold.
 
 ## 6.4 Later Evaluation
 

@@ -17,10 +17,13 @@ even if its 2.04 review is negative or unresolved.
 
 All qualifying filings are retained. Reports within a rolling 90-day gap form
 one disclosure episode; later episodes for the same company can contribute new
-outcomes. The model predicts a new disclosure episode within the next 60 calendar
-days. Recent known episodes are excluded from the training risk set for 90 days.
-Unresolved earlier 2.04-only evidence still censors affected labels. The episode
-gap is operational and does not establish contractual cure.
+outcomes. The 90-day interval approximates one quarter, grouping follow-up
+filings about the same distress event and keeping decisions soon after a known
+disclosure out of the risk set. The model predicts a new disclosure episode
+within the next 60 calendar days. Recent known episodes are excluded from the
+training risk set for 90 days. Unresolved earlier 2.04-only evidence still
+censors affected labels. The gap is a pragmatic grouping rule, not an
+empirically established cure period or proof of contractual cure.
 
 This is a broad disclosure proxy. Item 1.03 includes bankruptcy/receivership and
 confirmation of reorganization plans, so it does not prove a new missed payment
