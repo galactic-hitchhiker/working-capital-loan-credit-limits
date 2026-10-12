@@ -29,8 +29,6 @@ The thesis addresses four questions:
 
 The first two questions concern prediction. The last two concern policy design and historical simulation.
 
-The **event share**, also called the event rate, is the number of positive company-month rows divided by the total number of labeled rows in a given sample. For example, 10 positive rows among 1,000 observations give an event share of 1%. It counts monthly observations, so several positive rows may refer to the same episode or company. The constant benchmark assigns every observation the same probability, equal to the event share in the training sample.
-
 ## 1.4 Objectives and Contribution
 
 The first objective is to construct a monthly dataset using SEC Company Facts, Financial Statement and Notes data, and submissions as the study's source set. Each financial observation retains its reporting period, filing date and source. Only information available at the decision date can enter a prediction.
@@ -43,7 +41,7 @@ The contribution is a reproducible framework connecting dated financial informat
 
 ## 1.5 Scope and Limitations
 
-The study covers monthly decisions from January 2011 to December 2025 for eligible SEC issuers with usable financial data and filing histories. Financial amounts are reported in USD, and issuers in the current SIC range 6000–6999 are excluded. The sample is an observed reporting population rather than a complete historical listing universe. Chapter 3 gives the screening and information-availability rules.
+The study covers monthly decisions from January 2011 to December 2025 for eligible SEC issuers with usable financial data and filing histories. Financial amounts are reported in USD, and issuers in the current SIC range 6000–6999 are excluded because this range broadly covers finance, insurance, and real estate, whose financial statements are not directly comparable with those of ordinary operating companies. The sample is an observed reporting population rather than a complete historical listing universe. Chapter 3 gives the screening and information-availability rules.
 
 The later evaluation covers 2023–2025. These years are excluded from model development within the final run, but were examined during earlier project work. The evaluation is therefore retrospective. Companies may appear in both earlier and later periods, reflecting continued monitoring rather than evaluation on an entirely separate borrower population.
 
