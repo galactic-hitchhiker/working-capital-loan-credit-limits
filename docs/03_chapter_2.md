@@ -60,8 +60,7 @@ A zero or negative denominator can make a ratio undefined or misleading. The imp
 
 ### 2.5.1 Logistic regression
 
-Logistic regression links predictors to the probability of a binary outcome. For company $$i$$ at date $$t$$:
-
+Logistic regression links predictors to the probability of a binary outcome. For company i at date t:
 $$ q_{i,t} = \frac{1}{1+\exp(-z_{i,t})}, \qquad z_{i,t} = \beta_0+\sum_{j=1}^{p}\beta_j x_{i,t,j}. $$
 
 The coefficients describe relationships with event log-odds. A positive coefficient raises the fitted probability when the other predictors are held fixed. The basic model is linear in log-odds, so it cannot represent every nonlinear relationship without transformations or interactions.
