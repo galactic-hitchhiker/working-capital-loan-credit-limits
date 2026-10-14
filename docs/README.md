@@ -1,39 +1,15 @@
-# Thesis Document Index
+# Documentation
 
-The main text and evidence tables report run 006, including its recurrent
-bankruptcy or reviewed payment-failure disclosure target. Company Facts and
-Financial Statement and Notes facts are combined in one panel.
-Earlier run investigations below remain supporting material.
+The project documentation is separated by purpose so that the thesis manuscript is distinct from software instructions and development analyses.
 
-## Main Text
+## Thesis
 
-1. [Title page](00_title_page.md)
-2. [Abstract](01_abstract.md)
-3. [Chapter 1 — Introduction](02_chapter_1.md)
-4. [Chapter 2 — Theoretical Background and Literature Review](03_chapter_2.md)
-5. [Chapter 3 — Data and Target Definition](04_chapter_3.md)
-6. [Chapter 4 — Risk Modeling and Validation Methodology](05_chapter_4.md)
-7. [Chapter 5 — Credit Limit Methodology](06_chapter_5.md)
-8. [Chapter 6 — Empirical Results](07_chapter_6.md)
-9. [Chapter 7 — Credit-Limit Policy Results](08_chapter_7.md)
-10. [Chapter 8 — Discussion, Limitations and Conclusion](09_chapter_8.md)
-11. [References](10_references.md)
+The complete manuscript, appendices, evidence tables, and figures are under [`thesis/`](thesis/README.md).
 
-## Appendices
+## Guides
 
-- [Appendix A — Variable Dictionary](11_appendix_a_variable_dictionary.md)
-- [Appendix B — Implementation and Reproducibility](12_appendix_b_reproducibility.md)
-- [Appendix C — Supplementary Model Evidence](13_appendix_c.md)
-- [Appendix D — Policy Examples and Sensitivity](14_appendix_d.md)
+Reproduction instructions, pipeline documentation, data-download guidance, and supporting model explanations are under [`guides/`](guides/README.md).
 
-## Supporting Material
+## Experiments
 
-- [Reproduction workflow](workflow.md)
-- [SEC dataset download and unpacking](sec_dataset_download.md)
-- [Current bankruptcy/payment-failure workflow](bankruptcy_payment_failure_workflow.md)
-- [Run 004 feature coverage investigation](run_004_feature_coverage.md)
-- [Historical investigation of financial-statement coverage](statement_feature_recovery.md)
-- [Evidence tables](tables/)
-- [Figures](figures/)
-
-The local Markdown files are the current thesis source. Google Docs is intentionally left unchanged until final synchronization.
+Supporting investigations and comparison notes that are not part of the thesis manuscript are under [`experiments/`](experiments/README.md). Public-facing filenames describe the purpose of each analysis; internal run identifiers remain in artifact paths where needed for reproducibility.

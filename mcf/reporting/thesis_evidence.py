@@ -1,14 +1,14 @@
 """Copy small real-study evidence/figures and build supplementary appendices.
 
-This intentionally refreshes docs/tables, docs/figures and Appendices C/D from
-completed runs. It never trains a model or replaces source datasets.
+This intentionally refreshes docs/thesis/tables, docs/thesis/figures and
+Appendices C/D from completed runs. It never trains a model or replaces source datasets.
 
 Run from the repository root:
     .venv/bin/python -m mcf.reporting.thesis_evidence [parameters]
 
 Parameters:
-    --docs PATH: Thesis documentation destination; refreshes tables, figures and appendices
-        (default: docs).
+    --docs PATH: Thesis manuscript destination; refreshes tables, figures and appendices
+        (default: docs/thesis).
     --inventory PATH: Inventory audit source (default: results/empirical_inventory).
     --panel PATH: Panel audit/design source (default: results/empirical_panel).
     --models PATH: Training metrics and evidence source (default: results/empirical_models).
@@ -278,7 +278,7 @@ def export(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     defaults = dict(
-        docs="docs",
+        docs="docs/thesis",
         inventory="results/empirical_inventory",
         panel="results/empirical_panel",
         models="results/empirical_models",

@@ -2,8 +2,6 @@
 
 Altman, E. I. (1968). Financial ratios, discriminant analysis and the prediction of corporate bankruptcy. *The Journal of Finance, 23*(4), 589–609. [Original article](https://doi.org/10.1111/j.1540-6261.1968.tb00843.x).
 
-Basel Committee on Banking Supervision. (n.d.). *Basel Framework: CRE35, Treatment of expected losses and recognition of provisions*. Bank for International Settlements. [Framework chapter](https://www.bis.org/basel_framework/chapter/CRE/35.htm). Accessed 21 September 2026. Used for conceptual definitions, not as a statement that this research implements regulatory capital requirements.
-
 Breiman, L. (2001). Random forests. *Machine Learning, 45*, 5–32. DOI: 10.1023/A:1010933404324. [Author's paper](https://www.stat.berkeley.edu/~breiman/randomforest2001.pdf).
 
 Chen, T., & Guestrin, C. (2016). XGBoost: A scalable tree boosting system. In *Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining* (pp. 785–794). DOI: 10.1145/2939672.2939785. [Authors' paper](https://arxiv.org/abs/1603.02754).
@@ -30,6 +28,6 @@ U.S. Securities and Exchange Commission. (n.d.). *Form 8-K: Current report*, Ite
 
 ## Research data and implementation
 
-U.S. Securities and Exchange Commission. *EDGAR company facts, submissions, and Financial Statement and Notes datasets*, local run 006 snapshot. Observation cutoff: 7 September 2026. Item 2.04 review classifications are saved under results/item_204_openai_batch_review/. Individual source hashes, filing accessions and selected facts are recorded under results/run_006_full_statement_enrichment/inventory/ and panel/.
+U.S. Securities and Exchange Commission. *EDGAR company facts, submissions, and Financial Statement and Notes datasets*, local snapshot used in the primary model experiment. Observation cutoff: 7 September 2026. Item 2.04 review classifications are saved under results/item_204_openai_batch_review/. Individual source hashes, filing accessions and selected facts are recorded under results/run_006_full_statement_enrichment/inventory/ and panel/.
 
-Project implementation. *Dynamic Determination of Short-Term Corporate Credit Limits Using Machine Learning*, Python research files and run 006 empirical outputs. Chapter file references identify the implementation and result artifacts. Their full local paths are mapped in 12_appendix_b_reproducibility.md; repository URLs can replace the filename references when published.
+Project implementation. *Dynamic Determination of Short-Term Corporate Credit Limits Using Machine Learning*, Python research files and primary model experiment outputs. Chapter file references identify the implementation and result artifacts. Their full local paths are mapped in 12_appendix_b_reproducibility.md; repository URLs can replace the filename references when published.

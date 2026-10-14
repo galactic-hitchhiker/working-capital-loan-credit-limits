@@ -5,6 +5,7 @@ from itertools import product
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import ParameterSampler
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils.class_weight import compute_sample_weight
@@ -13,8 +14,8 @@ from sklearn.utils.class_weight import compute_sample_weight
 MODEL_ORDER = ("logistic", "logistic_l2", "random_forest", "xgboost")
 
 
-def candidates(name, *, smoke=False):
-    """Fixed small grids; smoke mode is only permitted with synthetic data."""
+def candidates(name, *, smoke=False, xgboost_candidates=None, seed=42):
+    """Legacy grids or a seeded wider XGBoost search, with paired class weights."""
     if name == "logistic":
         grid = [{}]
     elif name == "logistic_l2":
@@ -40,6 +41,29 @@ def candidates(name, *, smoke=False):
             }
             for max_depth, learning_rate in product((2, 4), (0.05, 0.1))
         ]
+        if xgboost_candidates is not None:
+            if (
+                type(xgboost_candidates) is not int
+                or xgboost_candidates < 8
+                or xgboost_candidates % 2
+            ):
+                raise ValueError("xgboost_candidates must be an even integer >= 8")
+            # Retain all original candidates, then sample a bounded wider search.
+            # Each parameter set is evaluated with both weighting schemes.
+            space = {
+                "max_depth": [2, 3, 4, 5],
+                "learning_rate": [0.02, 0.03, 0.05, 0.1],
+                "n_estimators": [200, 400, 800, 1200],
+                "min_child_weight": [1, 5, 10, 25],
+                "subsample": [0.7, 0.85, 1.0],
+                "colsample_bytree": [0.7, 0.85, 1.0],
+                "reg_alpha": [0.0, 0.01, 0.1, 1.0],
+                "reg_lambda": [1.0, 5.0, 10.0, 25.0],
+                "gamma": [0.0, 0.1, 1.0],
+            }
+            extra = xgboost_candidates // 2 - len(grid)
+            if extra:
+                grid.extend(ParameterSampler(space, n_iter=extra, random_state=seed))
     else:
         raise ValueError(f"Unknown model: {name}")
     if smoke:

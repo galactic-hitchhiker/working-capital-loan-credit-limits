@@ -1,6 +1,6 @@
-# Run 006: full statement enrichment comparison
+# Statement Enrichment Comparison
 
-The full importer completed for 79 SEC Financial Statement and Notes archives,
+This matched comparison supports the primary model experiment, stored internally as `run_006_full_statement_enrichment`. The full importer completed for 79 SEC Financial Statement and Notes archives,
 yielding 2,928,745 dated source facts for 10,759 companies. Most are direct
 statement totals and many duplicate Company Facts; the panel's native priority
 rules determine which values actually change a monthly feature. The importer
@@ -72,16 +72,16 @@ statement effect. The exact comparison is
 `results/run_006_full_statement_enrichment/comparison_to_run_005.json`.
 
 Run 005 selected XGBoost: test AUC 0.90501, AP 0.02647, Brier 0.00242906,
-precision 5.30%, recall 14.78%. The enriched run 006 selected random forest:
+precision 5.30%, recall 14.78%. The enriched primary model experiment selected random forest:
 test AUC 0.88659, AP 0.02599, Brier 0.00238402, precision 5.63%, recall
 9.12%. The test samples differ slightly (131,866 vs 131,842 rows), and the
-model family and threshold changed. The run 005 versus run 006 comparison
+model family and threshold changed. The run 005 versus primary model experiment comparison
 does not isolate the effect of statement data. Both evaluations remain
 retrospective; the 2023–2025 period was examined during prior development.
 
 ## Thesis policy replay
 
-The run 006 selected model was also replayed with the thesis's existing
+The primary model experiment's selected model was also replayed with the thesis's existing
 illustrative policy settings. After excluding missing or invalid required
 policy inputs, the base scenario covers 99,619 company-months from 3,869
 companies. Its median limit is USD 4.23 million and its mean limit is 0.6678%

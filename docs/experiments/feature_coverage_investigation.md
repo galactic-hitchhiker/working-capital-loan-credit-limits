@@ -1,8 +1,8 @@
-# Run 004 feature coverage investigation
+# Feature Coverage Investigation
 
 The main opportunities are accounting-component recovery and the annual cash-flow
 eligibility gate. Merely adding similar-looking tags would mix accounting scopes.
-This investigation preserves the original `results/run_004_recurrent_disclosures_initial` and creates a separate
+This supporting experiment is associated with the internal run 004 artifacts. It preserves the original `results/run_004_recurrent_disclosures_initial` and creates a separate
 rebuild at `results/run_004_liabilities_coverage/panel`.
 
 ## What is actually missing?

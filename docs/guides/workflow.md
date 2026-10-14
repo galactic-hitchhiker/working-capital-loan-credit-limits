@@ -12,7 +12,7 @@ Run commands from the repository root with the pinned virtual environment. Every
 
 Use the [bankruptcy/payment-failure workflow](bankruptcy_payment_failure_workflow.md)
 for the current recurrent 60-day target. Item 1.03 qualifies automatically;
-2.04 requires reviewed payment-failure evidence. Run 006's completed inventory,
+2.04 requires reviewed payment-failure evidence. The primary model experiment's completed inventory,
 panel and fitted models are under `results/run_006_full_statement_enrichment/`.
 The historical commands below document the earlier Item 1.03-only study.
 
@@ -67,9 +67,9 @@ The inventory identifies eligible issuers and first Item 1.03 disclosures. The p
   --output-dir results/new_run/worked_examples
 ```
 
-## Run 006 Policy and Reports
+## Primary Model Experiment Policy and Reports
 
-The run 006 panel and models are frozen. From a checkout containing their local
+The primary model experiment's panel and models are frozen. From a checkout containing their local
 generated files, create the policy replay and report directories with these
 commands (each destination must be new or empty):
 
@@ -97,7 +97,7 @@ commands (each destination must be new or empty):
 
 ```sh
 .venv/bin/python -m mcf.reporting.thesis_evidence \
-  --docs docs \
+  --docs docs/thesis \
   --inventory results/run_006_full_statement_enrichment/inventory \
   --panel results/run_006_full_statement_enrichment/panel \
   --models results/run_006_full_statement_enrichment/models \
@@ -108,7 +108,7 @@ commands (each destination must be new or empty):
   --examples results/history/item_103_model_evolution/03_rolling_temporal_validation_random_forest/worked_examples
 ```
 
-This refreshes local evidence tables, figures and Appendices C/D. It does not update Google Docs.
+This refreshes the evidence tables, figures and Appendices C/D under `docs/thesis/`. It does not update Google Docs.
 
 ## Experimental composite disclosure proxy
 

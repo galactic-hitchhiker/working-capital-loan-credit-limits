@@ -255,6 +255,24 @@ def prepare(panel_path, config):
 def run(config_path, panel_path, output, *, smoke=False):
     """Tune, refit, calibrate and select before evaluating the untouched test stage."""
     config = load_design(config_path)
+    requested_models = config.get("models", list(MODEL_ORDER))
+    if (
+        not isinstance(requested_models, list)
+        or not requested_models
+        or any(name not in MODEL_ORDER for name in requested_models)
+        or len(set(requested_models)) != len(requested_models)
+    ):
+        raise ValueError(f"models must be a nonempty unique list from {MODEL_ORDER}")
+    model_order = tuple(name for name in MODEL_ORDER if name in requested_models)
+    search = {
+        name: candidates(
+            name,
+            smoke=smoke,
+            xgboost_candidates=config.get("xgboost_candidates"),
+            seed=config["seed"],
+        )
+        for name in model_order
+    }
     if smoke and config["data_kind"] != "synthetic":
         raise ValueError("Smoke mode is only available for synthetic data")
     if config["data_kind"] == "empirical":
@@ -323,11 +341,11 @@ def run(config_path, panel_path, output, *, smoke=False):
     # Convergence problems stop the run rather than silently accepting unstable fits.
     with warnings.catch_warnings():
         warnings.simplefilter("error", ConvergenceWarning)
-        for name in MODEL_ORDER:
+        for name in model_order:
             print(f"Fitting {name} ({config['data_kind']})", flush=True)
             best = None
             for candidate_index, specification in enumerate(
-                candidates(name, smoke=smoke)
+                search[name]
             ):
                 fold_scores = []
                 for fold in tuning_folds:
@@ -408,7 +426,7 @@ def run(config_path, panel_path, output, *, smoke=False):
                     )
                 )
                 print(
-                    f"  candidate {candidate_index + 1}: "
+                    f"  candidate {candidate_index + 1}/{len(search[name])}: "
                     f"mean annual AP lift={mean_ap_lift:.3f}, "
                     f"Brier skill={mean_brier_skill:.4f}",
                     flush=True,
@@ -462,7 +480,7 @@ def run(config_path, panel_path, output, *, smoke=False):
         selection_scores,
         base_selection["brier"],
         float(y[selection].mean()),
-        list(MODEL_ORDER),
+        list(model_order),
     )
     decision = dict(
         selected_model=chosen,
@@ -491,7 +509,7 @@ def run(config_path, panel_path, output, *, smoke=False):
     joblib.dump({"models": bundles, "selection": decision}, output / "models.joblib")
     evaluations, predictions, reliability, intervals = [], [], [], {}
     coefficients, importance = [], []
-    for name in ("constant", *MODEL_ORDER):
+    for name in ("constant", *model_order):
         threshold = thresholds.get(name, 0.5)
         for stage in ("selection", "test"):
             stage_rows = stage_indices[stage]

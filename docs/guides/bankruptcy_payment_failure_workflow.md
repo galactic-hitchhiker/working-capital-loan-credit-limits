@@ -96,5 +96,5 @@ For stage-by-stage operation:
   --output-dir results/bankruptcy_payment_failure_run/models
 ```
 
-Earlier comparison configurations remain under `configs/`. The current
-run 006 target is defined by `configs/study.bankruptcy_or_payment_failure.json`.
+Earlier comparison configurations remain under `configs/`. The primary model experiment's
+target is defined by `configs/study.bankruptcy_or_payment_failure.json`.

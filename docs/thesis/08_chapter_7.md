@@ -1,6 +1,6 @@
 # 7 Credit-Limit Policy Results
 
-The policy translates the run 006 random forest's 60-day disclosure probability into a monthly credit limit. It replays historical SEC financial information under stated facility assumptions. The source data do not contain actual commitments, utilization, repayments, losses, pricing or profitability.
+The policy translates the primary model experiment's random-forest 60-day disclosure probability into a monthly credit limit. It replays historical SEC financial information under stated facility assumptions. The source data do not contain actual commitments, utilization, repayments, losses, pricing or profitability.
 
 ## 7.1 Replay Design
 
@@ -8,7 +8,7 @@ The replay applies the capacity, risk, cap and monthly update rules in Chapter 5
 
 ## 7.2 Base Scenario
 
-After excluding rows with missing or invalid required policy inputs, the run 006 replay covers 99,619 company-months from 3,869 companies and 5,176 continuous company segments in 2023–2025.
+After excluding rows with missing or invalid required policy inputs, the primary model experiment's policy replay covers 99,619 company-months from 3,869 companies and 5,176 continuous company segments in 2023–2025.
 
 | Outcome | Base result |
 |---|---:|
@@ -24,7 +24,7 @@ Among 94,443 month-to-month transitions, 17,088 are increases, 9,309 are decreas
 
 ![Policy sensitivity](figures/policy_sensitivity.png)
 
-*Figure 7.1. Base policy and selected sensitivity scenarios. Source: run 006 policy replay.*
+*Figure 7.1. Base policy and selected sensitivity scenarios. Source: primary model experiment policy replay.*
 
 ## 7.3 Sensitivity
 

@@ -2,7 +2,7 @@
 
 ## 8.1 Main Findings
 
-Run 006 selects a random forest with raw probabilities. In the 2023–2025 evaluation, it reaches ROC-AUC 0.8866, average precision 0.02599 and Brier score 0.0023840. The Brier improvement over the constant benchmark is small. At the frozen threshold, precision is 5.63% and recall is 9.12%, with 18 of 176 episodes detected. The ranking signal requires further validation before use in lending decisions.
+The primary model experiment selects a random forest with raw probabilities. In the 2023–2025 evaluation, it reaches ROC-AUC 0.8866, average precision 0.02599 and Brier score 0.0023840. The Brier improvement over the constant benchmark is small. At the frozen threshold, precision is 5.63% and recall is 9.12%, with 18 of 176 episodes detected. The ranking signal requires further validation before use in lending decisions.
 
 The policy replay translates probabilities into monthly limits. Capacity assumptions and caps have a larger aggregate effect than the risk multiplier, which reduces mean limit/assets by 1.08% relative to the capacity-only scenario. These results describe rule behavior, not improved lending outcomes.
 

@@ -1,10 +1,10 @@
 # 3 Data and Target Definition
 
-This chapter describes the SEC accounting data and disclosure labels used in run 006. The observation is a company at a monthly decision date.
+This chapter describes the SEC accounting data and disclosure labels used in the primary model experiment. The observation is a company at a monthly decision date.
 
 ## 3.1 Study Population and Observation Unit
 
-The run 006 inventory contains 20,443 company-facts files. Each company is linked to its submissions history through its Central Index Key, or CIK. The screen requires at least one domestic periodic filing, complete referenced historical archives and a known current SIC code outside 6000–6999.
+The inventory for the primary model experiment contains 20,443 company-facts files. Each company is linked to its submissions history through its Central Index Key, or CIK. The screen requires at least one domestic periodic filing, complete referenced historical archives and a known current SIC code outside 6000–6999.
 
 | Inventory screen | Companies |
 |---|---:|
@@ -50,7 +50,7 @@ Although the source is named Financial Statement and Notes, its use here concern
 
 ### 3.2.3 Information Availability and Provenance
 
-The local SEC snapshot was extracted before run 006. The study cutoff is 7 September 2026. The inventory identified 2,287 qualifying Item 1.03 or reviewed Item 2.04 filing records before episode grouping. This count includes excluded issuers; it is not the number of model events. The main submissions record is combined with every historical file referenced by it.
+The local SEC snapshot was extracted before the primary model experiment. The study cutoff is 7 September 2026. The inventory identified 2,287 qualifying Item 1.03 or reviewed Item 2.04 filing records before episode grouping. This count includes excluded issuers; it is not the number of model events. The main submissions record is combined with every historical file referenced by it.
 
 Financial extraction primarily uses USD values under standard US-GAAP tags from Forms 10-K, 10-Q and their amendments, with the statement-based mappings described above. A fact becomes available on the calendar day after its filing date. The fiscal period, fiscal-year label and XBRL frame are not treated as publication dates.
 
@@ -128,7 +128,7 @@ The following table shows how the candidate company-month grid becomes the label
 | Exclude missing, conflicting or stale required financial data, or nonpositive assets | 332,429 | 611,705 |
 | Apply disclosure-episode and outcome-observability exclusions from Section 3.3 | 46,483 | 565,222 |
 
-*Source: run 006 panel audit. Counts precede the chronological purging described in Chapter 4.*
+*Source: primary model experiment panel audit. Counts precede the chronological purging described in Chapter 4.*
 
 ### 3.5.2 Missing Predictors and Extreme Values
 
@@ -149,7 +149,7 @@ Passing the eligibility checks does not require every predictor to be observed. 
 | Negative operating cash flow | 0 | 0.00% |
 | Log assets | 0 | 0.00% |
 
-*Source: run 006 feature summary. Each percentage uses 565,222 labeled company-months as its denominator. A row can lack several predictors, so the counts overlap and must not be added to estimate excluded observations.*
+*Source: primary model experiment feature summary. Each percentage uses 565,222 labeled company-months as its denominator. A row can lack several predictors, so the counts overlap and must not be added to estimate excluded observations.*
 
 The 12-month leverage change has the highest missing share. Its construction requires both assets and liabilities at two comparable balance dates. Log assets and the negative-operating-cash-flow indicator are complete because their source values are required for entry. Operating cash flow to average assets can still be missing when the matched opening or closing asset balance is unavailable, even though annual cash flow itself is observed. Appendix C reports the predictor distributions alongside these missing shares.
 

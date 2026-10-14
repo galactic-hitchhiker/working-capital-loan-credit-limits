@@ -6,10 +6,10 @@ from sklearn.metrics import (
     brier_score_loss,
     confusion_matrix,
     f1_score,
+    precision_recall_curve,
     precision_score,
     recall_score,
     roc_auc_score,
-    precision_recall_curve,
 )
 
 
@@ -34,24 +34,24 @@ def metrics(y, probability, threshold=0.5):
     true_negative, false_positive, false_negative, true_positive = confusion_matrix(
         y, predicted, labels=[0, 1]
     ).ravel()
-    return dict(
-        rows=len(y),
-        positives=int(y.sum()),
-        event_share=float(y.mean()),
-        roc_auc=float(roc_auc_score(y, probabilities)) if two_classes else None,
-        average_precision=(
+    return {
+        "rows": len(y),
+        "positives": int(y.sum()),
+        "event_share": float(y.mean()),
+        "roc_auc": float(roc_auc_score(y, probabilities)) if two_classes else None,
+        "average_precision": (
             float(average_precision_score(y, probabilities)) if two_classes else None
         ),
-        brier=float(brier_score_loss(y, probabilities)),
-        precision=float(precision_score(y, predicted, zero_division=0)),
-        recall=float(recall_score(y, predicted, zero_division=0)),
-        f1=float(f1_score(y, predicted, zero_division=0)),
-        threshold=float(threshold),
-        true_negative=int(true_negative),
-        false_positive=int(false_positive),
-        false_negative=int(false_negative),
-        true_positive=int(true_positive),
-    )
+        "brier": float(brier_score_loss(y, probabilities)),
+        "precision": float(precision_score(y, predicted, zero_division=0)),
+        "recall": float(recall_score(y, predicted, zero_division=0)),
+        "f1": float(f1_score(y, predicted, zero_division=0)),
+        "threshold": float(threshold),
+        "true_negative": int(true_negative),
+        "false_positive": int(false_positive),
+        "false_negative": int(false_negative),
+        "true_positive": int(true_positive),
+    }
 
 
 def choose_threshold(y, probability):
@@ -100,14 +100,14 @@ def reliability_bins(y, probability, bins=10):
         mask = assignments == bin_index
         if mask.any():
             result.append(
-                dict(
-                    bin=bin_index,
-                    lower=bin_index / bins,
-                    upper=(bin_index + 1) / bins,
-                    rows=int(mask.sum()),
-                    mean_probability=float(probabilities[mask].mean()),
-                    event_share=float(y[mask].mean()),
-                )
+                {
+                    "bin": bin_index,
+                    "lower": bin_index / bins,
+                    "upper": (bin_index + 1) / bins,
+                    "rows": int(mask.sum()),
+                    "mean_probability": float(probabilities[mask].mean()),
+                    "event_share": float(y[mask].mean()),
+                }
             )
     return result
 

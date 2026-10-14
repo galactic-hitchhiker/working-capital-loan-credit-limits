@@ -1,12 +1,12 @@
 # Dynamic short-term corporate credit limits
 
-This repository contains the thesis, SEC data pipeline, models, and credit-limit simulation for **Dynamic Determination of Short-Term Corporate Credit Limits Using Machine Learning**. See the [thesis index](docs/README.md) for chapters and the [reproduction workflow](docs/workflow.md) for data requirements.
+This repository contains the thesis, SEC data pipeline, models, and credit-limit simulation for **Dynamic Determination of Short-Term Corporate Credit Limits Using Machine Learning**. See the [documentation index](docs/README.md), [thesis manuscript](docs/thesis/README.md), and [reproduction workflow](docs/guides/workflow.md).
 
 ## Current study
 
-The default target is a **bankruptcy/receivership or payment-failure disclosure within 60 days**. Item 1.03 filings qualify automatically; Item 2.04 filings require reviewed payment-failure evidence. The outcome is a disclosure proxy, not a verified contractual payment default. See the [target rules](docs/bankruptcy_payment_failure_workflow.md).
+The default target is a **bankruptcy/receivership or payment-failure disclosure within 60 days**. Item 1.03 filings qualify automatically; Item 2.04 filings require reviewed payment-failure evidence. The outcome is a disclosure proxy, not a verified contractual payment default. See the [target rules](docs/guides/bankruptcy_payment_failure_workflow.md).
 
-The pipeline uses local SEC filings and financial statements, builds a monthly panel with point-in-time features, and trains models with chronological validation. The [pipeline guide](docs/pipeline.md) covers options and outputs.
+The pipeline uses local SEC filings and financial statements, builds a monthly panel with point-in-time features, and trains models with chronological validation. The [pipeline guide](docs/guides/pipeline.md) covers options and outputs.
 
 ```mermaid
 flowchart LR
@@ -82,23 +82,23 @@ The main outputs are under `results/new_run/inventory/`, `results/new_run/panel/
   --output-dir results/new_run
 ```
 
-Use `--skip-download` with `all` if the SEC data are already present. See [reusing statement facts and reviews](docs/pipeline.md#run-everything) to avoid repeated imports or OpenAI calls. The [workflow guide](docs/workflow.md) covers reporting and the thesis policy replay.
+Use `--skip-download` with `all` if the SEC data are already present. See [reusing statement facts and reviews](docs/guides/pipeline.md#run-everything) to avoid repeated imports or OpenAI calls. The [workflow guide](docs/guides/workflow.md) covers reporting and the thesis policy replay.
 
 ## Current thesis result
 
-Run 006 models recurrent bankruptcy or reviewed payment-failure disclosure
-episodes. Its panel combines Company Facts and Financial Statement and
+The main empirical analysis models recurrent bankruptcy or reviewed payment-failure disclosure
+episodes. Its statement-enriched panel combines Company Facts and Financial Statement and
 Notes facts, with 565,222 company-months from 8,780 issuers. The selected
 random forest achieves **0.8866 ROC-AUC**, **0.02599 average precision** and
 **0.0023840 Brier score** in the retrospective 2023–2025 evaluation.
 The hypothetical policy replay has a median limit of **USD 4.23 million**.
-See the [thesis](docs/README.md).
+See the [thesis](docs/thesis/README.md).
 
 ## Historical thesis result
 
 The preserved Item 1.03-only study used 588,111 company-months from 9,075 issuers. Its selected random forest achieved **0.9089 ROC-AUC**, **0.027475 average precision**, and **0.0020872 Brier score** on 2023–2025 held-out data. These figures describe the historical disclosure target; they are not results for the current combined target. Earlier iterations examined those years, so this is retrospective held-out evaluation.
 
-The illustrative policy simulation had a median limit of **USD 3.79 million**. Its limits are hypothetical because the SEC data do not contain actual facilities, utilization, repayments, or losses. See the [historical results](results/history/README.md) and [reproduction workflow](docs/workflow.md).
+The illustrative policy simulation had a median limit of **USD 3.79 million**. Its limits are hypothetical because the SEC data do not contain actual facilities, utilization, repayments, or losses. See the [historical results](results/history/README.md) and [reproduction workflow](docs/guides/workflow.md).
 
 ## Repository map
 
@@ -109,7 +109,9 @@ The illustrative policy simulation had a median limit of **USD 3.79 million**. I
 | `mcf/models/` | Training and evaluation |
 | `mcf/policy/`, `mcf/reporting/` | Limit simulation and thesis reports |
 | `configs/` | Study and policy settings |
-| `docs/`, `results/` | Thesis guides and saved outputs |
+| `docs/thesis/` | Thesis manuscript, appendices, tables, and figures |
+| `docs/guides/`, `docs/experiments/` | Technical guides and supporting experiment notes |
+| `results/` | Generated and archived outputs |
 
 Run the code checks with:
 

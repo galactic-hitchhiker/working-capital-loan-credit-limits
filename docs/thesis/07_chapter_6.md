@@ -1,6 +1,6 @@
 # 6 Empirical Results
 
-Run 006 selects a random forest with its raw probability. The model ranks the defined disclosure episodes better than the logistic benchmarks and has lower selection-period Brier error than the constant benchmark. Its fixed-threshold detection remains limited.
+The primary model experiment selects a random forest with its raw probability. The model ranks the defined disclosure episodes better than the logistic benchmarks and has lower selection-period Brier error than the constant benchmark. Its fixed-threshold detection remains limited.
 
 ## 6.1 Sample and Chronological Design
 
@@ -14,7 +14,7 @@ The labeled panel contains 565,222 company-months from 8,780 companies. It has 1
 | Selection | 2020–2022 | 121,142 | 204 | 116 | 4,883 | 100 |
 | Later evaluation | 2023–2025 | 131,842 | 318 | 176 | 4,633 | 165 |
 
-*Source: run 006 stage audit. Counts refer to observations retained after boundary purging.*
+*Source: primary model experiment stage audit. Counts refer to observations retained after boundary purging.*
 
 **Positive rows** count company-month observations with a new qualifying disclosure episode within the next 60 days. **Episodes** count distinct disclosure episodes represented by those positive rows in each stage. **Event companies** count distinct companies with at least one positive row in that stage. One episode can fall within the prediction windows of several monthly decisions: for example, an episode on 15 March can make both the 1 February and 1 March observations positive. This contributes two positive rows, one episode and one event company. A company can also experience multiple episodes. Thus, the 318 positive rows in the later evaluation represent 176 episodes in 165 distinct event companies.
 
@@ -22,7 +22,7 @@ The final run excludes 2023–2025 labels from fitting, tuning, calibration and 
 
 ![Annual sample coverage and disclosure-label share](figures/sample_over_time.png)
 
-*Figure 6.1. Labeled panel before chronological purging. Positive rows are monthly prediction outcomes, not separate episodes. Source: run 006 panel audit and descriptive report.*
+*Figure 6.1. Labeled panel before chronological purging. Positive rows are monthly prediction outcomes, not separate episodes. Source: primary model experiment panel audit and descriptive report.*
 
 ## 6.2 Predictors and Tuning
 
@@ -63,7 +63,7 @@ The forest's annual ROC-AUC is 0.8715 in 2023, 0.8777 in 2024 and 0.9329 in 2025
 
 ![Held-out ranking and probability diagnostics](figures/model_diagnostics.png)
 
-*Figure 6.2. Precision-recall and probability diagnostics for 2023–2025. Source: run 006 model predictions and report.*
+*Figure 6.2. Precision-recall and probability diagnostics for 2023–2025. Source: primary model experiment predictions and model report.*
 
 ## 6.5 Interpretation
 

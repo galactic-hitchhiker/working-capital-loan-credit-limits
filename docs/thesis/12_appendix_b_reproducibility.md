@@ -2,9 +2,9 @@
 
 ## B.1 Completed Experiment
 
-The run 006 dataset combines local SEC Company Facts, Financial Statement and Notes facts, and submissions in one panel. Its target is a new qualifying Item 1.03 bankruptcy or receivership or reviewed Item 2.04 payment-failure disclosure episode within 60 days. Settings are in `configs/study.bankruptcy_or_payment_failure.json`. The stages are training in 2011–2016, tuning in 2017–2018, calibration in 2019, selection in 2020–2022 and later evaluation in 2023–2025. Boundary observations are purged until their complete labels are observable.
+The primary model experiment's dataset combines local SEC Company Facts, Financial Statement and Notes facts, and submissions in one panel. Its target is a new qualifying Item 1.03 bankruptcy or receivership or reviewed Item 2.04 payment-failure disclosure episode within 60 days. Settings are in `configs/study.bankruptcy_or_payment_failure.json`. The stages are training in 2011–2016, tuning in 2017–2018, calibration in 2019, selection in 2020–2022 and later evaluation in 2023–2025. Boundary observations are purged until their complete labels are observable.
 
-The run selects random forest with its raw probability and freezes a threshold of 0.0579707. Sigmoid calibration worsens selection Brier error. The run 006 policy replay uses this selected model.
+The primary model experiment selects a random forest with its raw probability and freezes a threshold of 0.0579707. Sigmoid calibration worsens selection Brier error. Its policy replay uses this selected model.
 
 ## B.2 Implementation Map
 
@@ -56,7 +56,7 @@ Company-cluster bootstrap intervals use 500 repetitions and retain all monthly r
 | Policy decisions and sensitivity | results/run_006_full_statement_enrichment/policy/ |
 | Policy reports and case studies | results/run_006_full_statement_enrichment/policy_report/ |
 | Separate hypothetical worked examples | results/history/item_103_model_evolution/03_rolling_temporal_validation_random_forest/worked_examples/ |
-| Thesis evidence copies | docs/tables/ and docs/figures/ |
+| Thesis evidence copies | docs/thesis/tables/ and docs/thesis/figures/ |
 
 Each result stage writes a manifest and hashes its inputs. New output directories must be empty, preventing silent overwrites. The older Item 1.03-only work is retained under `results/history/`.
 
@@ -78,16 +78,16 @@ The pinned packages are recorded in `requirements-lock.txt`. `mcf/workflows/laun
 
 ## B.6 Reproduction and Verification
 
-The exact command sequence is documented in `docs/workflow.md`. The tests cover information availability, restatements, period matching, conflicting facts, disclosure windows, chronological purging, preprocessing isolation, temporal folds, selection and policy invariants.
+The exact command sequence is documented in `docs/guides/workflow.md`. The tests cover information availability, restatements, period matching, conflicting facts, disclosure windows, chronological purging, preprocessing isolation, temporal folds, selection and policy invariants.
 
 Tests establish the implemented software behavior. They do not establish the economic validity of every filing fact or the suitability of a real credit decision. The target is a bankruptcy or reviewed payment-failure disclosure episode, not verified facility default. Policy outputs remain hypothetical because exposure, repayments, defaults, recoveries, losses, pricing and profitability are unobserved.
 
-The 2023–2025 period is excluded from all run 006 model-development steps. Because the same years were examined in earlier project iterations, including before the broader target was specified, the thesis treats this evaluation as retrospective and does not claim pristine external validation.
+The 2023–2025 period is excluded from all primary model experiment development steps. Because the same years were examined in earlier project iterations, including before the broader target was specified, the thesis treats this evaluation as retrospective and does not claim pristine external validation.
 
 ## B.7 Automated Disclosure Review Provenance
 
 The saved `classifications.jsonl` contains 2,968 filing records reviewed through OpenAI Batch. Per-record requested models are `gpt-6-luna` for 2,027 records and `gpt-6-sol` for 941. The audit names `gpt-6-sol`, so the audit alone does not describe the mixed review history. Per-record metadata preserve requested and returned models, review status, settings and input hashes where available. Missing or failed reviews remain unresolved.
 
-The review version is `item204-llm-v6-all-filings`, with context version `item204-openai-v1-source-bounded`. Run 006 reuses these saved reviews but applies the narrower payment-failure rule in `mcf/data/payment_failure.py`: high certainty, supporting quotations and an explicit payment-failure classification are required. Acceleration or enforcement alone does not qualify. The original review's broad classification totals are therefore not the final target counts.
+The review version is `item204-llm-v6-all-filings`, with context version `item204-openai-v1-source-bounded`. The primary model experiment reuses these saved reviews but applies the narrower payment-failure rule in `mcf/data/payment_failure.py`: high certainty, supporting quotations and an explicit payment-failure classification are required. Acceleration or enforcement alone does not qualify. The original review's broad classification totals are therefore not the final target counts.
 
 No independent human validation sample is documented in the saved run. Model certainty and supporting quotations aid traceability but do not establish label accuracy. Reproduction uses the saved reviews and hashes; a fresh automated review could produce different labels.
