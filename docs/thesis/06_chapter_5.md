@@ -12,12 +12,12 @@ Inputs must be available at the review date and use the same currency. The coeff
 
 ## 5.2 Borrower Capacity Component
 
-Borrower capacity is a monetary proxy based on revenue, operating cash flow, available cash and external debt payments. For company $$ i $$ at review date $$ t $$, define:
+Borrower capacity is a monetary proxy based on revenue, operating cash flow, available cash and external debt payments. For company $i$ at review date $t$, define:
 
-- $$ R_{i,t} $$: revenue for a consistent annual reporting period;
-- $$ F_{i,t} $$: operating cash flow for the same period;
-- $$ B_{i,t} $$: eligible cash available to support repayment;
-- $$ D_{i,t}^{60} $$: additional external debt payments due within the next 60 days, excluding payments already reflected in the cash-flow estimate.
+- $R_{i,t}$: revenue for a consistent annual reporting period;
+- $F_{i,t}$: operating cash flow for the same period;
+- $B_{i,t}$: eligible cash available to support repayment;
+- $D_{i,t}^{60}$: additional external debt payments due within the next 60 days, excluding payments already reflected in the cash-flow estimate.
 
 Two preliminary amounts are calculated:
 
@@ -39,7 +39,7 @@ The revenue component limits exposure relative to business activity. The cash-fl
 
 Annual revenue and operating cash flow are divided by six because the policy's 60-day horizon is approximately two months, or one-sixth of a year. This assumes an even flow through the year and does not account for seasonality. Cash is an existing balance, so it is not divided by six. Negative operating cash flow contributes no positive flow capacity. Cash may still support a positive amount, so this rule does not fully model future cash consumption.
 
-The starting values are $$ a=0.20 $$, $$ b=0.50 $$ and $$ c=0.10 $$. These fractions are illustrative policy choices, not estimated coefficients or established lending standards.
+The starting values are $a=0.20$, $b=0.50$ and $c=0.10$. These fractions are illustrative policy choices, not estimated coefficients or established lending standards.
 
 Eligible cash excludes restricted or unavailable amounts; reported SEC cash does not establish eligibility. Debt payments already included in operating cash flow must not be deducted again. The example deducts additional principal on another borrowing.
 
@@ -47,7 +47,7 @@ The extraction uses the last reported annual flows. Revenue and cash flow must c
 
 ## 5.3 Risk Adjustment Component
 
-Let $$ q_{i,t} $$ be the selected model's 60-day disclosure probability. The proposed risk multiplier is:
+Let $q_{i,t}$ be the selected model's 60-day disclosure probability. The proposed risk multiplier is:
 
 $$
 g(q_{i,t})=\exp(-kq_{i,t}),\qquad k\geq0.
@@ -59,7 +59,7 @@ $$
 C_{i,t}^{risk}=C_{i,t}\exp(-kq_{i,t}).
 $$
 
-The multiplier lies between zero and one. The parameter $$ k $$ controls how strongly estimated risk reduces capacity: a larger value produces a greater reduction at the same probability, while $$ k=0 $$ leaves capacity unchanged. The starting value $$ k=10 $$ is an illustrative policy assumption. For example, at a predicted probability of 5% ($$ q=0.05 $$), the multiplier is $$ e^{-10\times0.05}\approx0.607 $$, retaining about 61% of capacity. Values of 5 and 20 are examined in the sensitivity scenarios; the study does not establish that 10 is optimal.
+The multiplier lies between zero and one. The parameter $k$ controls how strongly estimated risk reduces capacity: a larger value produces a greater reduction at the same probability, while $k=0$ leaves capacity unchanged. The starting value $k=10$ is an illustrative policy assumption. For example, at a predicted probability of 5% ($q=0.05$), the multiplier is $e^{-10\times0.05}\approx0.607$, retaining about 61% of capacity. Values of 5 and 20 are examined in the sensitivity scenarios; the study does not establish that 10 is optimal.
 
 This disclosure probability is not a facility-default probability. A change in the event definition or horizon requires reassessing the mapping and its sensitivity parameter.
 
@@ -67,7 +67,7 @@ The exponential function is a proposed policy rule. It does not estimate an opti
 
 ## 5.4 Exposure Constraints and Existing Indebtedness
 
-Let $$ K_{i,t} $$ be the maximum permitted exposure under the research policy. The preliminary limit is:
+Let $K_{i,t}$ be the maximum permitted exposure under the research policy. The preliminary limit is:
 
 $$
 L_{i,t}^{*}=\min\left(K_{i,t},C_{i,t}^{risk}\right).
@@ -75,23 +75,23 @@ $$
 
 The example cap is USD 150,000. The historical scenario uses 1% of reported assets, with 0.5% and 2% alternatives. These are research assumptions. No positive minimum is imposed, as it could exceed capacity or the cap.
 
-Total debt and near-term debt payments have different roles. Liabilities to assets and its 12-month change are fitted leverage predictors. Additional payments due within 60 days reduce capacity through $$ D_{i,t}^{60} $$. The entire debt or liability balance is not subtracted from the proposed limit.
+Total debt and near-term debt payments have different roles. Liabilities to assets and its 12-month change are fitted leverage predictors. Additional payments due within 60 days reduce capacity through $D_{i,t}^{60}$. The entire debt or liability balance is not subtracted from the proposed limit.
 
-Let $$ E_{i,t} $$ be the current outstanding exposure on the studied facility and $$ L_{i,t} $$ the assigned limit after the monthly rules. Available credit is:
+Let $E_{i,t}$ be the current outstanding exposure on the studied facility and $L_{i,t}$ the assigned limit after the monthly rules. Available credit is:
 
 $$
 A_{i,t}=\max(0,L_{i,t}-E_{i,t}).
 $$
 
-If the limit falls below the outstanding balance, the excess is $$ \max(0,E_{i,t}-L_{i,t}) $$. A limit reduction prevents additional credit under the policy; it does not remove an existing balance or demonstrate repayment.
+If the limit falls below the outstanding balance, the excess is $\max(0,E_{i,t}-L_{i,t})$. A limit reduction prevents additional credit under the policy; it does not remove an existing balance or demonstrate repayment.
 
 ## 5.5 Monthly Update Rules and Safeguards
 
 The policy is reviewed monthly using the information available at each decision date. Financial statements remain unchanged between releases, although debt payments, exposure or other verified inputs may change.
 
-For an existing positive limit, three parameters control increases: a minimum-change threshold $$ \delta $$, a smoothing factor $$ \alpha $$ and a maximum monthly increase $$ u $$. The starting values are 2%, 50% and 10%, respectively.
+For an existing positive limit, three parameters control increases: a minimum-change threshold $\delta$, a smoothing factor $\alpha$ and a maximum monthly increase $u$. The starting values are 2%, 50% and 10%, respectively.
 
-If the preliminary limit is below the previous assigned limit, it is applied immediately. If no relevant new information is recorded, the previous limit is retained when the calculation would otherwise increase it. An increase of no more than $$ \delta L_{i,t-1} $$ is also held back.
+If the preliminary limit is below the previous assigned limit, it is applied immediately. If no relevant new information is recorded, the previous limit is retained when the calculation would otherwise increase it. An increase of no more than $\delta L_{i,t-1}$ is also held back.
 
 For a larger supported increase, the assigned limit is:
 
@@ -135,7 +135,7 @@ Consider a hypothetical borrower with the following inputs:
 
 Using the starting coefficients, the revenue amount is USD 400,000. The cash-flow and cash amount is USD 150,000. After deducting the additional principal payment, capacity equals USD 100,000.
 
-The risk multiplier is $$ \exp(-10\times0.02)=0.8187 $$. The preliminary limit is therefore USD 81,873.08. The exposure cap does not bind.
+The risk multiplier is $\exp(-10\times0.02)=0.8187$. The preliminary limit is therefore USD 81,873.08. The exposure cap does not bind.
 
 With new information supporting an increase, Section 5.5 compares USD 81,873.08, the smoothed amount of USD 75,936.54 and the monthly ceiling of USD 77,000. The smallest amount becomes the assigned limit. With USD 60,000 outstanding, available credit is USD 15,936.54. Calculations retain full precision; displayed amounts are rounded to cents.
 
