@@ -312,23 +312,11 @@ Propose extensions such as private payment data, direct 60-day delinquency model
 
 Use one citation style consistently. Include peer-reviewed credit-risk and machine-learning literature, primary model papers where appropriate, regulatory or institutional sources, and documentation for material data sources.
 
-## Appendices
+## Appendix
 
-### Appendix A Variable Dictionary
+### Appendix A Reproducibility and Code Availability
 
-Provide the definition, formula, source, reporting lag, and expected sign for every feature.
-
-### Appendix B Model Specifications
-
-List preprocessing steps, hyperparameters, tuning ranges, software versions, and reproducibility details.
-
-### Appendix C Supplementary Results
-
-Place secondary plots, full metric tables, robustness checks, and additional case studies here so the main chapters remain focused.
-
-### Appendix D Credit Limit Policy Example
-
-Provide detailed worked examples showing the input data, risk estimate, capacity calculation, caps, smoothing rule, and final limit.
+Record the primary configuration, model settings, software environment, implementation map, evidence locations and limitations of the automated disclosure review. Detailed result tables and worked examples remain in the accompanying repository rather than the thesis.
 
 ## Suggested Page Allocation
 

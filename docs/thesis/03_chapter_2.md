@@ -52,7 +52,7 @@ Leverage measures show how much of the company's assets are financed by liabilit
 
 Changes over time can also reveal information that a single financial statement cannot. Rapid growth may show successful expansion, but it may also require additional borrowing. A reduction in assets may reflect either improved efficiency or financial pressure. Company size provides further context, but a larger company is not automatically safer.
 
-These measures do not show exactly how much debt must be paid during the next 60 days. Total liabilities are measured at one date, while debt service consists of interest and principal payments due over time. The ratios are therefore indicators of general financial condition rather than direct measures of short-term repayment capacity. Chapter 3 defines the twelve predictors used in the model, and Appendix A provides their detailed construction and timing rules.
+These measures do not show exactly how much debt must be paid during the next 60 days. Total liabilities are measured at one date, while debt service consists of interest and principal payments due over time. The ratios are therefore indicators of general financial condition rather than direct measures of short-term repayment capacity. Chapter 3 defines the twelve predictors and their construction and timing rules.
 
 ## 2.5 Statistical and Machine Learning Models
 
@@ -94,7 +94,7 @@ No model should be selected using accuracy alone. The target event is rare, so a
 
 Precision shows how many of the observations flagged by a model actually experience the event. Low precision means many false alerts. Recall shows how many of the actual events the model identifies. Low recall means many events are missed. There is usually a trade-off between the two: flagging more companies can detect more events but can also create more false alerts. Precision-recall analysis is therefore useful for rare outcomes. [Saito and Rehmsmeier (2015)](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0118432).
 
-The Brier score summarizes the difference between estimated probabilities and actual outcomes, while calibration summaries compare estimated probabilities with observed event rates. These measures are important because the selected probability enters the credit-limit framework.
+The Brier score summarizes the difference between estimated probabilities and actual outcomes, while calibration summaries compare estimated probabilities with observed event rates. These measures are important because the selected probability enters the credit-limit framework. [Brier (1950)](https://doi.org/10.1175/1520-0493(1950)078%3C0001:VOFEIT%3E2.0.CO;2).
 
 Model explanations must also be treated carefully. Coefficients and variable-importance measures describe patterns used by a fitted model. They can help explain how the model makes predictions, but they do not prove that a financial characteristic causes or prevents the target event.
 

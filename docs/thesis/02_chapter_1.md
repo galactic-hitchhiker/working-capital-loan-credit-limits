@@ -51,4 +51,4 @@ The policy replay assumes cash eligibility, additional debt payments and facilit
 
 Chapter 2 presents the relevant concepts and literature. Chapters 3 and 4 explain the data, disclosure target, predictors and model evaluation. Chapter 5 defines the credit-limit policy and its monthly rules.
 
-Chapters 6 and 7 report predictive results and policy scenarios. Chapter 8 discusses the findings, limitations and further work. The appendices provide variable definitions, implementation details, supplementary results and worked examples.
+Chapters 6 and 7 report predictive results and policy scenarios. Chapter 8 discusses the findings, limitations and further work. Appendix A records the implementation and reproduction details.

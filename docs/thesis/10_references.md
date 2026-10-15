@@ -2,17 +2,17 @@
 
 Altman, E. I. (1968). Financial ratios, discriminant analysis and the prediction of corporate bankruptcy. *The Journal of Finance, 23*(4), 589–609. [Original article](https://doi.org/10.1111/j.1540-6261.1968.tb00843.x).
 
-Breiman, L. (2001). Random forests. *Machine Learning, 45*, 5–32. DOI: 10.1023/A:1010933404324. [Author's paper](https://www.stat.berkeley.edu/~breiman/randomforest2001.pdf).
+Breiman, L. (2001). Random forests. *Machine Learning, 45*, 5–32. [Original article](https://doi.org/10.1023/A:1010933404324).
 
-Chen, T., & Guestrin, C. (2016). XGBoost: A scalable tree boosting system. In *Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining* (pp. 785–794). DOI: 10.1145/2939672.2939785. [Authors' paper](https://arxiv.org/abs/1603.02754).
+Brier, G. W. (1950). Verification of forecasts expressed in terms of probability. *Monthly Weather Review, 78*(1), 1–3. [Original article](https://doi.org/10.1175/1520-0493(1950)078%3C0001:VOFEIT%3E2.0.CO;2).
 
-European Banking Authority. (2020). *Guidelines on loan origination and monitoring* (EBA/GL/2020/06). [Official publication](https://eba.europa.eu/activities/single-rulebook/regulatory-activities/credit-risk/guidelines-loan-origination-and-monitoring). Accessed 21 September 2026.
+Chen, T., & Guestrin, C. (2016). XGBoost: A scalable tree boosting system. In *Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining* (pp. 785–794). [Original article](https://doi.org/10.1145/2939672.2939785).
 
 Friedman, J. H. (2001). Greedy function approximation: A gradient boosting machine. *The Annals of Statistics, 29*(5), 1189–1232. [Original article](https://doi.org/10.1214/aos/1013203451).
 
 Ohlson, J. A. (1980). Financial ratios and the probabilistic prediction of bankruptcy. *Journal of Accounting Research, 18*(1), 109–131. [Original article](https://www.jstor.org/stable/2490395).
 
-Saito, T., & Rehmsmeier, M. (2015). The precision-recall plot is more informative than the ROC plot when evaluating binary classifiers on imbalanced datasets. *PLOS ONE, 10*(3), e0118432. [Original article](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0118432).
+Saito, T., & Rehmsmeier, M. (2015). The precision-recall plot is more informative than the ROC plot when evaluating binary classifiers on imbalanced datasets. *PLOS ONE, 10*(3), e0118432. [Original article](https://doi.org/10.1371/journal.pone.0118432).
 
 Scikit-learn developers. (2025). *Scikit-learn 1.6.1 documentation: Logistic regression*. [Versioned documentation](https://scikit-learn.org/1.6/modules/linear_model.html#logistic-regression). Accessed 21 September 2026.
 
@@ -26,8 +26,4 @@ U.S. Securities and Exchange Commission. (n.d.). *Financial Statement and Notes 
 
 U.S. Securities and Exchange Commission. (n.d.). *Form 8-K: Current report*, Items 1.03, Bankruptcy or Receivership, and 2.04, Triggering Events That Accelerate or Increase a Direct Financial Obligation. [Official form](https://www.sec.gov/files/form8-k.pdf). Accessed 21 September 2026.
 
-## Research data and implementation
-
-U.S. Securities and Exchange Commission. *EDGAR company facts, submissions, and Financial Statement and Notes datasets*, local snapshot used in the primary model experiment. Observation cutoff: 7 September 2026. Item 2.04 review classifications are saved under results/item_204_openai_batch_review/. Individual source hashes, filing accessions and selected facts are recorded under results/run_006_full_statement_enrichment/inventory/ and panel/.
-
-Project implementation. *Dynamic Determination of Short-Term Corporate Credit Limits Using Machine Learning*, Python research files and primary model experiment outputs. Chapter file references identify the implementation and result artifacts. Their full local paths are mapped in 12_appendix_b_reproducibility.md; repository URLs can replace the filename references when published.
+U.S. Securities and Exchange Commission. (n.d.). *Standard Industrial Classification code list*. [Official classification list](https://www.sec.gov/search-filings/standard-industrial-classification-sic-code-list). Accessed 15 October 2026.

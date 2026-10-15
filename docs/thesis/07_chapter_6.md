@@ -39,7 +39,7 @@ All models use the twelve predictors defined in Chapter 3 and the chronological 
 | Random forest | Unweighted, 300 trees, unrestricted depth and minimum leaf size 20 |
 | XGBoost | Unweighted, 200 trees, depth 4 and learning rate 0.05 |
 
-Balanced class weights give the rare positive rows more influence during fitting. They do not create equal numbers of positive and negative observations. Tuning selects weighting for the logistic models but not for the tree models. Appendix B records the complete parameter grid and software settings.
+Balanced class weights give the rare positive rows more influence during fitting. They do not create equal numbers of positive and negative observations. Tuning selects weighting for the logistic models but not for the tree models. Appendix A records the complete parameter grid and software settings.
 
 ## 6.3 Probability Mapping and Model Selection
 

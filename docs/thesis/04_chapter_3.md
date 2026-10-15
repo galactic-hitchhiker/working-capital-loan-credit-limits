@@ -18,7 +18,7 @@ The inventory for the primary model experiment contains 20,443 company-facts fil
 | Candidate companies after screening | 10,879 |
 | Companies contributing labeled observations | 8,780 |
 
-The four inventory exclusions are mutually exclusive. SIC codes 6000–6999 broadly cover finance, insurance and real-estate companies. These companies are excluded because their balance sheets differ from those of ordinary operating companies: for example, deposits are normal business funding for banks, so leverage, liquidity and working-capital ratios have different meanings. Their assessment requires specialized measures that are not included among the twelve predictors. Further losses reflect missing or stale financial information and unavailable outcome windows.
+The four inventory exclusions are mutually exclusive. SIC codes 6000–6999 broadly cover finance, insurance and real-estate companies. These companies are excluded because their balance sheets differ from those of ordinary operating companies: for example, deposits are normal business funding for banks, so leverage, liquidity and working-capital ratios have different meanings. Their assessment requires specialized measures that are not included among the twelve predictors. Further losses reflect missing or stale financial information and unavailable outcome windows. [SEC SIC code list](https://www.sec.gov/search-filings/standard-industrial-classification-sic-code-list).
 
 The unit is a company at the first day of a month. Decision dates run from January 2011 through December 2025. The completed panel has 565,222 labeled company-month observations before chronological purging. It contains 1,052 positive rows associated with 573 disclosure episodes in 487 companies.
 
@@ -71,7 +71,7 @@ For every company-month, the model asks a simple question: **will the company ma
 
 Two types of Form 8-K disclosure can qualify. Item 1.03 reports bankruptcy or receivership matters, including some reorganizations. It may concern the company or its parent, and the filing date is not necessarily the date on which the financial problem began. Item 2.04 covers events that can accelerate or increase a financial obligation. An Item 2.04-only filing is included here only when its review finds clear evidence of a missed principal or interest payment. [SEC, Form 8-K, Item 1.03](https://www.sec.gov/files/form8-k.pdf).
 
-The Item 2.04 reviews were produced by language models through OpenAI Batch. Filings that mention only acceleration or enforcement, lack a review, or remain unclear are treated as unresolved. The model's confidence description is not a measured accuracy rate because no separate human validation sample was recorded. Appendix B provides further details.
+The Item 2.04 reviews were produced by language models through OpenAI Batch. Filings that mention only acceleration or enforcement, lack a review, or remain unclear are treated as unresolved. The model's confidence description is not a measured accuracy rate because no separate human validation sample was recorded. Appendix A provides the reproduction and review details.
 
 Several related filings may describe the same financial problem. Qualifying disclosures no more than 90 days apart are therefore grouped into one episode. Company-months during that episode and for 90 days after its last disclosure are not used to predict another event. This prevents follow-up filings about an already known problem from being counted as new events. The 90-day rule is a practical assumption, not proof that the company recovered afterward.
 
@@ -194,7 +194,7 @@ $$ \ln(TA_t) $$
 
 **Expected impact.** Larger size is often expected to indicate lower risk, but this relationship is not guaranteed. Large companies can also have complex operations and substantial obligations. The feature therefore mainly controls for differences in company size.
 
-**Feature construction rules.** All components of a ratio are matched to compatible reporting dates and periods. Balance-sheet values must refer to the same date, while income and cash-flow values must cover the same annual period. The 12-month change features use the closest comparable balance approximately one year earlier. Quarterly cumulative values are not added together, and missing amounts are not treated as zero. Appendix A provides the exact accounting fields, timing rules and model variable names.
+**Feature construction rules.** All components of a ratio are matched to compatible reporting dates and periods. Balance-sheet values must refer to the same date, while income and cash-flow values must cover the same annual period. The 12-month change features use the closest comparable balance approximately one year earlier. Quarterly cumulative values are not added together, and missing amounts are not treated as zero. These rules apply to all twelve configured predictors.
 
 Interest coverage is not included because the available SEC tags could not support a sufficiently reliable and consistent calculation. Industry and reporting age are retained for auditing but are not model features.
 

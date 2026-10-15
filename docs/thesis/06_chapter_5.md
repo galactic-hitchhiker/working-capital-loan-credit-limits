@@ -182,7 +182,7 @@ The exposure cap does not bind in this example. The smoothing rule produces the 
 
 ## 5.7 Scenario Assumptions and Limitations
 
-Each decision record preserves the input values and dates, currency, event definition, prediction horizon, model version and policy settings. It also records the capacity proxy, risk multiplier, preliminary limit, assigned limit, binding constraint and reason for the change. Outstanding exposure and new available credit remain separate. Appendix B maps the supporting code and saved results.
+Each decision record preserves the input values and dates, currency, event definition, prediction horizon, model version and policy settings. It also records the capacity proxy, risk multiplier, preliminary limit, assigned limit, binding constraint and reason for the change. Outstanding exposure and new available credit remain separate. Appendix A maps the supporting code and saved results.
 
 The base replay assumes that all reported cash is eligible, no additional external debt payment is due within 60 days, outstanding facility exposure is zero and the exposure cap equals 1% of assets. These are not observed borrower facts. Rows without the required accounting inputs are excluded, and a reporting gap starts a new hypothetical assessment.
 

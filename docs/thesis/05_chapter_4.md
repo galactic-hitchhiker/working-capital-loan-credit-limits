@@ -1,6 +1,6 @@
 # 4 Risk Modeling and Validation Methodology
 
-This chapter explains how the models are trained, compared and evaluated. Every model uses the same accounting features, outcome definition and information-timing rules. Appendix B records the exact software settings and parameter grids.
+This chapter explains how the models are trained, compared and evaluated. Every model uses the same accounting features, outcome definition and information-timing rules. Appendix A records the exact software settings and parameter grids.
 
 ## 4.1 Modeling Framework
 
@@ -25,7 +25,7 @@ Both logistic models use the same preprocessing. Their coefficients describe ass
 
 ## 4.3 Model Tuning
 
-Several settings are tested for each model family. Logistic regression contributes two candidates, L2 logistic regression six, random forest eight and XGBoost eight, for 24 candidates in total. These counts include versions fitted with and without balanced class weights. Appendix B lists the exact settings.
+Several settings are tested for each model family. Logistic regression contributes two candidates, L2 logistic regression six, random forest eight and XGBoost eight, for 24 candidates in total. These counts include versions fitted with and without balanced class weights. Appendix A lists the exact settings.
 
 Candidate settings are compared using two expanding yearly tests:
 

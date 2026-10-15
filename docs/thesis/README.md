@@ -16,12 +16,9 @@ The main text and evidence tables report the primary empirical analysis, includi
 10. [Chapter 8 — Discussion, Limitations and Conclusion](09_chapter_8.md)
 11. [References](10_references.md)
 
-## Appendices
+## Appendix
 
-- [Appendix A — Variable Dictionary](11_appendix_a_variable_dictionary.md)
-- [Appendix B — Implementation and Reproducibility](12_appendix_b_reproducibility.md)
-- [Appendix C — Supplementary Model Evidence](13_appendix_c.md)
-- [Appendix D — Policy Examples and Sensitivity](14_appendix_d.md)
+- [Appendix A — Reproducibility and Code Availability](11_appendix_a_reproducibility.md)
 
 ## Supporting Material
 
