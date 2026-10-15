@@ -1,39 +1,76 @@
 # 8 Discussion, Limitations and Conclusion
 
-## 8.1 Main Findings
+## 8.1 Answers to the Research Questions
 
-The primary model experiment selects a random forest with raw probabilities. In the 2023–2025 evaluation, it reaches ROC-AUC 0.8866, average precision 0.02599 and Brier score 0.0023840. The Brier improvement over the constant benchmark is small. At the frozen threshold, precision is 5.63% and recall is 9.12%, with 18 of 176 episodes detected. The ranking signal requires further validation before use in lending decisions.
+### 8.1.1 Prediction Compared with a Constant Benchmark
 
-The policy replay translates probabilities into monthly limits. Capacity assumptions and caps have a larger aggregate effect than the risk multiplier, which reduces mean limit/assets by 1.08% relative to the capacity-only scenario. These results describe rule behavior, not improved lending outcomes.
+The first question asks whether financial information available at monthly decision dates can predict a new bankruptcy or payment-failure disclosure episode within 60 days better than a constant event-rate benchmark.
+
+In the retrospective 2023–2025 evaluation, the selected random forest provides substantially better ranking and slightly lower probability error. Its ROC-AUC is 0.8866. Its average precision is 2.60%, compared with an event share of 0.241%, giving an AP lift of 10.77. Its Brier error is 0.95% lower than the constant benchmark. The results therefore show useful ranking information, but only a small improvement in probability accuracy.
+
+Performance at one fixed alert threshold is limited. The forest produces 515 alerts: 29 are followed by a positive outcome and 486 are not. It misses 289 of the 318 positive company-months and detects at least one row for only 18 of 176 disclosure episodes. The threshold is therefore not suitable as a stand-alone decision rule.
+
+### 8.1.2 Tree Models Compared with Logistic Regression
+
+The second question asks whether random forest and XGBoost improve prediction compared with logistic regression under the same chronological design.
+
+Both tree models rank the outcome better than the logistic models in the later evaluation. However, their probability quality is less consistent. The random forest has positive Brier skill of 0.95%, while XGBoost has negative Brier skill of −5.34% despite its slightly higher ROC-AUC and average precision. The predefined selection rule chooses the random forest because it has the lower Brier error during the 2020–2022 selection period.
+
+The alternative-period sensitivity experiment selects XGBoost instead. The evidence therefore supports using tree models for ranking, but it does not establish one tree family as consistently superior across periods.
+
+### 8.1.3 Converting Risk and Financial Capacity into a Limit
+
+The third question asks how the estimated probability can be combined with financial capacity and an exposure cap to produce a monetary limit.
+
+The proposed policy first calculates a capacity proxy from revenue, positive operating cash flow, eligible cash and near-term debt payments. It then applies a probability-based reduction and an asset-based exposure cap. Monthly rules phase in supported increases, apply reductions immediately and prevent automatic reopening after a zero limit without a new assessment.
+
+This produces a transparent and reproducible amount for each eligible company-month. It does not establish that the amount is economically optimal or safe because several facility inputs are assumed rather than observed.
+
+### 8.1.4 Monthly Behavior and Alternative Policy Assumptions
+
+The fourth question asks how limits respond to new information, estimated risk and alternative policy assumptions.
+
+Among consecutive observations, 72.05% of limits remain unchanged, 18.09% increase and 9.86% decrease. The high unchanged share is expected because accounting values are often carried forward between SEC reports rather than refreshed every month. The exposure cap determines the preliminary limit in 53.42% of observations.
+
+Removing the probability-based risk adjustment increases mean limit/assets from 0.6678% to 0.6751%, a relative increase of 1.08%. Assumptions about eligible cash, near-term debt payments and the exposure cap have much larger effects. The policy results are therefore driven more strongly by financial-capacity and exposure assumptions than by the model probability at the aggregate level. Individual high-risk companies can still receive a larger probability-based reduction.
 
 ## 8.2 Contribution
 
-The research links dated SEC records, a 60-day disclosure-episode label, chronological model development and an auditable credit rule. It evaluates ranking, probability error, threshold detection and monetary outputs separately.
+The study combines SEC Company Facts, Financial Statement and Notes facts, and submissions in one accounting panel. Each observation retains its reporting period, filing date, availability date and source, allowing the information available at a monthly decision date to be reconstructed.
 
-Company Facts and Financial Statement and Notes facts form a single accounting panel. Filing-date availability, consistent reporting periods and recorded source provenance make the financial inputs traceable at each decision date.
+The modeling design evaluates ranking, probability error and fixed-threshold alerts separately. This distinction is important because a model can rank companies well while producing probabilities that are unsuitable for direct use in a monetary formula.
+
+The policy layer is also separate from the prediction model. It converts the estimated probability and financial inputs into a limit through explicit formulas and monthly rules. Observed accounting data, model estimates and assumed facility inputs remain distinguishable. The supporting code and saved evidence make the process auditable and reproducible.
 
 ## 8.3 Limitations
 
-The target is a bankruptcy or reviewed payment-failure disclosure episode. Filing dates and the 90-day episode gap do not establish the precise onset or cure of contractual default. Neither disclosure type verifies default on the proposed facility. Item 2.04 classification uses automated reviews; no independent human validation sample is documented in the saved run.
+The outcome is a bankruptcy or reviewed payment-failure disclosure episode, not verified default on the hypothetical facility. Filing dates do not necessarily identify when financial distress or missed payment began. The 90-day episode gap is an operational grouping rule and does not verify recovery. Item 2.04 classification uses automated reviews, and the saved experiment does not contain an independent human-validation sample.
 
-The rare outcome, missing accounting values, reporting noise and sample exclusions limit generalization. Company-cluster bootstrap intervals account for dependence within companies but omit common calendar shocks and uncertainty from model and target selection.
+The outcome is rare, and accounting data contain missing values, inconsistent reporting and measurement noise. Although decisions are monthly, accounting inputs are normally quarterly or annual and can remain unchanged between filings. The policy replay also excludes 41,841 of 141,460 candidate company-months because required financial inputs are missing or invalid.
 
-Although the final run excludes 2023–2025 from model development, earlier project versions examined those years before the broader target was specified. The evaluation is retrospective rather than untouched external validation.
+The population consists of SEC reporting companies and includes very large public businesses. It may not represent smaller private working-capital borrowers. Companies can appear in several chronological stages, so the evaluation reflects continued monitoring rather than performance on a completely separate borrower population.
 
-The policy assumes initial limits, cash eligibility, additional debt and facility exposure. Actual utilization, repayments, contractual defaults, recoveries, losses, pricing and customer outcomes are unavailable. The simulation cannot demonstrate higher profit or lower realized credit loss.
+The final experiment does not use 2023–2025 outcomes for fitting, tuning, calibration or selection. However, those years were examined during earlier development before the broader outcome was specified. The evaluation is retrospective rather than untouched external validation. The different model selected in the alternative-period experiment also shows that model choice is sensitive to the chronological periods used.
+
+Company-cluster bootstrap intervals preserve dependence within each company but do not capture common economic shocks, model-selection uncertainty, changes in sample construction or errors in the disclosure labels. The small Brier improvement should therefore not be interpreted as precise validation of the probability scale.
+
+The policy assumes that all reported cash is eligible, no additional external debt payment is due within 60 days, outstanding facility exposure is zero and the maximum exposure is 1% of assets. Actual commitments, utilization, repayments, contractual defaults, recoveries, losses, pricing, profitability and customer effects are unavailable. The replay cannot demonstrate that the calculated limits reduce losses or improve profit.
 
 ## 8.4 Further Work
 
-A stronger study should independently validate a sample of automated disclosure reviews, resolve ambiguous filings and improve accounting reconciliation. This would improve confidence in both the outcome labels and the financial predictors.
+Future work should prioritize four improvements:
 
-The predictor set could be extended with macroeconomic indicators such as interest rates, inflation, unemployment, industrial production growth and credit spreads. These variables would represent the economic conditions shared by companies at each monthly decision date. Their interactions with company characteristics could also be examined, for example whether interest-rate changes are more informative for highly indebted firms. Each value must be aligned with its publication date and the version available at that time, since subsequently revised data would introduce future information. Added predictive value should be assessed against the accounting-only model using the same chronological evaluation periods.
+1. **Validate the disclosure labels.** An independent human-reviewed sample should measure the accuracy of the automated Item 2.04 classifications and resolve ambiguous filings.
+2. **Use prospective or independent evaluation.** The target, predictors, model settings and selection rules should be fixed before evaluation on a future period or an independent lender portfolio.
+3. **Add borrower and facility data.** Unrestricted cash, debt-payment schedules, current utilization, repayments, arrears, contractual defaults, recoveries, losses, pricing and profitability would allow the policy to be tested against actual lending outcomes.
+4. **Use more timely predictors.** Monthly management accounts, bank transactions and macroeconomic indicators could provide fresher information. Every value should retain its measurement period, publication date and availability date to prevent future information from entering an earlier decision.
 
-A further priority is a richer monthly dataset. The current panel has monthly decision dates, but its accounting inputs can remain unchanged between filings and its flow measures use the last reported annual period. Where access permits, future work could combine monthly management accounts and bank transactions with sales, operating cash flow, receivables and payables, unrestricted cash, debt-payment schedules and facility utilization. Dated payment records could establish when arrears begin, whether obligations are repaid and when a borrower recovers. Such information would support more timely predictors, clearer episode boundaries and better measurement of the resources available for repayment. Each company-month should retain the source, measurement period and availability date of every input, with explicit treatment of missing or delayed reports.
-
-Direct facility data would also allow evaluation of payment risk, limit changes, losses and profitability under realistic operational constraints. The expanded target definition, predictor set and selection rules should be fixed before evaluation on a future period or an independent lender portfolio. Probability calibration should then be monitored through a predefined process.
+These additions would support a facility-default target, more realistic capacity inputs and direct evaluation of whether limit changes improve lending outcomes. Probability calibration should then be monitored through a predefined process.
 
 ## 8.5 Conclusion
 
-Public accounting and filing data provide a ranking signal for near-term bankruptcy or payment-failure disclosures. The analysis uses one panel combining Company Facts and Financial Statement and Notes facts. Threshold detection is limited, and the model does not estimate verified facility-default probability.
+Public SEC accounting and filing data contain useful information for ranking near-term bankruptcy or payment-failure disclosure risk. The selected model ranks the rare outcome substantially better than a constant benchmark, but its improvement in probability error is small and its fixed alert threshold misses most disclosure episodes. The model does not estimate verified default on a lending facility.
 
-The policy layer provides transparent, reproducible limit calculations and identifies influential assumptions. Its practical value remains to be tested with facility outcomes and independent validation.
+The policy demonstrates how dated financial information and a disclosure probability can be converted into transparent monthly limits. The calculations are reproducible, but their results depend strongly on unobserved assumptions about eligible cash, debt payments and exposure caps. They are not shown to be optimal, safe or profitable.
+
+The thesis therefore provides a research framework rather than a validated lending system. Its practical value can be established only with independently validated outcomes, actual facility data and prospective evaluation.

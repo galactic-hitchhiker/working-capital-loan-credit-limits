@@ -302,7 +302,7 @@ def policy_report(policy, output):
         dates = np.array([np.datetime64(r["decision_date"]) for r in company_rows])
         for key, label in [
             ("assigned_limit", base_label),
-            ("capacity_only_limit", "Capacity only"),
+            ("capacity_only_limit", "No probability-based risk adjustment"),
             (
                 f"exploratory_{comparison_model}_limit",
                 f"{comparison_model.replace('_', ' ').title()} comparison",
@@ -367,15 +367,27 @@ def policy_report(policy, output):
             f"exploratory_{comparison_model}",
         }
     ]
-    fig, ax = plt.subplots(figsize=(9, 5), constrained_layout=True)
+    labels = {
+        "base": "Reference policy",
+        "capacity_only": "No probability-based risk adjustment",
+        "cash_eligible_half": "50% of reported cash eligible",
+        "cash_eligible_zero": "No reported cash eligible",
+        "additional_debt_assets_0.005": "60-day debt payment: 0.5% of assets",
+        "cap_assets_0.005": "Exposure cap: 0.5% of assets",
+        "cap_assets_0.02": "Exposure cap: 2% of assets",
+        f"exploratory_{comparison_model}": (
+            f"{comparison_model.replace('_', ' ').title()} probabilities"
+        ),
+    }
+    fig, ax = plt.subplots(figsize=(10, 5.5), constrained_layout=True)
     ax.barh(
-        [r["scenario"].replace("_", " ") for r in selected],
+        [labels[r["scenario"]] for r in selected],
         [100 * float(r["mean_limit_to_assets"]) for r in selected],
         color="#346699",
     )
     ax.set(
         xlabel="Mean assigned limit / reported total assets (%)",
-        title="Policy sensitivity on the same real financial histories",
+        title="Average assigned limit under alternative policy assumptions",
     )
     save(fig, output, "policy_sensitivity")
     write_json(
