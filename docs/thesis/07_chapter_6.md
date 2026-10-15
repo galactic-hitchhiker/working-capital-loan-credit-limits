@@ -65,7 +65,13 @@ The forest's annual ROC-AUC is 0.8715 in 2023, 0.8777 in 2024 and 0.9329 in 2025
 
 *Figure 6.2. Precision-recall and probability diagnostics for 2023–2025. Source: primary model experiment predictions and model report.*
 
-## 6.5 Interpretation
+## 6.5 Alternative-Period Sensitivity
+
+The primary model experiment uses 2020–2022 for model selection and chooses a random forest. An alternative-period sensitivity experiment uses 2023–2024 for selection and chooses XGBoost. It also changes the training and tuning periods and excludes 2020–2022 decisions, so the difference cannot be attributed to one cause.
+
+The primary selection period overlaps the COVID-19 pandemic, which may have changed financial conditions and disclosure patterns. However, the alternative experiment does not isolate a pandemic effect because several time boundaries change together. It was conducted after the primary results were examined and is therefore a sensitivity check, not an independent validation or a replacement for the primary design.
+
+## 6.6 Interpretation
 
 Permutation importance for the selected forest is highest for log assets, followed by working capital to assets, asset growth and liabilities to assets. It measures model reliance, not causation. The low precision and recall at one threshold limit its use as a stand-alone alert.
 
