@@ -132,3 +132,13 @@ Run the test suite with:
 ```sh
 .venv/bin/python -m mcf.workflows.launcher -m unittest discover -s tests -v
 ```
+
+## License
+
+This repository uses split licensing. The software and code examples are
+licensed under the [MIT License](LICENSE). The original thesis, prose
+documentation, and original figures and tables are licensed under
+[Creative Commons Attribution 4.0 International](LICENSE-THESIS.md).
+
+Third-party material, source data, SEC filings, trademarks, and dependencies
+remain subject to their respective terms and legal status.
