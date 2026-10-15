@@ -2,6 +2,18 @@
 
 This repository contains the thesis, SEC data pipeline, models, and credit-limit simulation for **Dynamic Determination of Short-Term Corporate Credit Limits Using Machine Learning**. See the [documentation index](docs/README.md), [thesis manuscript](docs/thesis/README.md), and [reproduction workflow](docs/guides/workflow.md).
 
+## Setup
+
+Python 3.13 is the recorded reproduction environment. Create a virtual environment and install the fully pinned dependencies:
+
+```sh
+python3.13 -m venv .venv
+.venv/bin/python -m pip install --upgrade pip
+.venv/bin/python -m pip install -r requirements-lock.txt
+```
+
+Use `requirements.txt` instead when only the direct project dependencies need to be pinned. Run all commands below from the repository root; the source tree does not require a separate package-install step.
+
 ## Current study
 
 The default target is a **bankruptcy/receivership or payment-failure disclosure within 60 days**. Item 1.03 filings qualify automatically; Item 2.04 filings require reviewed payment-failure evidence. The outcome is a disclosure proxy, not a verified contractual payment default. See the [target rules](docs/guides/bankruptcy_payment_failure_workflow.md).
@@ -113,7 +125,9 @@ The illustrative policy simulation had a median limit of **USD 3.79 million**. I
 | `docs/guides/`, `docs/experiments/` | Technical guides and supporting experiment notes |
 | `results/` | Generated and archived outputs |
 
-Run the code checks with:
+## Verify
+
+Run the test suite with:
 
 ```sh
 .venv/bin/python -m mcf.workflows.launcher -m unittest discover -s tests -v
