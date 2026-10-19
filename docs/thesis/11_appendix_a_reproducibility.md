@@ -22,7 +22,7 @@ All model families use median imputation fitted only on the relevant training da
 | Model family | Candidate settings |
 |---|---|
 | Logistic regression | No penalty; LBFGS; 5,000 maximum iterations |
-| L2 logistic regression | $C=0.1$, $1$ or $10$ |
+| L2 logistic regression | $$C=0.1$$, $$1$$ or $$10$$ |
 | Random forest | 300 trees; depth 3 or unrestricted; minimum leaf size 5 or 20 |
 | XGBoost | 200 trees; depth 2 or 4; learning rate 0.05 or 0.1 |
 

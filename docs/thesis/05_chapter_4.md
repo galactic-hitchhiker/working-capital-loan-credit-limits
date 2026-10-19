@@ -64,7 +64,7 @@ The disclosure outcome is rare. Without adjustment, a model can focus mainly on 
 
 $$ w_c=\frac{N}{2N_c}, $$
 
-where $N$ is the number of fitting observations, $N_c$ is the number in class $c$, and $w_c$ is the weight for that class. The weights are calculated separately in each fitting sample. Calibration and evaluation keep the observed event distribution.
+where $$N$$ is the number of fitting observations, $$N_c$$ is the number in class $$c$$, and $$w_c$$ is the weight for that class. The weights are calculated separately in each fitting sample. Calibration and evaluation keep the observed event distribution.
 
 Weighting may improve attention to rare events, but weighted raw probabilities may not match observed event rates. Weighting is therefore treated as a tuning choice, and both raw and corrected probabilities are evaluated.
 

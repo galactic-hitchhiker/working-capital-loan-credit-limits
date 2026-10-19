@@ -96,7 +96,7 @@ The predictive experiment uses twelve accounting features. Together they describ
 
 The expected effects described below are starting assumptions, not guaranteed rules or causal claims. For example, a high-liability company may still be healthy, and rapid growth may be either a sign of success or excessive expansion. The models use the historical data to determine whether each feature is useful and how it interacts with the others.
 
-In the formulas, $CA$ means current assets, $CL$ current liabilities, $TA$ total assets, $L$ total liabilities, $Cash$ cash and cash equivalents, $NI$ net income and $OCF$ operating cash flow. The latest value known at monthly decision date $t$ is used. The subscript $t-12$ refers to a comparable balance-sheet date about one year earlier, while $a$ refers to the latest complete annual period. Average assets and liabilities use the values at the beginning and end of that annual period.
+In the formulas, $$CA$$ means current assets, $$CL$$ current liabilities, $$TA$$ total assets, $$L$$ total liabilities, $$Cash$$ cash and cash equivalents, $$NI$$ net income and $$OCF$$ operating cash flow. The latest value known at monthly decision date $$t$$ is used. The subscript $$t-12$$ refers to a comparable balance-sheet date about one year earlier, while $$a$$ refers to the latest complete annual period. Average assets and liabilities use the values at the beginning and end of that annual period.
 
 ### 3.4.1 Current Ratio
 

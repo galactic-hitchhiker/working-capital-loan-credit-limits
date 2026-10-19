@@ -35,7 +35,7 @@ All models use the twelve predictors defined in Chapter 3 and the chronological 
 | Model family | Selected setting |
 |---|---|
 | Logistic regression | Balanced class weights |
-| L2 logistic regression | Balanced class weights and $C=10$ |
+| L2 logistic regression | Balanced class weights and $$C=10$$ |
 | Random forest | Unweighted, 300 trees, unrestricted depth and minimum leaf size 20 |
 | XGBoost | Unweighted, 200 trees, depth 4 and learning rate 0.05 |
 

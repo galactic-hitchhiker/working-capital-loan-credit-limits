@@ -35,12 +35,12 @@ The historical replay combines reported SEC values, model outputs and assumption
 | Maximum exposure | 1% of reported assets in the base scenario | Scenario assumption |
 | Outstanding facility exposure | Zero in the base scenario | Scenario assumption |
 
-For company $i$ at review date $t$, define:
+For company $$i$$ at review date $$t$$, define:
 
-- $R_{i,t}$ as annual revenue;
-- $F_{i,t}$ as annual operating cash flow for the same period;
-- $B_{i,t}$ as cash considered eligible to support repayment;
-- $D_{i,t}^{60}$ as additional external debt payments due within the next 60 days.
+- $$R_{i,t}$$ as annual revenue;
+- $$F_{i,t}$$ as annual operating cash flow for the same period;
+- $$B_{i,t}$$ as cash considered eligible to support repayment;
+- $$D_{i,t}^{60}$$ as additional external debt payments due within the next 60 days.
 
 The policy first calculates a revenue-based amount:
 
@@ -64,13 +64,13 @@ The policy uses the smaller of the two amounts. This prevents high revenue from 
 
 Annual revenue and operating cash flow are divided by six because 60 days are approximately one-sixth of a year. This simple conversion assumes that activity is evenly distributed through the year and therefore does not capture seasonality. Cash is an existing balance, so it is not divided by six. Negative operating cash flow adds nothing to the proxy, although eligible cash can still produce a positive amount.
 
-The starting values are $a=0.20$, $b=0.50$ and $c=0.10$. They are illustrative policy choices. Revenue and operating cash flow use the same annual period, and cumulative year-to-date values are not treated as separate quarters.
+The starting values are $$a=0.20$$, $$b=0.50$$ and $$c=0.10$$. They are illustrative policy choices. Revenue and operating cash flow use the same annual period, and cumulative year-to-date values are not treated as separate quarters.
 
-Eligible cash is not directly observed in the SEC data. Restricted or otherwise unavailable cash should be excluded in a real assessment, but the base replay cannot identify it and therefore assumes that all reported cash is eligible. The replay also cannot observe the exact external debt payments due within 60 days, so the base scenario assumes $D_{i,t}^{60}=0$. Alternative assumptions are tested in Chapter 7.
+Eligible cash is not directly observed in the SEC data. Restricted or otherwise unavailable cash should be excluded in a real assessment, but the base replay cannot identify it and therefore assumes that all reported cash is eligible. The replay also cannot observe the exact external debt payments due within 60 days, so the base scenario assumes $$D_{i,t}^{60}=0$$. Alternative assumptions are tested in Chapter 7.
 
 ## 5.3 Risk Adjustment
 
-Let $q_{i,t}$ be the selected model's estimated probability of a qualifying disclosure within 60 days. The proposed risk multiplier is:
+Let $$q_{i,t}$$ be the selected model's estimated probability of a qualifying disclosure within 60 days. The proposed risk multiplier is:
 
 $$
 g(q_{i,t})=\exp(-kq_{i,t}),\qquad k\geq0.
@@ -82,13 +82,13 @@ $$
 C_{i,t}^{risk}=C_{i,t}\exp(-kq_{i,t}).
 $$
 
-The multiplier is greater than zero and at most one: $0<e^{-kq}\leq1$. A larger $k$ makes the reduction stronger for the same estimated probability, while $k=0$ applies no risk reduction. The starting value $k=10$ is an illustrative assumption. At an estimated probability of 5% ($q=0.05$), the multiplier is $e^{-10\times0.05}\approx0.607$, so about 61% of the capacity proxy remains. Values of 5 and 20 are examined in the sensitivity scenarios; the study does not establish that 10 is optimal.
+The multiplier is greater than zero and at most one: $$0<e^{-kq}\leq1$$. A larger $$k$$ makes the reduction stronger for the same estimated probability, while $$k=0$$ applies no risk reduction. The starting value $$k=10$$ is an illustrative assumption. At an estimated probability of 5% ($$q=0.05$$), the multiplier is $$e^{-10\times0.05}\approx0.607$$, so about 61% of the capacity proxy remains. Values of 5 and 20 are examined in the sensitivity scenarios; the study does not establish that 10 is optimal.
 
 The estimated probability concerns the SEC disclosure outcome defined in Chapter 3. It is not a probability of default on the hypothetical facility. The exponential reduction is a proposed policy rule, not an estimate of an optimal or safe exposure.
 
 ## 5.4 Exposure Cap and Existing Exposure
 
-Let $K_{i,t}$ be the maximum exposure permitted by the research policy. The preliminary limit is:
+Let $$K_{i,t}$$ be the maximum exposure permitted by the research policy. The preliminary limit is:
 
 $$
 L_{i,t}^{*}=\min\left(K_{i,t},C_{i,t}^{risk}\right).
@@ -96,21 +96,21 @@ $$
 
 The worked example uses a cap of USD 150,000. The historical base scenario assumes a cap equal to 1% of reported assets, with 0.5% and 2% tested as alternatives. These values are scenario assumptions. The policy has no positive minimum because a minimum could exceed both the capacity proxy and the cap.
 
-Total liabilities and near-term debt payments have different roles. Liabilities to assets and its 12-month change are predictors in the risk model. Only additional external payments due within 60 days reduce the capacity proxy through $D_{i,t}^{60}$. The full liability balance is not deducted from the limit.
+Total liabilities and near-term debt payments have different roles. Liabilities to assets and its 12-month change are predictors in the risk model. Only additional external payments due within 60 days reduce the capacity proxy through $$D_{i,t}^{60}$$. The full liability balance is not deducted from the limit.
 
-Let $E_{i,t}$ be the current outstanding balance on the hypothetical facility and $L_{i,t}$ the assigned limit after the monthly rules. New available credit is:
+Let $$E_{i,t}$$ be the current outstanding balance on the hypothetical facility and $$L_{i,t}$$ the assigned limit after the monthly rules. New available credit is:
 
 $$
 A_{i,t}=\max(0,L_{i,t}-E_{i,t}).
 $$
 
-If the limit is below the outstanding balance, excess exposure is $\max(0,E_{i,t}-L_{i,t})$. Reducing the limit prevents further use under the policy. It does not remove an existing balance or show that the borrower can repay it.
+If the limit is below the outstanding balance, excess exposure is $$\max(0,E_{i,t}-L_{i,t})$$. Reducing the limit prevents further use under the policy. It does not remove an existing balance or show that the borrower can repay it.
 
 ## 5.5 Monthly Update Rules and Safeguards
 
 The policy is reviewed monthly using information available on each decision date. Accounting values usually remain unchanged between SEC reports, so a new month does not necessarily provide new financial information.
 
-For an existing positive limit, the policy uses a 2% deadband $\delta$, a 50% smoothing factor $\alpha$ and a 10% maximum monthly increase $u$. The rules are applied as follows:
+For an existing positive limit, the policy uses a 2% deadband $$\delta$$, a 50% smoothing factor $$\alpha$$ and a 10% maximum monthly increase $$u$$. The rules are applied as follows:
 
 | Situation | Policy action |
 |---|---|
@@ -167,16 +167,16 @@ The calculation is:
 
 | Step | Calculation | Result |
 |---|---|---:|
-| 1. Revenue-based amount | $0.20\times\text{USD }12{,}000{,}000/6$ | USD 400,000.00 |
-| 2. Cash-flow-and-cash amount | $0.50\times\text{USD }1{,}200{,}000/6+0.10\times\text{USD }500{,}000$ | USD 150,000.00 |
-| 3. Capacity proxy | $\min(400{,}000,150{,}000)-50{,}000$ | USD 100,000.00 |
-| 4. Risk multiplier | $e^{-10\times0.02}$ | 0.8187 |
-| 5. Risk-adjusted amount | $100{,}000\times0.8187$ | USD 81,873.08 |
-| 6. Preliminary limit | $\min(150{,}000,81{,}873.08)$ | USD 81,873.08 |
-| 7. Smoothed increase | $70{,}000+0.50\times(81{,}873.08-70{,}000)$ | USD 75,936.54 |
-| 8. Monthly increase ceiling | $1.10\times70{,}000$ | USD 77,000.00 |
+| 1. Revenue-based amount | $$0.20\times\text{USD }12{,}000{,}000/6$$ | USD 400,000.00 |
+| 2. Cash-flow-and-cash amount | $$0.50\times\text{USD }1{,}200{,}000/6+0.10\times\text{USD }500{,}000$$ | USD 150,000.00 |
+| 3. Capacity proxy | $$\min(400{,}000,150{,}000)-50{,}000$$ | USD 100,000.00 |
+| 4. Risk multiplier | $$e^{-10\times0.02}$$ | 0.8187 |
+| 5. Risk-adjusted amount | $$100{,}000\times0.8187$$ | USD 81,873.08 |
+| 6. Preliminary limit | $$\min(150{,}000,81{,}873.08)$$ | USD 81,873.08 |
+| 7. Smoothed increase | $$70{,}000+0.50\times(81{,}873.08-70{,}000)$$ | USD 75,936.54 |
+| 8. Monthly increase ceiling | $$1.10\times70{,}000$$ | USD 77,000.00 |
 | 9. Assigned limit | Smallest of steps 6–8 | USD 75,936.54 |
-| 10. New available credit | $75{,}936.54-60{,}000$ | USD 15,936.54 |
+| 10. New available credit | $$75{,}936.54-60{,}000$$ | USD 15,936.54 |
 
 The exposure cap does not bind in this example. The smoothing rule produces the smallest permitted amount and therefore determines the assigned limit. The Python implementation generates these values using full precision; the table rounds displayed amounts. The example does not represent an actual company or a fitted model result.
 

@@ -26,7 +26,7 @@ The reference, or base, scenario uses the following assumptions:
 | Additional external debt payment due within 60 days | Zero |
 | Maximum exposure | 1% of reported assets |
 | Outstanding facility exposure | Zero |
-| Risk sensitivity | $k=10$ |
+| Risk sensitivity | $$k=10$$ |
 | Increase smoothing | 50% |
 | Maximum monthly increase | 10% |
 | Increase deadband | 2% |
@@ -78,7 +78,7 @@ Each sensitivity scenario uses the same historical financial observations and ch
 | Exposure cap: 0.5% of assets | Reduces the maximum exposure from 1% to 0.5% of assets | 0.388% | 3.55% |
 | Exposure cap: 2% of assets | Raises the maximum exposure from 1% to 2% of assets | 0.954% | 3.55% |
 | 60-day debt payment: 0.5% of assets | Deducts an assumed near-term payment equal to 0.5% of assets | 0.429% | 36.48% |
-| Stronger risk reduction, $k=20$ | Doubles the sensitivity of the limit to the estimated probability | 0.659% | 3.55% |
+| Stronger risk reduction, $$k=20$$ | Doubles the sensitivity of the limit to the estimated probability | 0.659% | 3.55% |
 
 Removing the probability-based reduction raises mean limit/assets from 0.6678% to 0.6751%. The results are close but not identical. Most estimated probabilities are low, and the exposure cap already determines the preliminary limit in more than half of the observations. The risk adjustment can still produce a larger reduction for an individual company with a higher probability and a non-binding cap.
 
