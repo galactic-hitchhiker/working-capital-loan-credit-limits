@@ -92,109 +92,26 @@ These rows are excluded because their outcomes cannot be labeled reliably. Howev
 
 ## 3.4 Feature Construction
 
-The predictive experiment uses twelve accounting features. Together they describe five broad aspects of a company: short-term liquidity, reliance on liabilities, recent financial change, profitability and cash generation, and company size. These measures were selected because each can reveal a different form of financial pressure and can be constructed consistently enough from the available SEC data.
+The predictive experiment uses twelve features covering liquidity, leverage, financial change, profitability, cash generation and size. In the formulas below, $$CA$$ is current assets, $$CL$$ current liabilities, $$TA$$ total assets, $$L$$ total liabilities, $$Cash$$ cash and cash equivalents, $$NI$$ net income and $$OCF$$ operating cash flow. Values at $$t$$ are the latest known at the monthly decision date; $$t-12$$ denotes the closest comparable balance about one year earlier; and $$a$$ denotes the latest complete annual period. Average assets and liabilities use the beginning and end of that period.
 
-The expected effects described below are starting assumptions, not guaranteed rules or causal claims. For example, a high-liability company may still be healthy, and rapid growth may be either a sign of success or excessive expansion. The models use the historical data to determine whether each feature is useful and how it interacts with the others.
+| Feature | Formula | Interpretation and expected relationship with risk |
+|---|---|---|
+| Current ratio | $$CA_t/CL_t$$ | Short-term resources relative to obligations; lower values can indicate payment pressure, although inventory and receivable quality matter. |
+| Cash to assets | $$Cash_t/TA_t$$ | Immediate liquidity buffer; higher values generally suggest lower risk unless cash is restricted or operationally necessary. |
+| Liabilities to assets | $$L_t/TA_t$$ | Overall obligations and equity buffer; higher values generally suggest greater risk, subject to industry differences. |
+| Asset growth, 12 months | $$(TA_t-TA_{t-12})/TA_{t-12}$$ | Captures expansion, contraction, acquisitions or asset sales. Either rapid growth or contraction can be adverse, so no single direction is assumed. |
+| Change in liabilities to assets | $$L_t/TA_t-L_{t-12}/TA_{t-12}$$ | Measures the change in leverage; an increase generally suggests higher risk. |
+| Working capital to assets | $$(CA_t-CL_t)/TA_t$$ | Short-term surplus or shortage relative to company size; larger positive values generally suggest lower risk. |
+| Return on average assets | $$NI_a/\overline{TA}_a$$ | Accounting profitability; low or negative returns generally suggest higher risk, but profit need not imply cash generation. |
+| Operating cash flow to average assets | $$OCF_a/\overline{TA}_a$$ | Operating cash generation relative to assets; low or negative values can indicate cash pressure. |
+| Operating cash flow to average liabilities | $$OCF_a/\overline{L}_a$$ | Cash generation relative to obligations; this is not debt-service coverage because scheduled principal and interest are unavailable. |
+| Negative income | $$\mathbb{1}(NI_a<0)$$ | Captures the loss threshold separately from return on assets; a value of one generally suggests higher risk. |
+| Negative operating cash flow | $$\mathbb{1}(OCF_a<0)$$ | Identifies operations that consume cash, while allowing that one negative year may reflect temporary working-capital investment. |
+| Log assets | $$\ln(TA_t)$$ | Controls for company size on a compressed scale; larger firms may have diversification and funding advantages, but are not necessarily safer. |
 
-In the formulas, $$CA$$ means current assets, $$CL$$ current liabilities, $$TA$$ total assets, $$L$$ total liabilities, $$Cash$$ cash and cash equivalents, $$NI$$ net income and $$OCF$$ operating cash flow. The latest value known at monthly decision date $$t$$ is used. The subscript $$t-12$$ refers to a comparable balance-sheet date about one year earlier, while $$a$$ refers to the latest complete annual period. Average assets and liabilities use the values at the beginning and end of that annual period.
+These expected relationships are economic priors rather than causal claims. Models determine whether the features are useful in the study data and can capture combinations that differ from the expected direction.
 
-### 3.4.1 Current Ratio
-
-$$ \frac{CA_t}{CL_t} $$
-
-**Meaning and purpose.** The current ratio compares resources expected to become cash relatively soon with obligations due relatively soon. It is included to show whether the company appears able to cover upcoming bills using its short-term resources.
-
-**Expected impact.** A higher ratio is generally expected to indicate lower distress risk, while a low ratio can signal payment pressure. However, a high ratio is less reassuring when current assets mainly consist of slow-moving inventory or receivables that may be difficult to collect.
-
-### 3.4.2 Cash to Assets
-
-$$ \frac{Cash_t}{TA_t} $$
-
-**Meaning and purpose.** This feature shows how much of the company's asset base is held as cash or cash equivalents. Cash provides an immediate buffer when revenue falls or payments become due. The measure is stricter than the current ratio because it does not count inventory or receivables as cash.
-
-**Expected impact.** A higher cash share is generally expected to indicate lower short-term risk. The protection may be overstated when cash is restricted or needed to maintain normal operations.
-
-### 3.4.3 Liabilities to Assets
-
-$$ \frac{L_t}{TA_t} $$
-
-**Meaning and purpose.** This feature shows how much of the company's assets are financed by obligations rather than owners' equity. Liabilities include more than bank loans. The ratio measures the overall financial burden and the size of the equity buffer available to absorb losses.
-
-**Expected impact.** A higher ratio is generally expected to indicate greater distress risk because less of the asset base is supported by equity. However, normal liability levels differ between industries.
-
-### 3.4.4 Asset Growth over 12 Months
-
-$$ \frac{TA_t-TA_{t-12}}{TA_{t-12}} $$
-
-**Meaning and purpose.** This feature shows whether the company's total asset base expanded or contracted over approximately one year. It can reveal asset sales, acquisitions, restructuring or rapid expansion that would not be visible from the current asset value alone.
-
-**Expected impact.** Strong contraction may indicate distress or forced asset sales. Rapid growth may show successful expansion, but it may also increase risk when financed too aggressively. Therefore, no single direction is assumed.
-
-### 3.4.5 Change in Liabilities to Assets over 12 Months
-
-$$ \frac{L_t}{TA_t}-\frac{L_{t-12}}{TA_{t-12}} $$
-
-**Meaning and purpose.** This feature shows whether liabilities became larger or smaller relative to assets during the year. A company's current ratio may appear acceptable while its financial position is worsening quickly, so the change provides information that the current level does not.
-
-**Expected impact.** An increase is generally expected to indicate higher risk because the company is becoming more dependent on liabilities. A decrease is generally expected to indicate lower risk, although the reason for the change still matters.
-
-### 3.4.6 Working Capital to Assets
-
-$$ \frac{CA_t-CL_t}{TA_t} $$
-
-**Meaning and purpose.** Working capital is the difference between short-term resources and short-term obligations. Dividing it by total assets makes companies of different sizes easier to compare. Unlike the current ratio, this feature shows the size of the short-term surplus or shortage relative to the whole business.
-
-**Expected impact.** A larger positive value is generally expected to indicate lower risk. A negative value means that short-term obligations exceed short-term resources and may therefore indicate higher risk. The quality of inventory and receivables remains important.
-
-### 3.4.7 Return on Average Assets
-
-$$ \frac{NI_a}{\overline{TA}_a} $$
-
-**Meaning and purpose.** Return on average assets compares annual profit or loss with the average assets used during the year. It shows whether the company generates accounting profit from its asset base and allows differently sized companies to be compared.
-
-**Expected impact.** A higher positive return is generally expected to indicate lower risk. A low or negative return is expected to indicate higher risk because repeated losses weaken the company. Accounting profit does not necessarily mean that the company generated cash.
-
-### 3.4.8 Operating Cash Flow to Average Assets
-
-$$ \frac{OCF_a}{\overline{TA}_a} $$
-
-**Meaning and purpose.** This feature compares cash generated by normal business operations with the average asset base. It shows whether the business itself produces cash instead of relying only on accounting profit, borrowing or asset sales.
-
-**Expected impact.** A higher positive value is generally expected to indicate lower risk. A low or negative value may indicate that normal operations are consuming cash.
-
-### 3.4.9 Operating Cash Flow to Average Liabilities
-
-$$ \frac{OCF_a}{\overline{L}_a} $$
-
-**Meaning and purpose.** This feature compares operating cash generation with the company's average total obligations. It indicates how large the internally generated cash flow is relative to liabilities.
-
-**Expected impact.** A higher value is generally expected to indicate lower risk, while weak or negative cash flow relative to liabilities is expected to indicate higher risk. This is not a debt-service-coverage ratio because it does not compare cash with scheduled principal and interest payments.
-
-### 3.4.10 Negative Income
-
-$$ \mathbb{1}(NI_a<0) $$
-
-**Meaning and purpose.** This indicator equals one when the company reports an annual accounting loss and zero otherwise. Moving from profit to loss may be an important warning by itself, so this feature captures that threshold separately from the size of return on assets.
-
-**Expected impact.** A value of one is expected to indicate higher risk. A profit does not, however, prove that the company is financially safe.
-
-### 3.4.11 Negative Operating Cash Flow
-
-$$ \mathbb{1}(OCF_a<0) $$
-
-**Meaning and purpose.** This indicator equals one when normal operations consume cash during the annual period. Such a company must fund operations using existing cash, new financing or asset sales. The feature captures the difference between generating and consuming cash separately from the size of the cash-flow ratios.
-
-**Expected impact.** A value of one is generally expected to indicate higher risk, especially when negative operating cash flow continues over time. A single negative year may also result from temporary investment in inventory or other working capital.
-
-### 3.4.12 Company Size (Log Assets)
-
-$$ \ln(TA_t) $$
-
-**Meaning and purpose.** This feature represents company size. The logarithm compresses the very large differences between small and large companies, preventing the largest companies from dominating the scale of the variable. Size may also reflect diversification, access to financing and resources available to absorb shocks.
-
-**Expected impact.** Larger size is often expected to indicate lower risk, but this relationship is not guaranteed. Large companies can also have complex operations and substantial obligations. The feature therefore mainly controls for differences in company size.
-
-**Feature construction rules.** All components of a ratio are matched to compatible reporting dates and periods. Balance-sheet values must refer to the same date, while income and cash-flow values must cover the same annual period. The 12-month change features use the closest comparable balance approximately one year earlier. Quarterly cumulative values are not added together, and missing amounts are not treated as zero. These rules apply to all twelve configured predictors.
+All ratio components are matched to compatible reporting dates and periods. Balance-sheet values refer to the same date, annual flows cover the same period, and change features use the closest comparable balance about one year earlier. Quarterly cumulative values are not added and missing amounts are not treated as zero.
 
 Interest coverage is not included because the available SEC tags could not support a sufficiently reliable and consistent calculation. Industry and reporting age are retained for auditing but are not model features.
 

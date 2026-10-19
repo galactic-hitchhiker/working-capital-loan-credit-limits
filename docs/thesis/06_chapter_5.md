@@ -1,20 +1,12 @@
 # 5 Credit Limit Methodology
 
-The proposed policy translates company financial data and the model's estimated 60-day disclosure probability into a hypothetical credit limit. It combines a financial capacity proxy, a risk reduction, an exposure cap and monthly update rules. Chapter 7 replays this policy on historical SEC data under stated assumptions about a lending facility.
-
-The calculation has five main steps:
-
-1. Estimate a capacity proxy from revenue, operating cash flow, cash and near-term external debt payments.
-2. Reduce that amount when the model estimates higher disclosure risk.
-3. Apply a maximum exposure cap.
-4. Compare the result with the previous limit and control monthly changes.
-5. Set the limit to zero when a qualifying disclosure is already known.
+The proposed policy translates financial data and the estimated 60-day disclosure probability into a hypothetical credit limit. It combines capacity, a risk reduction, an exposure cap and monthly update rules, including an immediate zero limit for a known qualifying disclosure. Chapter 7 replays it on historical SEC data.
 
 ## 5.1 Design Principles
 
-The credit limit represents the maximum total amount that may be outstanding on the facility, including unpaid balances from earlier periods. It is not the amount of new credit available. New available credit is the assigned limit minus the amount already outstanding.
+The limit is the maximum total facility balance, including unpaid amounts from earlier periods. Available new credit equals the assigned limit less the outstanding balance.
 
-The prediction model and the limit policy have different roles. The model estimates the probability of the disclosure event defined in Chapter 3. The policy converts that probability and the financial inputs into an amount. A low estimated probability alone does not justify a large limit because the company must also have a sufficient capacity proxy under the policy.
+The model estimates the Chapter 3 disclosure probability; the policy converts it and financial inputs into an amount. Low estimated risk alone cannot justify a large limit without sufficient capacity.
 
 All inputs must be available on the review date and monetary values must use the same currency. The policy coefficients are research assumptions tested through sensitivity analysis. They are not fitted lending standards.
 
@@ -62,11 +54,11 @@ $$
 
 The policy uses the smaller of the two amounts. This prevents high revenue from supporting a large limit when cash generation is weak. Additional external payments due during the 60-day horizon then reduce the result.
 
-Annual revenue and operating cash flow are divided by six because 60 days are approximately one-sixth of a year. This simple conversion assumes that activity is evenly distributed through the year and therefore does not capture seasonality. Cash is an existing balance, so it is not divided by six. Negative operating cash flow adds nothing to the proxy, although eligible cash can still produce a positive amount.
+Revenue and operating cash flow are divided by six because 60 days are approximately one-sixth of a year, an approximation that ignores seasonality. Cash is a balance and is not divided. Negative operating cash flow contributes nothing, although eligible cash can still support capacity.
 
 The starting values are $$a=0.20$$, $$b=0.50$$ and $$c=0.10$$. They are illustrative policy choices. Revenue and operating cash flow use the same annual period, and cumulative year-to-date values are not treated as separate quarters.
 
-Eligible cash is not directly observed in the SEC data. Restricted or otherwise unavailable cash should be excluded in a real assessment, but the base replay cannot identify it and therefore assumes that all reported cash is eligible. The replay also cannot observe the exact external debt payments due within 60 days, so the base scenario assumes $$D_{i,t}^{60}=0$$. Alternative assumptions are tested in Chapter 7.
+Because eligible cash and exact external debt payments due within 60 days are unobserved, the base replay assumes all reported cash is eligible and $$D_{i,t}^{60}=0$$. Chapter 7 tests alternatives.
 
 ## 5.3 Risk Adjustment
 
@@ -82,7 +74,7 @@ $$
 C_{i,t}^{risk}=C_{i,t}\exp(-kq_{i,t}).
 $$
 
-The multiplier is greater than zero and at most one: $$0<e^{-kq}\leq1$$. A larger $$k$$ makes the reduction stronger for the same estimated probability, while $$k=0$$ applies no risk reduction. The starting value $$k=10$$ is an illustrative assumption. At an estimated probability of 5% ($$q=0.05$$), the multiplier is $$e^{-10\times0.05}\approx0.607$$, so about 61% of the capacity proxy remains. Values of 5 and 20 are examined in the sensitivity scenarios; the study does not establish that 10 is optimal.
+The multiplier satisfies $$0<e^{-kq}\leq1$$. A larger $$k$$ strengthens the reduction, while $$k=0$$ removes it. The illustrative starting value is $$k=10$$: at $$q=5\%$$, about 61% of capacity remains. Sensitivity cases use 5 and 20; no value is claimed to be optimal.
 
 The estimated probability concerns the SEC disclosure outcome defined in Chapter 3. It is not a probability of default on the hypothetical facility. The exponential reduction is a proposed policy rule, not an estimate of an optimal or safe exposure.
 
@@ -96,7 +88,7 @@ $$
 
 The worked example uses a cap of USD 150,000. The historical base scenario assumes a cap equal to 1% of reported assets, with 0.5% and 2% tested as alternatives. These values are scenario assumptions. The policy has no positive minimum because a minimum could exceed both the capacity proxy and the cap.
 
-Total liabilities and near-term debt payments have different roles. Liabilities to assets and its 12-month change are predictors in the risk model. Only additional external payments due within 60 days reduce the capacity proxy through $$D_{i,t}^{60}$$. The full liability balance is not deducted from the limit.
+Total liabilities affect model predictors, while only additional external payments due within 60 days reduce capacity through $$D_{i,t}^{60}$$. The full liability balance is not deducted.
 
 Let $$E_{i,t}$$ be the current outstanding balance on the hypothetical facility and $$L_{i,t}$$ the assigned limit after the monthly rules. New available credit is:
 
@@ -133,7 +125,7 @@ L_{i,t-1}+\alpha(L_{i,t}^{*}-L_{i,t-1}),\;
 \right\}.
 $$
 
-For example, if the previous limit is USD 100,000 and the new preliminary limit is USD 101,500, the increase is only 1.5%. Because it is within the 2% deadband, the assigned limit remains USD 100,000. The deadband avoids small changes that may reflect rounding or minor input movements.
+The deadband avoids changes caused by rounding or minor input movements.
 
 Increase controls never delay a reduction and never permit a limit above the current cap. Missing required inputs, unresolved accounting conflicts or stale information require review rather than replacement with zero. The freshness limits are 180 days from the balance-sheet period end and 540 days from the annual-flow period end.
 
@@ -182,7 +174,7 @@ The exposure cap does not bind in this example. The smoothing rule produces the 
 
 ## 5.7 Scenario Assumptions and Limitations
 
-Each decision record preserves the input values and dates, currency, event definition, prediction horizon, model version and policy settings. It also records the capacity proxy, risk multiplier, preliminary limit, assigned limit, binding constraint and reason for the change. Outstanding exposure and new available credit remain separate. Appendix A maps the supporting code and saved results.
+Each decision record preserves input values and dates, currency, event definition, horizon, model version, policy settings, intermediate amounts, binding constraint and change reason. Exposure and available credit remain separate. Appendix A maps the code and results.
 
 The base replay assumes that all reported cash is eligible, no additional external debt payment is due within 60 days, outstanding facility exposure is zero and the exposure cap equals 1% of assets. These are not observed borrower facts. Rows without the required accounting inputs are excluded, and a reporting gap starts a new hypothetical assessment.
 

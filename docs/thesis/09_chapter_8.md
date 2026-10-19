@@ -4,43 +4,35 @@
 
 ### 8.1.1 Prediction Compared with a Constant Benchmark
 
-The first question asks whether financial information available at monthly decision dates can predict a new bankruptcy or payment-failure disclosure episode within 60 days better than a constant event-rate benchmark.
-
-In the retrospective 2023–2025 evaluation, the selected random forest provides substantially better ranking and slightly lower probability error. Its ROC-AUC is 0.8866. Its average precision is 2.60%, compared with an event share of 0.241%, giving an AP lift of 10.77. Its Brier error is 0.95% lower than the constant benchmark. The results therefore show useful ranking information, but only a small improvement in probability accuracy.
+The first question is whether information available at monthly decision dates predicts a new disclosure episode within 60 days better than a constant event rate. In the retrospective 2023–2025 evaluation, the selected forest has ROC-AUC 0.8866, average precision of 2.60% versus a 0.241% event share (10.77 lift), and 0.95% less Brier error. It therefore improves ranking substantially but probability accuracy only slightly.
 
 Performance at one fixed alert threshold is limited. The forest produces 515 alerts: 29 are followed by a positive outcome and 486 are not. It misses 289 of the 318 positive company-months and detects at least one row for only 18 of 176 disclosure episodes. The threshold is therefore not suitable as a stand-alone decision rule.
 
 ### 8.1.2 Tree Models Compared with Logistic Regression
 
-The second question asks whether random forest and XGBoost improve prediction compared with logistic regression under the same chronological design.
-
-Both tree models rank the outcome better than the logistic models in the later evaluation. However, their probability quality is less consistent. The random forest has positive Brier skill of 0.95%, while XGBoost has negative Brier skill of −5.34% despite its slightly higher ROC-AUC and average precision. The predefined selection rule chooses the random forest because it has the lower Brier error during the 2020–2022 selection period.
+The second question compares tree models with logistic regression. Both trees rank better in the later evaluation, but their probability quality is inconsistent: random forest has 0.95% Brier skill, while XGBoost has −5.34% despite slightly higher ROC-AUC and average precision. The predefined rule selects the forest for its lower 2020–2022 Brier error.
 
 The alternative-period sensitivity experiment selects XGBoost instead. The evidence therefore supports using tree models for ranking, but it does not establish one tree family as consistently superior across periods.
 
 ### 8.1.3 Converting Risk and Financial Capacity into a Limit
 
-The third question asks how the estimated probability can be combined with financial capacity and an exposure cap to produce a monetary limit.
-
-The proposed policy first calculates a capacity proxy from revenue, positive operating cash flow, eligible cash and near-term debt payments. It then applies a probability-based reduction and an asset-based exposure cap. Monthly rules phase in supported increases, apply reductions immediately and prevent automatic reopening after a zero limit without a new assessment.
+The third question concerns converting risk and capacity into a limit. The policy calculates capacity from revenue, positive operating cash flow, eligible cash and near-term debt payments, then applies a probability reduction and asset cap. Monthly rules phase in increases, apply reductions immediately and prevent automatic reopening after zero.
 
 This produces a transparent and reproducible amount for each eligible company-month. It does not establish that the amount is economically optimal or safe because several facility inputs are assumed rather than observed.
 
 ### 8.1.4 Monthly Behavior and Alternative Policy Assumptions
 
-The fourth question asks how limits respond to new information, estimated risk and alternative policy assumptions.
-
-Among consecutive observations, 72.05% of limits remain unchanged, 18.09% increase and 9.86% decrease. The high unchanged share is expected because accounting values are often carried forward between SEC reports rather than refreshed every month. The exposure cap determines the preliminary limit in 53.42% of observations.
+The fourth question concerns monthly behavior and alternative assumptions. Among consecutive observations, 72.05% of limits are unchanged, 18.09% increase and 9.86% decrease; accounting values are often carried forward between filings. The cap determines 53.42% of preliminary limits.
 
 Removing the probability-based risk adjustment increases mean limit/assets from 0.6678% to 0.6751%, a relative increase of 1.08%. Assumptions about eligible cash, near-term debt payments and the exposure cap have much larger effects. The policy results are therefore driven more strongly by financial-capacity and exposure assumptions than by the model probability at the aggregate level. Individual high-risk companies can still receive a larger probability-based reduction.
 
 ## 8.2 Contribution
 
-The study combines SEC Company Facts, Financial Statement and Notes facts, and submissions in one accounting panel. Each observation retains its reporting period, filing date, availability date and source, allowing the information available at a monthly decision date to be reconstructed.
+The study combines SEC Company Facts, Financial Statement and Notes facts, and submissions in a point-in-time panel that preserves reporting periods, filing and availability dates, and sources.
 
-The modeling design evaluates ranking, probability error and fixed-threshold alerts separately. This distinction is important because a model can rank companies well while producing probabilities that are unsuitable for direct use in a monetary formula.
+The design evaluates ranking, probability error and fixed-threshold alerts separately because strong ranking does not ensure probabilities suitable for a monetary formula.
 
-The policy layer is also separate from the prediction model. It converts the estimated probability and financial inputs into a limit through explicit formulas and monthly rules. Observed accounting data, model estimates and assumed facility inputs remain distinguishable. The supporting code and saved evidence make the process auditable and reproducible.
+The separate policy layer uses explicit formulas and monthly rules while distinguishing observed data, model estimates and assumed facility inputs. Supporting code and evidence make the process reproducible.
 
 ## 8.3 Limitations
 
@@ -63,7 +55,7 @@ Future work should prioritize four improvements:
 1. **Validate the disclosure labels.** An independent human-reviewed sample should measure the accuracy of the automated Item 2.04 classifications and resolve ambiguous filings.
 2. **Use prospective or independent evaluation.** The target, predictors, model settings and selection rules should be fixed before evaluation on a future period or an independent lender portfolio.
 3. **Add borrower and facility data.** Unrestricted cash, debt-payment schedules, current utilization, repayments, arrears, contractual defaults, recoveries, losses, pricing and profitability would allow the policy to be tested against actual lending outcomes.
-4. **Include more timely firm-level and macroeconomic predictors.** Monthly management accounts and bank transactions could provide fresher company information. Macroeconomic and financial-market variables, such as interest rates, GDP growth, inflation, unemployment, credit spreads and sector-specific indicators, could capture systematic conditions affecting corporate liquidity and payment-failure risk. Every input should retain its measurement period, publication date, data vintage and availability date so that only information available on each decision date is used.
+4. **Include timelier predictors.** Management accounts, bank transactions and point-in-time macroeconomic or market variables could capture recent borrower and systematic conditions. Every input should retain its measurement period, publication date, vintage and availability date.
 
 These additions would support a facility-default target, more realistic capacity inputs and direct evaluation of whether limit changes improve lending outcomes. Probability calibration should then be monitored through a predefined process.
 

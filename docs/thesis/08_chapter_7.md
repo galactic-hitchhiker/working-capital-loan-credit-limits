@@ -4,7 +4,7 @@ The policy replay applies the Chapter 5 rules to historical SEC financial inform
 
 ## 7.1 Replay Sample and Reference Assumptions
 
-The policy replay starts with 141,460 company-months from 2023–2025. Unlike the model evaluation in Chapter 6, a policy calculation does not require a future outcome label. It requires valid financial inputs and a probability produced from information available on the decision date.
+The replay starts with 141,460 company-months from 2023–2025. Unlike model evaluation, it requires no future label, only valid financial inputs and a probability available on the decision date.
 
 | Policy-sample step | Company-months |
 |---|---:|
@@ -13,7 +13,7 @@ The policy replay starts with 141,460 company-months from 2023–2025. Unlike th
 | Invalid required financial values | −42 |
 | Included in the policy replay | 99,619 |
 
-The replay therefore includes 99,619 company-months from 3,869 companies. Approximately 29.6% of the candidate rows are excluded because the monetary calculation requires revenue, operating cash flow, cash and positive assets; these values are not replaced with zero.
+The replay includes 99,619 company-months from 3,869 companies; 29.6% of candidates lack required values, which are not replaced with zero.
 
 The included observations form 5,176 continuous company segments. A segment is a sequence of consecutive monthly observations for one company. If a month is missing, the next observation starts a new segment and is treated as a new hypothetical initial assessment. This reset is a replay convention, not evidence that a real lender would reopen a facility.
 
@@ -31,7 +31,7 @@ The reference, or base, scenario uses the following assumptions:
 | Maximum monthly increase | 10% |
 | Increase deadband | 2% |
 
-Revenue, operating cash flow, reported cash and assets come from the SEC accounting panel. Cash eligibility, near-term debt payments, the exposure cap and outstanding facility exposure are assumptions because the source data do not provide those facility-specific values. The reference scenario is a comparison point, not an optimal policy or an established lending standard.
+Revenue, operating cash flow, cash and assets are observed. Cash eligibility, near-term debt payments, the cap and facility exposure are assumptions. The reference scenario is a comparison point, not an established or optimal standard.
 
 ## 7.2 Reference-Scenario Results
 
@@ -47,13 +47,13 @@ The reference policy produces the following results:
 | Preliminary limit determined by the exposure cap | 53.42% |
 | Mean absolute monthly change / assets | 0.0290% |
 
-The mean assigned limit is much higher than the median because the sample includes very large public companies. The mean is therefore affected by a small number of large monetary limits, while the median is closer to the middle company-month. Neither amount should be interpreted as a typical limit for a smaller private borrower.
+The mean exceeds the median because a few very large public companies have large limits. Neither amount represents a typical smaller private borrower.
 
 The 0.668% result is the average of each company-month's assigned limit divided by its reported assets. It is not the total of all assigned limits divided by the total of all assets.
 
-A zero limit does not always represent a new hard stop. It can result from a zero capacity proxy, a qualifying disclosure already known, or an earlier zero that cannot reopen automatically within the same segment. The 262 hard-stop rows are monthly observations, not necessarily 262 different companies or disclosure episodes.
+A zero may reflect no capacity, a known disclosure or a prior zero that cannot reopen automatically. The 262 hard-stop rows are observations, not necessarily distinct companies or episodes.
 
-The assumed 1%-of-assets exposure cap determines the preliminary limit in 53.42% of observations. This means that the asset cap, rather than the lower risk-adjusted capacity proxy, is the immediate upper constraint in more than half of the replay rows.
+The 1%-of-assets cap determines the preliminary limit in 53.42% of observations, making it the immediate constraint in more than half of the replay.
 
 The replay contains 94,443 transitions between consecutive months within the same company segment:
 
@@ -80,9 +80,9 @@ Each sensitivity scenario uses the same historical financial observations and ch
 | 60-day debt payment: 0.5% of assets | Deducts an assumed near-term payment equal to 0.5% of assets | 0.429% | 36.48% |
 | Stronger risk reduction, $$k=20$$ | Doubles the sensitivity of the limit to the estimated probability | 0.659% | 3.55% |
 
-Removing the probability-based reduction raises mean limit/assets from 0.6678% to 0.6751%. The results are close but not identical. Most estimated probabilities are low, and the exposure cap already determines the preliminary limit in more than half of the observations. The risk adjustment can still produce a larger reduction for an individual company with a higher probability and a non-binding cap.
+Removing the probability reduction raises mean limit/assets from 0.6678% to 0.6751%. Most probabilities are low and the cap often binds, although high-risk companies with a non-binding cap can receive larger reductions.
 
-The cash and debt-payment assumptions have a stronger effect. Without eligible cash, companies with non-positive operating cash flow can have a zero capacity proxy, raising the zero-limit share to 48.30%. An assumed debt payment equal to 0.5% of assets can also exceed the capacity proxy, raising the zero-limit share to 36.48%. These results demonstrate sensitivity to unobserved facility assumptions; they do not show that companies actually have no eligible cash or owe that amount within 60 days.
+Cash and debt assumptions have larger effects. With no eligible cash, the zero-limit share rises to 48.30%; deducting debt payments equal to 0.5% of assets raises it to 36.48%. These scenarios show sensitivity to unobserved inputs, not that companies actually face those conditions.
 
 Changing the exposure cap also has a large effect. A lower cap directly limits otherwise supported amounts, while a 2%-of-assets cap allows more observations to be determined by the capacity proxy. Capacity assumptions and caps therefore have a larger effect on the aggregate results than the model-based risk adjustment in these scenarios.
 

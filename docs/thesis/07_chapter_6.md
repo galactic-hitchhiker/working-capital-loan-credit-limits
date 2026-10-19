@@ -18,9 +18,9 @@ The five modeling stages contain 531,344 observations after chronological purgin
 
 *Source: primary model experiment stage audit. Counts refer to observations retained after chronological purging.*
 
-The stage counts are lower than the complete panel because 33,878 observations are removed at the boundaries between stages. For these observations, the complete 60-day outcome was not yet available when the next stage began. Removing them prevents future outcome information from entering an earlier modeling stage.
+The stages exclude 33,878 boundary observations whose complete 60-day outcome was unavailable when the next stage began, preventing future labels from entering earlier stages.
 
-A **positive row** is a company-month followed by a new qualifying disclosure episode within 60 days. An **episode** is the distinct disclosure event represented by one or more positive rows. For example, a disclosure on 15 March can make both the 1 February and 1 March observations positive. This produces two positive rows but only one episode. In the later evaluation, 318 positive rows represent 176 episodes in 165 companies.
+A **positive row** is a company-month followed by an episode within 60 days; one episode can produce several positive monthly rows. The later evaluation's 318 positive rows represent 176 episodes in 165 companies.
 
 The reported experiment does not use 2023–2025 outcomes for fitting, tuning, calibration or model selection. However, these years were examined during earlier project development, and the broader outcome definition was specified after that work. The later evaluation is therefore retrospective rather than an untouched external validation.
 
@@ -39,7 +39,7 @@ All models use the twelve predictors defined in Chapter 3 and the chronological 
 | Random forest | Unweighted, 300 trees, unrestricted depth and minimum leaf size 20 |
 | XGBoost | Unweighted, 200 trees, depth 4 and learning rate 0.05 |
 
-Balanced class weights give the rare positive rows more influence during fitting. They do not create equal numbers of positive and negative observations. Tuning selects weighting for the logistic models but not for the tree models. Appendix A records the complete parameter grid and software settings.
+Balanced weights give rare positives more influence without changing their number. Tuning selects them for the logistic but not the tree models. Appendix A records the full grid and software settings.
 
 ## 6.3 Probability Mapping and Model Selection
 
@@ -56,7 +56,7 @@ The constant benchmark has a selection-period event share of 0.1684% and a Brier
 
 Both logistic models rank positive rows above the event-share baseline, but their corrected probabilities have more Brier error than the constant benchmark. They therefore fail the requirement for improvement in both ranking and probability error. Both tree models pass. The random forest has the lower Brier score and is selected according to the rule in Section 4.9, even though XGBoost has the higher ROC-AUC.
 
-The random forest's alert threshold is selected on the 2020–2022 period by maximizing F1. The resulting threshold is 0.057971, or approximately 5.8%. A predicted probability at or above this value produces an alert: for example, 6% produces an alert while 5% does not. The threshold is then applied unchanged to 2023–2025. It is used to evaluate alerts, not to approve credit. The credit-limit policy uses the complete continuous probability.
+Maximizing F1 in 2020–2022 sets the forest's alert threshold at 0.057971 (about 5.8%). It is applied unchanged in 2023–2025 only to evaluate alerts; the credit policy uses the continuous probability.
 
 ## 6.4 Later Evaluation
 
@@ -80,11 +80,11 @@ The next table reports performance at each model's threshold fixed during the 20
 | **Random forest, raw** | **5.63%** | **9.12%** |
 | XGBoost, raw | 6.21% | 6.92% |
 
-The selected forest's average precision is 10.77 times the event share. Its Brier error is about 0.95% lower than the constant benchmark, which is a positive but small improvement. XGBoost ranks slightly better, but its probability error is 5.34% higher than the benchmark. This difference shows why ranking quality and probability accuracy must be considered separately.
+The forest's average precision is 10.77 times the event share, while its Brier error is only 0.95% below the benchmark. XGBoost ranks slightly better but has 5.34% more probability error, illustrating the distinction between ranking and probability accuracy.
 
 Across the later period, the forest's mean predicted probability is 0.284%, compared with an observed positive-row share of 0.241%. The overall Brier improvement is small, so the probability scale should not be treated as precisely validated.
 
-At the frozen threshold, the forest creates 515 alerts. Of these, 29 are followed by a positive outcome and 486 are not. It also misses 289 of the 318 positive rows. In simple terms, approximately 6 of every 100 alerts are followed by a qualifying disclosure, while the model detects approximately 9 of every 100 positive company-months.
+At the frozen threshold, 29 of 515 alerts are followed by a positive outcome; 486 are not, and 289 of 318 positive rows are missed. Thus roughly 6 in 100 alerts precede a disclosure and 9 in 100 positive rows are detected.
 
 At the episode level, the forest produces at least one alert for 18 of 176 later-period disclosure episodes, corresponding to episode-level recall of 10.23%. Row-level and episode-level recall differ because several monthly observations can precede one episode.
 
@@ -103,7 +103,7 @@ The selected model changes when different chronological periods are used:
 | Primary model experiment | 2017–2018 | 2020–2022 | Random forest |
 | Alternative-period sensitivity experiment | 2018 | 2023–2024 | XGBoost |
 
-The alternative experiment also changes the training period and excludes 2020–2022 observations. Because several parts of the design change together, the different model choice cannot be attributed to one specific cause. The result instead shows that model selection is sensitive to the time periods used.
+The alternative also changes training dates and excludes 2020–2022, so no single cause explains the different choice. It shows that selection is period-sensitive.
 
 The primary selection period overlaps the COVID-19 pandemic, which may have affected company finances and disclosure patterns. However, the alternative experiment does not isolate a pandemic effect. It was also conducted after the primary results were examined. It is therefore a sensitivity check, not independent validation or a replacement for the primary design.
 

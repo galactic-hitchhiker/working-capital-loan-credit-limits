@@ -4,9 +4,7 @@ This chapter explains how the models are trained, compared and evaluated. Every 
 
 ## 4.1 Modeling Framework
 
-Each observation represents one company at one monthly decision date. The models use the twelve accounting features and the 60-day SEC disclosure outcome defined in Chapter 3. Company names, identifiers, industry codes, future information and credit-policy results are not used as predictors.
-
-Some accounting features are missing for some observations. During model fitting, each missing value is replaced with the median from the relevant fitting data. A separate indicator tells the model that the original value was missing. Logistic models also place the inputs on a comparable scale. The fitted preprocessing rules are then applied unchanged to later observations, preventing later data from influencing model fitting.
+Each observation represents a company at a monthly decision date. Models use the twelve accounting features and 60-day outcome defined in Chapter 3, but not company names, identifiers, industry codes, future information or policy results. Missing features are replaced with fitting-sample medians and accompanied by missingness indicators; logistic inputs are also scaled. These fitted transformations are applied unchanged to later observations.
 
 The study does not create synthetic companies or outcomes and does not duplicate rare events through oversampling. Unusually large ratios are retained rather than capped. Missing inputs needed for the monetary credit-limit calculation are handled separately and are never filled with model medians.
 
@@ -14,14 +12,9 @@ The study does not create synthetic companies or outcomes and does not duplicate
 
 The constant benchmark assigns every observation the event rate from the original training period. It does not distinguish between companies. A useful model should provide more information than this simple prediction.
 
-Four model families are compared:
+Four model families are compared: logistic regression, L2-regularized logistic regression, random forest and XGBoost. The first two provide linear benchmarks; the tree ensembles can capture nonlinearities and interactions.
 
-- logistic regression provides a simple linear benchmark;
-- L2 logistic regression limits very large coefficients and can be more stable when features overlap;
-- random forest combines many decision trees and can capture nonlinear relationships and interactions; and
-- XGBoost builds trees in sequence, with each tree trying to improve earlier errors.
-
-Both logistic models use the same preprocessing. Their coefficients describe associations after scaling and before probability calibration; they do not show causal effects or direct percentage-point changes in the final probability. A convergence warning stops the fitting process rather than allowing an unstable result.
+Both logistic models use the same preprocessing. Their scaled, pre-calibration coefficients describe associations, not causal effects or direct percentage-point probability changes. A convergence warning stops fitting.
 
 ## 4.3 Model Tuning
 
@@ -34,7 +27,7 @@ Candidate settings are compared using two expanding yearly tests:
 
 Only labels available before the beginning of a yearly evaluation are used for fitting. Missing-value replacement and scaling are also recalculated inside each fold.
 
-Two measures rank the candidates. **Average-precision lift** compares average precision with that year's event rate; a value above one means the model ranks rare events better than the event-rate baseline. **Brier skill** compares probability error with assigning every observation the event rate from the corresponding fitting data. Positive Brier skill means that the model has lower probability error than this constant prediction.
+Candidates are ranked by **average-precision lift** over the year's event rate and **Brier skill** relative to the corresponding fitting-sample event rate. Values above one and zero, respectively, indicate improvement over these baselines.
 
 The candidate with the highest mean annual average-precision lift wins within its family. Mean annual Brier skill and a fixed candidate order break ties. The winning setting is then fitted again using the combined training and tuning observations.
 
@@ -52,7 +45,7 @@ A random split would mix observations from different dates and could allow futur
 
 These are nominal date ranges. An observation is removed from an earlier stage when its complete 60-day label was not available before the next stage began. The data cutoff is 7 September 2026. Chapter 3 explains when positive and negative labels become available, and Chapter 6 reports the retained observations.
 
-The same company can appear in several stages because the study evaluates continued monitoring of the observed issuer population. It does not test performance on a completely separate group of borrowers. A company can also contribute many monthly observations, and consecutive months may use the same carried-forward financial statements. Row-level measures therefore give more influence to companies with more eligible months. The company-level bootstrap in Section 4.6 keeps each company's observations together when estimating uncertainty.
+The same company can appear in several stages because the study evaluates continued monitoring, not a separate borrower population. Companies can contribute repeated months based on carried-forward statements, so row-level measures give more influence to issuers with more eligible months. The bootstrap in Section 4.6 keeps each company's observations together.
 
 One disclosure episode can produce positive labels for more than one monthly decision. Results therefore report positive rows, distinct episodes and event companies separately.
 
@@ -60,13 +53,13 @@ The 2023–2025 period is excluded from the reported model's fitting, tuning, ca
 
 ## 4.5 Rare Outcomes and the Alert Threshold
 
-The disclosure outcome is rare. Without adjustment, a model can focus mainly on the much larger negative class. Balanced fitting weights give the positive and negative classes equal total influence:
+Because the outcome is rare, balanced fitting weights can give the two classes equal total influence:
 
 $$ w_c=\frac{N}{2N_c}, $$
 
 where $$N$$ is the number of fitting observations, $$N_c$$ is the number in class $$c$$, and $$w_c$$ is the weight for that class. The weights are calculated separately in each fitting sample. Calibration and evaluation keep the observed event distribution.
 
-Weighting may improve attention to rare events, but weighted raw probabilities may not match observed event rates. Weighting is therefore treated as a tuning choice, and both raw and corrected probabilities are evaluated.
+Weighting is a tuning choice because it may improve event detection while distorting raw probabilities. Raw and corrected probabilities are both evaluated.
 
 A threshold converts a probability into a yes-or-no alert. For each model family, the threshold is chosen on the 2020–2022 selection period by maximizing F1. Ties favor higher recall and then the higher threshold. The chosen value is fixed and applied unchanged to 2023–2025, preventing later outcomes from influencing the alert rule.
 
@@ -76,15 +69,13 @@ The threshold is used only to report classification performance. It is not based
 
 The study evaluates both ranking and probability accuracy.
 
-**ROC-AUC** measures ranking. It can be interpreted as how often a randomly selected event observation receives a higher score than a randomly selected non-event observation. A value of 0.5 indicates no useful ranking, while 1 represents perfect ranking.
-
-**Average precision** focuses on the observations receiving the highest risk scores. It summarizes precision and recall across possible thresholds and is especially useful when events are rare. A model with no useful ranking has average precision close to the event share, so results are compared with that baseline.
+**ROC-AUC** measures how often an event observation ranks above a non-event observation; 0.5 indicates no useful ranking and 1 perfect ranking. **Average precision** summarizes precision and recall across thresholds and is compared with the event share, its no-skill baseline.
 
 **Brier score** measures the squared difference between predicted probabilities and observed outcomes:
 
 $$ BS=\frac{1}{N}\sum_{n=1}^{N}(q_n-y_n)^2. $$
 
-Lower values are better. Because the outcome is rare, predicting a low probability for every observation can still produce a small score. The model's Brier score is therefore compared with the constant training-rate benchmark.
+Lower values are better. Because a constant low probability can score well on a rare outcome, models are compared with the training-rate benchmark.
 
 At the frozen alert threshold, **precision** is the share of alerts followed by an event, while **recall** is the share of actual positive observations detected by the alerts:
 
@@ -102,13 +93,13 @@ These intervals preserve dependence within a company but do not capture shared e
 
 ## 4.7 Probability Calibration
 
-Calibration asks whether predicted probabilities match observed event rates. For example, if a model assigns many observations a probability near 5%, approximately 5% of them should experience the outcome for that probability to be well calibrated.
+Calibration asks whether predicted probabilities match observed event rates.
 
 Each family first produces a **raw probability**. The fitted model is then frozen, and a sigmoid correction is learned from the 2019 calibration observations. This correction changes the probability scale but does not refit the underlying logistic coefficients or decision trees.
 
 The raw and corrected probabilities are compared on the 2020–2022 selection period. The version with the lower Brier score is retained; an exact tie favors the raw probability. This allows calibration to help when needed without forcing an unnecessary adjustment.
 
-Calibration can weaken when event rates or company relationships change. The later evaluation therefore compares predicted probabilities with observed event rates. The standard output uses ten equal-width probability groups, while the empirical report also uses probability quantiles because rare-event predictions often occupy a narrow range. These later diagnostics do not change the model.
+Later evaluation compares predicted probabilities with observed rates using ten equal-width groups and probability quantiles, which help when rare-event estimates occupy a narrow range. These diagnostics do not change the model.
 
 ## 4.8 Model Interpretation and Error Analysis
 
