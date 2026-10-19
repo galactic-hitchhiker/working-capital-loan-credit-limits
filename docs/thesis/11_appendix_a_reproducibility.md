@@ -13,6 +13,8 @@ The accompanying project repository contains the source code, configuration file
 | Thesis evidence copies | `docs/thesis/tables/` and `docs/thesis/figures/` |
 | Reproduction instructions | `docs/guides/workflow.md` |
 
+*Table 24. Primary experiment evidence and locations.*
+
 The SEC source snapshot has an observation cutoff of 7 September 2026. Each completed stage records a manifest and hashes of its inputs. Output directories must be empty before a run, preventing an existing result from being overwritten silently.
 
 ## A.2 Model and Validation Settings
@@ -25,6 +27,8 @@ All model families use median imputation fitted only on the relevant training da
 | L2 logistic regression | $$C=0.1$$, $$1$$ or $$10$$ |
 | Random forest | 300 trees; depth 3 or unrestricted; minimum leaf size 5 or 20 |
 | XGBoost | 200 trees; depth 2 or 4; learning rate 0.05 or 0.1 |
+
+*Table 25. Candidate settings by model family.*
 
 Each setting is fitted with and without balanced class weights, producing 24 candidates. Tuning uses two expanding temporal folds: fit through 2016 and validate on 2017, then fit through 2017 and validate on 2018. Candidates are ranked within each family by mean annual average-precision lift, followed by mean annual Brier skill and a fixed candidate order.
 
@@ -43,6 +47,8 @@ The random seed is 42. Tree fitting uses up to four CPU threads, and the company
 | Tables, figures and evidence export | `mcf/reporting/` |
 | Automated tests | `tests/` |
 
+*Table 26. Implementation components and main code locations.*
+
 ## A.4 Software Environment
 
 | Software | Version |
@@ -54,6 +60,8 @@ The random seed is 42. Tree fitting uses up to four CPU threads, and the company
 | XGBoost | 3.0.2 |
 | Matplotlib | 3.10.3 |
 | joblib | 1.5.1 |
+
+*Table 27. Software environment used for the primary experiment.*
 
 The full dependency set is recorded in `requirements-lock.txt`. Sigmoid correction uses scikit-learn's `CalibratedClassifierCV` with `FrozenEstimator`.
 

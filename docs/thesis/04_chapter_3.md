@@ -18,6 +18,8 @@ The inventory for the primary model experiment contains 20,443 company-facts fil
 | Candidate companies after screening | 10,879 |
 | Companies contributing labeled observations | 8,780 |
 
+*Table 1. Company inventory screening.*
+
 The four inventory exclusions are mutually exclusive. SIC codes 6000–6999 broadly cover finance, insurance and real-estate companies. These companies are excluded because their balance sheets differ from those of ordinary operating companies: for example, deposits are normal business funding for banks, so leverage, liquidity and working-capital ratios have different meanings. Their assessment requires specialized measures that are not included among the twelve predictors. Further losses reflect missing or stale financial information and unavailable outcome windows. [SEC SIC code list](https://www.sec.gov/search-filings/standard-industrial-classification-sic-code-list).
 
 The unit is a company at the first day of a month. Decision dates run from January 2011 through December 2025. The completed panel has 565,222 labeled company-month observations before chronological purging. It contains 1,052 positive rows associated with 573 disclosure episodes in 487 companies.
@@ -33,6 +35,8 @@ This study combines three SEC sources in one monthly company panel: Company Fact
 | Company Facts | Accounting values under standard tags, units, reporting periods, filing dates and accession numbers | Provides the main histories of balance-sheet values and annual income, revenue and operating cash flow |
 | Financial Statement and Notes data | Numeric statement facts, standard and custom tag definitions, presentation labels and calculation relationships | Supports identification and reconciliation of assets, liabilities, current assets, current liabilities and cash |
 | Submissions | Filing forms, dates, accession numbers and reported item codes, including referenced historical archives | Identifies qualifying disclosures and the issuer's observed reporting history |
+
+*Table 2. SEC data sources and their roles in the panel.*
 
 ### 3.2.1 Understanding Company Facts and Overlapping Filings
 
@@ -88,6 +92,8 @@ The labeling rules reduce 611,705 financially usable company-months to 565,222 l
 | Fell within an existing episode or its 90-day quiet period | 1,458 |
 | Contained unresolved payment evidence in the next 60 days | 350 |
 
+*Table 3. Company-months removed by the outcome-labeling rules.*
+
 These rows are excluded because their outcomes cannot be labeled reliably. However, a disclosure already known on the decision date can still stop the credit policy from offering a limit.
 
 ## 3.4 Feature Construction
@@ -108,6 +114,8 @@ The predictive experiment uses twelve features covering liquidity, leverage, fin
 | Negative income | $$\mathbb{1}(NI_a<0)$$ | Captures the loss threshold separately from return on assets; a value of one generally suggests higher risk. |
 | Negative operating cash flow | $$\mathbb{1}(OCF_a<0)$$ | Identifies operations that consume cash, while allowing that one negative year may reflect temporary working-capital investment. |
 | Log assets | $$\ln(TA_t)$$ | Controls for company size on a compressed scale; larger firms may have diversification and funding advantages, but are not necessarily safer. |
+
+*Table 4. Accounting predictors, definitions and expected relationships with risk.*
 
 These expected relationships are economic priors rather than causal claims. Models determine whether the features are useful in the study data and can capture combinations that differ from the expected direction.
 
@@ -141,6 +149,8 @@ The filters reduce the initial monthly grid as follows. They are applied in orde
 | Remove months without usable and sufficiently recent required financial data | 332,429 | 611,705 |
 | Remove months whose 60-day outcome cannot be labeled reliably | 46,483 | 565,222 |
 
+*Table 5. Sequential company-month filtering.*
+
 *Source: primary model experiment panel audit. These counts are calculated before the later time-based filtering described in Chapter 4.*
 
 ### 3.5.2 Missing Feature Values
@@ -161,6 +171,8 @@ An included company-month does not need to have all twelve model features. For e
 | Negative income | 22,284 | 3.94% |
 | Negative operating cash flow | 0 | 0.00% |
 | Log assets | 0 | 0.00% |
+
+*Table 6. Missing values among the twelve model features.*
 
 *A company-month can be missing more than one feature, so these counts must not be added together.*
 

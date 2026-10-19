@@ -43,6 +43,8 @@ A random split would mix observations from different dates and could allow futur
 | Selection | January 2020–December 2022 | Choose raw or corrected probabilities, alert thresholds and the final model |
 | Later evaluation | January 2023–December 2025 | Evaluate the frozen choices |
 
+*Table 7. Chronological model-development and evaluation stages.*
+
 These are nominal date ranges. An observation is removed from an earlier stage when its complete 60-day label was not available before the next stage began. The data cutoff is 7 September 2026. Chapter 3 explains when positive and negative labels become available, and Chapter 6 reports the retained observations.
 
 The same company can appear in several stages because the study evaluates continued monitoring, not a separate borrower population. Companies can contribute repeated months based on carried-forward statements, so row-level measures give more influence to issuers with more eligible months. The bootstrap in Section 4.6 keeps each company's observations together.
@@ -55,7 +57,7 @@ The 2023–2025 period is excluded from the reported model's fitting, tuning, ca
 
 Because the outcome is rare, balanced fitting weights can give the two classes equal total influence:
 
-$$ w_c=\frac{N}{2N_c}, $$
+$$ w_c=\frac{N}{2N_c}, \tag{4} $$
 
 where $$N$$ is the number of fitting observations, $$N_c$$ is the number in class $$c$$, and $$w_c$$ is the weight for that class. The weights are calculated separately in each fitting sample. Calibration and evaluation keep the observed event distribution.
 
@@ -73,17 +75,17 @@ The study evaluates both ranking and probability accuracy.
 
 **Brier score** measures the squared difference between predicted probabilities and observed outcomes:
 
-$$ BS=\frac{1}{N}\sum_{n=1}^{N}(q_n-y_n)^2. $$
+$$ BS=\frac{1}{N}\sum_{n=1}^{N}(q_n-y_n)^2. \tag{5} $$
 
 Lower values are better. Because a constant low probability can score well on a rare outcome, models are compared with the training-rate benchmark.
 
 At the frozen alert threshold, **precision** is the share of alerts followed by an event, while **recall** is the share of actual positive observations detected by the alerts:
 
-$$ \operatorname{Precision}=\frac{TP}{TP+FP},\qquad \operatorname{Recall}=\frac{TP}{TP+FN}. $$
+$$ \operatorname{Precision}=\frac{TP}{TP+FP},\qquad \operatorname{Recall}=\frac{TP}{TP+FN}. \tag{6} $$
 
 **F1** combines precision and recall into one value:
 
-$$ F_1=\frac{2\,\operatorname{Precision}\,\operatorname{Recall}}{\operatorname{Precision}+\operatorname{Recall}}. $$
+$$ F_1=\frac{2\,\operatorname{Precision}\,\operatorname{Recall}}{\operatorname{Precision}+\operatorname{Recall}}. \tag{7} $$
 
 The study also reports the confusion matrix, event share, number of observations and number of distinct episodes detected. Precision or recall is set to zero when its denominator is zero.
 

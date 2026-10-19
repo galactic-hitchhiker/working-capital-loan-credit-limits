@@ -13,6 +13,8 @@ The replay starts with 141,460 company-months from 2023–2025. Unlike model eva
 | Invalid required financial values | −42 |
 | Included in the policy replay | 99,619 |
 
+*Table 18. Construction of the policy-replay sample.*
+
 The replay includes 99,619 company-months from 3,869 companies; 29.6% of candidates lack required values, which are not replaced with zero.
 
 The included observations form 5,176 continuous company segments. A segment is a sequence of consecutive monthly observations for one company. If a month is missing, the next observation starts a new segment and is treated as a new hypothetical initial assessment. This reset is a replay convention, not evidence that a real lender would reopen a facility.
@@ -31,6 +33,8 @@ The reference, or base, scenario uses the following assumptions:
 | Maximum monthly increase | 10% |
 | Increase deadband | 2% |
 
+*Table 19. Reference policy assumptions.*
+
 Revenue, operating cash flow, cash and assets are observed. Cash eligibility, near-term debt payments, the cap and facility exposure are assumptions. The reference scenario is a comparison point, not an established or optimal standard.
 
 ## 7.2 Reference-Scenario Results
@@ -47,6 +51,8 @@ The reference policy produces the following results:
 | Preliminary limit determined by the exposure cap | 53.42% |
 | Mean absolute monthly change / assets | 0.0290% |
 
+*Table 20. Reference-scenario credit-limit results.*
+
 The mean exceeds the median because a few very large public companies have large limits. Neither amount represents a typical smaller private borrower.
 
 The 0.668% result is the average of each company-month's assigned limit divided by its reported assets. It is not the total of all assigned limits divided by the total of all assets.
@@ -62,6 +68,8 @@ The replay contains 94,443 transitions between consecutive months within the sam
 | Increase | 17,088 | 18.09% |
 | Decrease | 9,309 | 9.86% |
 | No change | 68,046 | 72.05% |
+
+*Table 21. Monthly transitions under the reference policy.*
 
 Most limits remain unchanged because accounting values are carried forward between SEC reports and a new month often contains no new financial information. Missing-month gaps are not counted as monthly transitions.
 
@@ -80,6 +88,8 @@ Each sensitivity scenario uses the same historical financial observations and ch
 | 60-day debt payment: 0.5% of assets | Deducts an assumed near-term payment equal to 0.5% of assets | 0.429% | 36.48% |
 | Stronger risk reduction, $$k=20$$ | Doubles the sensitivity of the limit to the estimated probability | 0.659% | 3.55% |
 
+*Table 22. Sensitivity of policy results to alternative assumptions.*
+
 Removing the probability reduction raises mean limit/assets from 0.6678% to 0.6751%. Most probabilities are low and the cap often binds, although high-risk companies with a non-binding cap can receive larger reductions.
 
 Cash and debt assumptions have larger effects. With no eligible cash, the zero-limit share rises to 48.30%; deducting debt payments equal to 0.5% of assets raises it to 36.48%. These scenarios show sensitivity to unobserved inputs, not that companies actually face those conditions.
@@ -90,7 +100,7 @@ Using probabilities from another fitted model changes the aggregate mean little:
 
 ![Policy sensitivity](figures/policy_sensitivity.png)
 
-*Figure 7.1. Average assigned limit as a percentage of reported assets under the reference policy and selected alternative assumptions. Each scenario uses the same historical financial observations. Source: primary model experiment policy replay.*
+*Figure 3. Average assigned limit as a percentage of reported assets under the reference policy and selected alternative assumptions. Each scenario uses the same historical financial observations. Source: primary model experiment policy replay.*
 
 ## 7.4 Effect of the Monthly Update Rules
 
@@ -101,6 +111,8 @@ Two additional benchmarks show the effect of the monthly safeguards:
 | Reference policy | 0.6678% | 0.02904% |
 | Keep each segment's initial limit | 0.6786% | 0.02107% |
 | Apply each month's preliminary limit without smoothing | 0.7399% | 0.04227% |
+
+*Table 23. Effect of alternative monthly update rules.*
 
 The fixed-initial benchmark keeps the amount assigned at the beginning of each continuous segment, subject only to the current asset cap and a known-disclosure hard stop. It produces fewer changes, but the retained amount exceeds the current preliminary limit in 19.80% of observations. A static limit can therefore remain above the amount supported by the current calculation.
 

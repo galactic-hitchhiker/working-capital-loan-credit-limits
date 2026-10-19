@@ -16,6 +16,8 @@ The five modeling stages contain 531,344 observations after chronological purgin
 | Selection | 2020–2022 | 121,142 | 204 | 116 | 4,883 | 100 |
 | Later evaluation | 2023–2025 | 131,842 | 318 | 176 | 4,633 | 165 |
 
+*Table 12. Composition of the chronological modeling stages.*
+
 *Source: primary model experiment stage audit. Counts refer to observations retained after chronological purging.*
 
 The stages exclude 33,878 boundary observations whose complete 60-day outcome was unavailable when the next stage began, preventing future labels from entering earlier stages.
@@ -26,7 +28,7 @@ The reported experiment does not use 2023–2025 outcomes for fitting, tuning, c
 
 ![Annual sample coverage and disclosure-label share](figures/sample_over_time.png)
 
-*Figure 6.1. Labeled panel before chronological purging. Positive rows are monthly prediction outcomes, not separate episodes. Source: primary model experiment panel audit and descriptive report.*
+*Figure 1. Labeled panel before chronological purging. Positive rows are monthly prediction outcomes, not separate episodes. Source: primary model experiment panel audit and descriptive report.*
 
 ## 6.2 Predictors and Tuning
 
@@ -38,6 +40,8 @@ All models use the twelve predictors defined in Chapter 3 and the chronological 
 | L2 logistic regression | Balanced class weights and $$C=10$$ |
 | Random forest | Unweighted, 300 trees, unrestricted depth and minimum leaf size 20 |
 | XGBoost | Unweighted, 200 trees, depth 4 and learning rate 0.05 |
+
+*Table 13. Selected settings by model family.*
 
 Balanced weights give rare positives more influence without changing their number. Tuning selects them for the logistic but not the tree models. Appendix A records the full grid and software settings.
 
@@ -53,6 +57,8 @@ The constant benchmark has a selection-period event share of 0.1684% and a Brier
 | L2 logistic, sigmoid | 0.8190 | 0.6168% | 3.66 | 0.0017116 | −1.81% | No |
 | Random forest, raw | 0.8601 | 4.3005% | 25.54 | 0.0016463 | 2.08% | Yes |
 | XGBoost, raw | 0.8755 | 3.9759% | 23.61 | 0.0016778 | 0.20% | Yes |
+
+*Table 14. Model selection results for 2020–2022.*
 
 Both logistic models rank positive rows above the event-share baseline, but their corrected probabilities have more Brier error than the constant benchmark. They therefore fail the requirement for improvement in both ranking and probability error. Both tree models pass. The random forest has the lower Brier score and is selected according to the rule in Section 4.9, even though XGBoost has the higher ROC-AUC.
 
@@ -70,6 +76,8 @@ The first table reports ranking and probability quality for 2023–2025. Average
 | **Random forest, raw** | **0.8866** | **2.5989%** | **10.77** | **0.0023840** | **0.95%** |
 | XGBoost, raw | 0.8946 | 2.8057% | 11.63 | 0.0025355 | −5.34% |
 
+*Table 15. Later-period ranking and probability performance.*
+
 The next table reports performance at each model's threshold fixed during the 2020–2022 selection stage:
 
 | Model | Precision | Recall |
@@ -79,6 +87,8 @@ The next table reports performance at each model's threshold fixed during the 20
 | L2 logistic, sigmoid | 1.48% | 23.27% |
 | **Random forest, raw** | **5.63%** | **9.12%** |
 | XGBoost, raw | 6.21% | 6.92% |
+
+*Table 16. Later-period performance at the frozen alert thresholds.*
 
 The forest's average precision is 10.77 times the event share, while its Brier error is only 0.95% below the benchmark. XGBoost ranks slightly better but has 5.34% more probability error, illustrating the distinction between ranking and probability accuracy.
 
@@ -92,7 +102,7 @@ The forest's annual ROC-AUC is 0.8715 in 2023, 0.8777 in 2024 and 0.9329 in 2025
 
 ![Held-out ranking and probability diagnostics](figures/model_diagnostics.png)
 
-*Figure 6.2. Ranking and probability diagnostics for 2023–2025. Source: primary model experiment predictions and model report.*
+*Figure 2. Ranking and probability diagnostics for 2023–2025. Source: primary model experiment predictions and model report.*
 
 ## 6.5 Alternative-Period Sensitivity
 
@@ -102,6 +112,8 @@ The selected model changes when different chronological periods are used:
 |---|---|---|---|
 | Primary model experiment | 2017–2018 | 2020–2022 | Random forest |
 | Alternative-period sensitivity experiment | 2018 | 2023–2024 | XGBoost |
+
+*Table 17. Alternative-period model-selection sensitivity.*
 
 The alternative also changes training dates and excludes 2020–2022, so no single cause explains the different choice. It shows that selection is period-sensitive.
 

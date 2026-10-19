@@ -27,6 +27,8 @@ The historical replay combines reported SEC values, model outputs and assumption
 | Maximum exposure | 1% of reported assets in the base scenario | Scenario assumption |
 | Outstanding facility exposure | Zero in the base scenario | Scenario assumption |
 
+*Table 8. Observed and assumed inputs to the policy replay.*
+
 For company $$i$$ at review date $$t$$, define:
 
 - $$R_{i,t}$$ as annual revenue;
@@ -38,18 +40,21 @@ The policy first calculates a revenue-based amount:
 
 $$
 C_{i,t}^{R}=a\frac{R_{i,t}}{6}.
+\tag{8}
 $$
 
 It also calculates an amount based on operating cash flow and eligible cash:
 
 $$
 C_{i,t}^{F}=b\frac{\max(F_{i,t},0)}{6}+cB_{i,t}.
+\tag{9}
 $$
 
 The capacity proxy is:
 
 $$
 C_{i,t}=\max\left(0,\min(C_{i,t}^{R},C_{i,t}^{F})-D_{i,t}^{60}\right).
+\tag{10}
 $$
 
 The policy uses the smaller of the two amounts. This prevents high revenue from supporting a large limit when cash generation is weak. Additional external payments due during the 60-day horizon then reduce the result.
@@ -66,12 +71,14 @@ Let $$q_{i,t}$$ be the selected model's estimated probability of a qualifying di
 
 $$
 g(q_{i,t})=\exp(-kq_{i,t}),\qquad k\geq0.
+\tag{11}
 $$
 
 The risk-adjusted capacity proxy is:
 
 $$
 C_{i,t}^{risk}=C_{i,t}\exp(-kq_{i,t}).
+\tag{12}
 $$
 
 The multiplier satisfies $$0<e^{-kq}\leq1$$. A larger $$k$$ strengthens the reduction, while $$k=0$$ removes it. The illustrative starting value is $$k=10$$: at $$q=5\%$$, about 61% of capacity remains. Sensitivity cases use 5 and 20; no value is claimed to be optimal.
@@ -84,6 +91,7 @@ Let $$K_{i,t}$$ be the maximum exposure permitted by the research policy. The pr
 
 $$
 L_{i,t}^{*}=\min\left(K_{i,t},C_{i,t}^{risk}\right).
+\tag{13}
 $$
 
 The worked example uses a cap of USD 150,000. The historical base scenario assumes a cap equal to 1% of reported assets, with 0.5% and 2% tested as alternatives. These values are scenario assumptions. The policy has no positive minimum because a minimum could exceed both the capacity proxy and the cap.
@@ -94,6 +102,7 @@ Let $$E_{i,t}$$ be the current outstanding balance on the hypothetical facility 
 
 $$
 A_{i,t}=\max(0,L_{i,t}-E_{i,t}).
+\tag{14}
 $$
 
 If the limit is below the outstanding balance, excess exposure is $$\max(0,E_{i,t}-L_{i,t})$$. Reducing the limit prevents further use under the policy. It does not remove an existing balance or show that the borrower can repay it.
@@ -115,6 +124,8 @@ For an existing positive limit, the policy uses a 2% deadband $$\delta$$, a 50% 
 | A larger increase is supported by new information | Apply smoothing and the monthly increase ceiling |
 | The previous limit is zero | Keep it at zero until a new initial assessment is documented |
 
+*Table 9. Monthly credit-limit update rules.*
+
 For a supported increase, the assigned limit is:
 
 $$
@@ -123,6 +134,7 @@ L_{i,t}^{*},\;
 L_{i,t-1}+\alpha(L_{i,t}^{*}-L_{i,t-1}),\;
 (1+u)L_{i,t-1}
 \right\}.
+\tag{15}
 $$
 
 The deadband avoids changes caused by rounding or minor input movements.
@@ -140,6 +152,7 @@ L_{i,t}^{*}=\min\left\{K_{i,t},\;
 \max\left[0,\min\left(a\frac{R_{i,t}}{6},
 b\frac{\max(F_{i,t},0)}{6}+cB_{i,t}\right)-D_{i,t}^{60}\right]
 \exp(-kq_{i,t})\right\}.
+\tag{16}
 $$
 
 Consider a hypothetical borrower with the following inputs:
@@ -155,6 +168,8 @@ Consider a hypothetical borrower with the following inputs:
 | Previous assigned limit | USD 70,000 |
 | Outstanding facility exposure | USD 60,000 |
 
+*Table 10. Inputs to the worked credit-limit example.*
+
 The calculation is:
 
 | Step | Calculation | Result |
@@ -169,6 +184,8 @@ The calculation is:
 | 8. Monthly increase ceiling | $$1.10\times70{,}000$$ | USD 77,000.00 |
 | 9. Assigned limit | Smallest of steps 6–8 | USD 75,936.54 |
 | 10. New available credit | $$75{,}936.54-60{,}000$$ | USD 15,936.54 |
+
+*Table 11. Worked credit-limit calculation.*
 
 The exposure cap does not bind in this example. The smoothing rule produces the smallest permitted amount and therefore determines the assigned limit. The Python implementation generates these values using full precision; the table rounds displayed amounts. The example does not represent an actual company or a fitted model result.
 

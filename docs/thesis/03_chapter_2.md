@@ -8,7 +8,7 @@ Corporate credit risk is the risk that a company will not meet its financial obl
 
 Expected credit loss is commonly separated into three components. Probability of default (PD) is the likelihood that the borrower defaults within a defined period. Exposure at default (EAD) is the amount the lender expects to be owed when default occurs; it may differ from the current balance because the borrower can draw or repay funds before then. Loss given default (LGD) is the proportion of that exposure the lender expects not to recover after default. A simplified expected-loss (EL) amount is therefore:
 
-$$ EL = PD \times LGD \times EAD. $$
+$$ EL = PD \times LGD \times EAD. \tag{1} $$
 
 This decomposition distinguishes how likely default is, how much would be outstanding and how severe the resulting loss would be. Combining the components requires consistent definitions and time horizons, as well as separate evidence about default events, exposure, recoveries, collection costs and their timing.
 
@@ -20,7 +20,7 @@ Short-term credit supports working-capital needs, including payments made before
 
 The limit applies to the total outstanding balance across statement periods. If the limit is represented by L and the outstanding exposure by E, available credit is:
 
-$$ A = \max(0,L-E). $$
+$$ A = \max(0,L-E). \tag{2} $$
 
 A reduction in the limit restricts further use but leaves the outstanding debt in place. The policy therefore records the assigned limit and existing exposure separately.
 
@@ -80,7 +80,7 @@ Model explanations must also be treated carefully. Coefficients and variable-imp
 
 A probability describes the chance of an event. A credit limit specifies a monetary exposure. The proposed framework connects them through three components:
 
-$$ L_{i,t}^{*}=\min\left(K_{i,t}, C_{i,t}g(q_{i,t})\right). $$
+$$ L_{i,t}^{*}=\min\left(K_{i,t}, C_{i,t}g(q_{i,t})\right). \tag{3} $$
 
 Here, C is a capacity proxy, K is a hard exposure cap, and g is a risk multiplier between zero and one. The preliminary limit is later subject to monthly update rules.
 

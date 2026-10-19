@@ -1,11 +1,17 @@
+UNION UNIVERSITY
+
+SCHOOL OF COMPUTING, BELGRADE, SERBIA
+
+MASTER IN COMPUTATIONAL FINANCE
+
 # Dynamic Determination of Short-Term Corporate Credit Limits Using Machine Learning
 
-**Master Thesis**
-
-Master in Computational Finance
+**MASTER'S THESIS**
 
 Student: Đorđe Veličković
 
-Supervisor: Prof. Dr. Branko Urosević
+Student ID number: [to be entered]
 
-2026
+Supervisor: Prof. Dr. Branko Urošević
+
+Belgrade, October 2026
