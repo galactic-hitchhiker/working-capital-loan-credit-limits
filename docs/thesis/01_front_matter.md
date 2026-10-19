@@ -1,0 +1,125 @@
+# Table of Contents
+
+<!-- BEGIN GENERATED CONTENTS -->
+- Abstract
+- 1 Introduction
+  - 1.1 Background
+  - 1.2 Research Problem
+  - 1.3 Research Questions
+  - 1.4 Objectives and Contribution
+  - 1.5 Scope and Limitations
+  - 1.6 Structure of the Thesis
+- 2 Theoretical Background and Literature Review
+  - 2.1 Corporate Credit Risk
+  - 2.2 Short-Term Corporate Credit Facilities
+  - 2.3 Corporate Credit Scoring
+  - 2.4 Financial Ratio Analysis
+  - 2.5 Statistical and Machine Learning Models
+    - 2.5.1 Logistic regression
+    - 2.5.2 Regularized logistic regression
+    - 2.5.3 Random forest
+    - 2.5.4 Gradient boosting
+    - 2.5.5 Evaluation and interpretation
+  - 2.6 Credit Limit Determination
+  - 2.7 Dynamic Limit Management
+  - 2.8 Research Gap and Position of the Study
+- 3 Data and Target Definition
+  - 3.1 Study Population and Observation Unit
+  - 3.2 Sources and Information Availability
+    - 3.2.1 Understanding Company Facts and Overlapping Filings
+    - 3.2.2 Why Both Accounting Sources Are Needed
+    - 3.2.3 Combining the Sources in One Panel
+  - 3.3 Outcome and Prediction Horizon
+  - 3.4 Feature Construction
+  - 3.5 Data Quality and Preprocessing
+    - 3.5.1 Which Company-Months Are Included
+    - 3.5.2 Missing Feature Values
+    - 3.5.3 Data Required for the Credit-Limit Policy
+  - 3.6 Data Limitations
+- 4 Risk Modeling and Validation Methodology
+  - 4.1 Modeling Framework
+  - 4.2 Models and Constant Benchmark
+  - 4.3 Model Tuning
+  - 4.4 Chronological Validation and Information Timing
+  - 4.5 Rare Outcomes and the Alert Threshold
+  - 4.6 Performance Measures and Uncertainty
+  - 4.7 Probability Calibration
+  - 4.8 Model Interpretation and Error Analysis
+  - 4.9 Final Model Selection and Connection to the Policy
+- 5 Credit Limit Methodology
+  - 5.1 Design Principles
+  - 5.2 Capacity Proxy and Input Assumptions
+  - 5.3 Risk Adjustment
+  - 5.4 Exposure Cap and Existing Exposure
+  - 5.5 Monthly Update Rules and Safeguards
+  - 5.6 Worked Example
+  - 5.7 Scenario Assumptions and Limitations
+- 6 Empirical Results
+  - 6.1 Sample and Chronological Design
+  - 6.2 Predictors and Tuning
+  - 6.3 Probability Mapping and Model Selection
+  - 6.4 Later Evaluation
+  - 6.5 Alternative-Period Sensitivity
+  - 6.6 Interpretation
+- 7 Credit-Limit Policy Results
+  - 7.1 Replay Sample and Reference Assumptions
+  - 7.2 Reference-Scenario Results
+  - 7.3 Sensitivity to Policy Assumptions
+  - 7.4 Effect of the Monthly Update Rules
+  - 7.5 Scope of the Evidence
+- 8 Discussion, Limitations and Conclusion
+  - 8.1 Answers to the Research Questions
+    - 8.1.1 Prediction Compared with a Constant Benchmark
+    - 8.1.2 Tree Models Compared with Logistic Regression
+    - 8.1.3 Converting Risk and Financial Capacity into a Limit
+    - 8.1.4 Monthly Behavior and Alternative Policy Assumptions
+  - 8.2 Contribution
+  - 8.3 Limitations
+  - 8.4 Further Work
+  - 8.5 Conclusion
+- References
+- Appendix A: Reproducibility and Code Availability
+  - A.1 Primary Experiment and Evidence
+  - A.2 Model and Validation Settings
+  - A.3 Implementation Map
+  - A.4 Software Environment
+  - A.5 Reproduction and Label-Review Limits
+<!-- END GENERATED CONTENTS -->
+
+After synchronization, replace this Markdown index with or refresh the native Google Docs table of contents so its links and page numbers follow the current document layout.
+
+# List of Figures
+
+- Figure 1. Labeled panel before chronological purging. Positive rows are monthly prediction outcomes, not separate episodes. Source: primary model experiment panel audit and descriptive report.
+- Figure 2. Ranking and probability diagnostics for 2023–2025. Source: primary model experiment predictions and model report.
+- Figure 3. Average assigned limit as a percentage of reported assets under the reference policy and selected alternative assumptions. Each scenario uses the same historical financial observations. Source: primary model experiment policy replay.
+
+# List of Tables
+
+- Table 1. Company inventory screening.
+- Table 2. SEC data sources and their roles in the panel.
+- Table 3. Company-months removed by the outcome-labeling rules.
+- Table 4. Accounting predictors, definitions and expected relationships with risk.
+- Table 5. Sequential company-month filtering.
+- Table 6. Missing values among the twelve model features.
+- Table 7. Chronological model-development and evaluation stages.
+- Table 8. Observed and assumed inputs to the policy replay.
+- Table 9. Monthly credit-limit update rules.
+- Table 10. Inputs to the worked credit-limit example.
+- Table 11. Worked credit-limit calculation.
+- Table 12. Composition of the chronological modeling stages.
+- Table 13. Selected settings by model family.
+- Table 14. Model selection results for 2020–2022.
+- Table 15. Later-period ranking and probability performance.
+- Table 16. Later-period performance at the frozen alert thresholds.
+- Table 17. Alternative-period model-selection sensitivity.
+- Table 18. Construction of the policy-replay sample.
+- Table 19. Reference policy assumptions.
+- Table 20. Reference-scenario credit-limit results.
+- Table 21. Monthly transitions under the reference policy.
+- Table 22. Sensitivity of policy results to alternative assumptions.
+- Table 23. Effect of alternative monthly update rules.
+- Table 24. Primary experiment evidence and locations.
+- Table 25. Candidate settings by model family.
+- Table 26. Implementation components and main code locations.
+- Table 27. Software environment used for the primary experiment.
