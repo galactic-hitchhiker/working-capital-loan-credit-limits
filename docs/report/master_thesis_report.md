@@ -21,13 +21,13 @@ The candidate is enrolled in the Master in Computational Finance programme at th
 
 ## 2. Description of the master thesis
 
-The master’s thesis comprises 48 pages in the submitted Word edition and cites 14 sources. It contains an abstract, eight chapters, a reference list and a reproducibility appendix. The thesis examines how point-in-time accounting information and machine-learning estimates can be combined in a transparent framework for dynamic short-term corporate credit limits.
+The master’s thesis comprises 45 pages in the submitted Word edition and cites 15 sources. It contains an abstract, eight chapters, a reference list and a reproducibility appendix. The thesis examines how point-in-time accounting information and machine-learning estimates can be combined in a transparent framework for dynamic short-term corporate credit limits.
 
-The empirical study combines SEC Company Facts, Financial Statement and Notes data, and submissions in a monthly panel covering 2011–2025. The completed modeling panel contains 565,222 labeled company-month observations from 8,780 companies. Twelve accounting predictors describe liquidity, leverage, profitability, cash generation, growth and company size. The outcome is a new bankruptcy or reviewed payment-failure disclosure episode within 60 days; the candidate clearly distinguishes this disclosure proxy from verified default on a lending facility.
+The empirical study combines SEC Company Facts, Financial Statement and Notes data, and submissions in a monthly panel covering 2011–2025. The completed modeling panel contains 565,222 labeled company-month observations from 8,780 companies. Twelve accounting predictors describe liquidity, leverage, profitability, cash generation, growth and company size. The outcome is a new bankruptcy or reviewed payment-failure disclosure episode within 60 days. The candidate clearly distinguishes this disclosure proxy from verified default on a lending facility.
 
 Four model families are compared using a chronological development design: logistic regression, L2-regularized logistic regression, random forest and XGBoost. The thesis then translates the selected probability into a preliminary limit through a financial-capacity proxy, a probability-based risk adjustment and an exposure cap. Monthly update rules introduce immediate reductions, controlled increases, a deadband and explicit hard stops.
 
-The work is logically organized and supported by documented filters, formulas, tables, figures and reproducibility material. The candidate also states the main empirical limitations directly: the disclosure labels are automated and not independently validated, the later evaluation is retrospective, and facility utilization, repayment, loss, pricing and profitability data are unavailable.
+The work is logically organized and supported by documented filters, formulas, tables, figures and reproducibility material. The candidate also states the main empirical limitations directly: the automated Item 2.04 payment-failure classifications were not independently validated, the later evaluation is retrospective, and facility utilization, repayment, loss, pricing and profitability data are unavailable.
 
 ## 3. Analysis of the work and key results
 

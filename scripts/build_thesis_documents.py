@@ -730,7 +730,7 @@ def apply_thesis_format(path: Path) -> None:
     doc.core_properties.title = "Dynamic Determination of Short-Term Corporate Credit Limits Using Machine Learning"
     doc.core_properties.subject = "Master's thesis in Computational Finance"
     doc.core_properties.author = "Đorđe Veličković"
-    doc.core_properties.keywords = "corporate credit risk; credit limits; machine learning; SEC disclosures"
+    doc.core_properties.keywords = "corporate credit risk, credit limits, machine learning, SEC disclosures"
     doc.core_properties.comments = "Formatted from the RAF reference thesis."
     doc.save(path)
 
@@ -893,11 +893,11 @@ def build_report(thesis_pages: int) -> None:
     add_report_heading(doc, 2, "Description of the master thesis")
     add_report_paragraph(
         doc,
-        f"The master’s thesis comprises {thesis_pages} pages in the submitted Word edition and cites 14 sources. It contains an abstract, eight chapters, a reference list and a reproducibility appendix. The thesis examines how point-in-time accounting information and machine-learning estimates can be combined in a transparent framework for dynamic short-term corporate credit limits.",
+        f"The master’s thesis comprises {thesis_pages} pages in the submitted Word edition and cites 15 sources. It contains an abstract, eight chapters, a reference list and a reproducibility appendix. The thesis examines how point-in-time accounting information and machine-learning estimates can be combined in a transparent framework for dynamic short-term corporate credit limits.",
     )
     add_report_paragraph(
         doc,
-        "The empirical study combines SEC Company Facts, Financial Statement and Notes data, and submissions in a monthly panel covering 2011–2025. The completed modeling panel contains 565,222 labeled company-month observations from 8,780 companies. Twelve accounting predictors describe liquidity, leverage, profitability, cash generation, growth and company size. The outcome is a new bankruptcy or reviewed payment-failure disclosure episode within 60 days; the candidate clearly distinguishes this disclosure proxy from verified default on a lending facility.",
+        "The empirical study combines SEC Company Facts, Financial Statement and Notes data, and submissions in a monthly panel covering 2011–2025. The completed modeling panel contains 565,222 labeled company-month observations from 8,780 companies. Twelve accounting predictors describe liquidity, leverage, profitability, cash generation, growth and company size. The outcome is a new bankruptcy or reviewed payment-failure disclosure episode within 60 days. The candidate clearly distinguishes this disclosure proxy from verified default on a lending facility.",
     )
     add_report_paragraph(
         doc,
@@ -905,7 +905,7 @@ def build_report(thesis_pages: int) -> None:
     )
     add_report_paragraph(
         doc,
-        "The work is logically organized and supported by documented filters, formulas, tables, figures and reproducibility material. The candidate also states the main empirical limitations directly: the disclosure labels are automated and not independently validated, the later evaluation is retrospective, and facility utilization, repayment, loss, pricing and profitability data are unavailable.",
+        "The work is logically organized and supported by documented filters, formulas, tables, figures and reproducibility material. The candidate also states the main empirical limitations directly: the automated Item 2.04 payment-failure classifications were not independently validated, the later evaluation is retrospective, and facility utilization, repayment, loss, pricing and profitability data are unavailable.",
     )
 
     add_report_heading(doc, 3, "Analysis of the work and key results")

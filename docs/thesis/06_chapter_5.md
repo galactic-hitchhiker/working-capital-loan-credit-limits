@@ -1,18 +1,18 @@
 # 5 Credit Limit Methodology
 
-The proposed policy translates financial data and the estimated 60-day disclosure probability into a hypothetical credit limit. It combines capacity, a risk reduction, an exposure cap and monthly update rules, including an immediate zero limit for a known qualifying disclosure. Chapter 7 replays it on historical SEC data.
+The policy combines capacity, 60-day disclosure probability, an exposure cap and monthly rules to produce a hypothetical limit. A known qualifying disclosure sets it to zero.
 
 ## 5.1 Design Principles
 
-The limit is the maximum total facility balance, including unpaid amounts from earlier periods. Available new credit equals the assigned limit less the outstanding balance.
+The limit covers total facility exposure. Available new credit subtracts the outstanding balance. Low estimated risk cannot substitute for capacity. Inputs must be available on the review date and use one currency. Policy coefficients are sensitivity-tested assumptions, not fitted lending standards.
 
-The model estimates the Chapter 3 disclosure probability; the policy converts it and financial inputs into an amount. Low estimated risk alone cannot justify a large limit without sufficient capacity.
-
-All inputs must be available on the review date and monetary values must use the same currency. The policy coefficients are research assumptions tested through sensitivity analysis. They are not fitted lending standards.
+The design seeks four properties: monotonic risk response, a capacity ceiling, an independent exposure cap and stable monthly changes. Every intermediate amount is retained so a reviewer can identify whether capacity, risk, the cap or an update safeguard determined the final result.
 
 ## 5.2 Capacity Proxy and Input Assumptions
 
-The historical replay combines reported SEC values, model outputs and assumptions about a hypothetical lending facility. This distinction is important because SEC filings do not report whether cash is available to a lender, the company's exact debt payments over the next 60 days or the balance on the studied facility.
+The replay combines SEC values, model output and facility assumptions because filings omit cash eligibility, exact 60-day debt payments and the studied facility balance.
+
+Table 8 separates these categories explicitly. This prevents assumed zeros from being mistaken for reported borrower facts and makes sensitivity cases interpretable as policy scenarios rather than alternative historical observations.
 
 | Input | Value used in the replay | Type |
 |---|---|---|
@@ -31,9 +31,9 @@ The historical replay combines reported SEC values, model outputs and assumption
 
 For company $$i$$ at review date $$t$$, define:
 
-- $$R_{i,t}$$ as annual revenue;
-- $$F_{i,t}$$ as annual operating cash flow for the same period;
-- $$B_{i,t}$$ as cash considered eligible to support repayment;
+- $$R_{i,t}$$ as annual revenue
+- $$F_{i,t}$$ as annual operating cash flow for the same period
+- $$B_{i,t}$$ as cash considered eligible to support repayment
 - $$D_{i,t}^{60}$$ as additional external debt payments due within the next 60 days.
 
 The policy first calculates a revenue-based amount:
@@ -57,13 +57,9 @@ C_{i,t}=\max\left(0,\min(C_{i,t}^{R},C_{i,t}^{F})-D_{i,t}^{60}\right).
 \tag{10}
 $$
 
-The policy uses the smaller of the two amounts. This prevents high revenue from supporting a large limit when cash generation is weak. Additional external payments due during the 60-day horizon then reduce the result.
+Taking the smaller amount prevents revenue from supporting a large limit when cash generation is weak. Near-term external payments then reduce it. Annual flows are divided by six as a 60-day approximation that ignores seasonality. Cash is a balance, and negative cash flow contributes zero. The illustrative values are $$a=0.20$$, $$b=0.50$$ and $$c=0.10$$. Annual flows use one period. The base case treats all cash as eligible and sets unobserved $$D_{i,t}^{60}=0$$.
 
-Revenue and operating cash flow are divided by six because 60 days are approximately one-sixth of a year, an approximation that ignores seasonality. Cash is a balance and is not divided. Negative operating cash flow contributes nothing, although eligible cash can still support capacity.
-
-The starting values are $$a=0.20$$, $$b=0.50$$ and $$c=0.10$$. They are illustrative policy choices. Revenue and operating cash flow use the same annual period, and cumulative year-to-date values are not treated as separate quarters.
-
-Because eligible cash and exact external debt payments due within 60 days are unobserved, the base replay assumes all reported cash is eligible and $$D_{i,t}^{60}=0$$. Chapter 7 tests alternatives.
+The revenue branch represents activity scale, while the cash-flow-and-cash branch approximates resources that could support repayment. Taking their minimum prevents either branch from overriding weakness in the other. The formula is intentionally conservative in structure but its coefficients are not empirically validated lending standards.
 
 ## 5.3 Risk Adjustment
 
@@ -81,9 +77,9 @@ C_{i,t}^{risk}=C_{i,t}\exp(-kq_{i,t}).
 \tag{12}
 $$
 
-The multiplier satisfies $$0<e^{-kq}\leq1$$. A larger $$k$$ strengthens the reduction, while $$k=0$$ removes it. The illustrative starting value is $$k=10$$: at $$q=5\%$$, about 61% of capacity remains. Sensitivity cases use 5 and 20; no value is claimed to be optimal.
+The multiplier lies in $$(0,1]$$. Larger $$k$$ strengthens the reduction and $$k=0$$ removes it. With illustrative $$k=10$$, a 5% probability retains about 61% of capacity. Sensitivity uses 5 and 20. This rule is neither facility PD nor an estimated optimal exposure.
 
-The estimated probability concerns the SEC disclosure outcome defined in Chapter 3. It is not a probability of default on the hypothetical facility. The exponential reduction is a proposed policy rule, not an estimate of an optimal or safe exposure.
+The exponential form is continuous and strictly decreasing, so a higher estimated probability can never raise the limit when other inputs are fixed. It also avoids a single approval threshold, although the choice of $$k$$ determines how strongly small rare-event probabilities affect money.
 
 ## 5.4 Exposure Cap and Existing Exposure
 
@@ -94,9 +90,9 @@ L_{i,t}^{*}=\min\left(K_{i,t},C_{i,t}^{risk}\right).
 \tag{13}
 $$
 
-The worked example uses a cap of USD 150,000. The historical base scenario assumes a cap equal to 1% of reported assets, with 0.5% and 2% tested as alternatives. These values are scenario assumptions. The policy has no positive minimum because a minimum could exceed both the capacity proxy and the cap.
+The worked example caps exposure at USD 150,000. The replay uses 1% of assets and tests 0.5% and 2%. No positive minimum can override capacity or the cap. Total liabilities affect prediction, but only additional payments due within 60 days reduce capacity.
 
-Total liabilities affect model predictors, while only additional external payments due within 60 days reduce capacity through $$D_{i,t}^{60}$$. The full liability balance is not deducted.
+Deducting the entire liability balance would mix stock obligations with payments due over the short horizon. Conversely, omitting actual near-term debt service in deployment would overstate available capacity. This is why the unobserved payment assumption receives a separate sensitivity case.
 
 Let $$E_{i,t}$$ be the current outstanding balance on the hypothetical facility and $$L_{i,t}$$ the assigned limit after the monthly rules. New available credit is:
 
@@ -105,13 +101,11 @@ A_{i,t}=\max(0,L_{i,t}-E_{i,t}).
 \tag{14}
 $$
 
-If the limit is below the outstanding balance, excess exposure is $$\max(0,E_{i,t}-L_{i,t})$$. Reducing the limit prevents further use under the policy. It does not remove an existing balance or show that the borrower can repay it.
+If exposure exceeds the reduced limit, excess is $$\max(0,E_{i,t}-L_{i,t})$$. The reduction prevents new use but neither removes nor proves repayment of the balance.
 
 ## 5.5 Monthly Update Rules and Safeguards
 
-The policy is reviewed monthly using information available on each decision date. Accounting values usually remain unchanged between SEC reports, so a new month does not necessarily provide new financial information.
-
-For an existing positive limit, the policy uses a 2% deadband $$\delta$$, a 50% smoothing factor $$\alpha$$ and a 10% maximum monthly increase $$u$$. The rules are applied as follows:
+Monthly reviews use available information, which often remains unchanged between filings. Existing positive limits use a 2% deadband $$\delta$$, 50% smoothing $$\alpha$$ and 10% increase ceiling $$u$$:
 
 | Situation | Policy action |
 |---|---|
@@ -137,11 +131,13 @@ L_{i,t-1}+\alpha(L_{i,t}^{*}-L_{i,t-1}),\;
 \tag{15}
 $$
 
-The deadband avoids changes caused by rounding or minor input movements.
+The deadband ignores minor movements. Increase controls never delay reductions or breach the current cap. Missing, conflicting or stale inputs require review rather than zero replacement. Freshness limits are 180 days for balance sheets and 540 for annual flows.
 
-Increase controls never delay a reduction and never permit a limit above the current cap. Missing required inputs, unresolved accounting conflicts or stale information require review rather than replacement with zero. The freshness limits are 180 days from the balance-sheet period end and 540 days from the annual-flow period end.
+These asymmetric controls prevent a stale favorable assessment from supporting growth while ensuring that a lower current preliminary limit takes effect immediately. They also distinguish a data-quality exception from an economically calculated zero.
 
-A known qualifying disclosure produces an immediate hard stop. When the disclosure's quiet-gap period ends, the hard-stop indicator can end, but the previous zero limit still prevents automatic reopening. In the historical replay, the limit therefore remains zero within the same continuous company segment. A missing-month gap starts a new hypothetical segment and is treated as a new initial assessment. This reset is a replay convention, not evidence that a real lender would reopen the facility.
+A known disclosure immediately stops the limit. After its quiet period, the previous zero still prevents automatic reopening within a continuous segment. A missing-month gap starts a new hypothetical assessment. This is only a replay convention.
+
+In an operating policy, reopening would require documented review rather than a gap in the research data. The replay convention is retained only so disconnected historical segments do not inherit state across months with no eligible observation.
 
 ## 5.6 Worked Example
 
@@ -187,12 +183,8 @@ The calculation is:
 
 *Table 11. Worked credit-limit calculation.*
 
-The exposure cap does not bind in this example. The smoothing rule produces the smallest permitted amount and therefore determines the assigned limit. The Python implementation generates these values using full precision; the table rounds displayed amounts. The example does not represent an actual company or a fitted model result.
+Here the cap does not bind and smoothing determines the assigned limit. Implementation uses full precision, while displayed amounts are rounded. The borrower is hypothetical.
 
 ## 5.7 Scenario Assumptions and Limitations
 
-Each decision record preserves input values and dates, currency, event definition, horizon, model version, policy settings, intermediate amounts, binding constraint and change reason. Exposure and available credit remain separate. Appendix A maps the code and results.
-
-The base replay assumes that all reported cash is eligible, no additional external debt payment is due within 60 days, outstanding facility exposure is zero and the exposure cap equals 1% of assets. These are not observed borrower facts. Rows without the required accounting inputs are excluded, and a reporting gap starts a new hypothetical assessment.
-
-The probability is a prediction of an SEC disclosure proxy, not a verified facility default. The data contain no actual credit limits, drawings, repayments, losses, prices or profits against which to test the policy. The parameters were fixed before model fitting, and the sensitivity cases show how the rules react to alternative assumptions rather than identify optimal settings. The replay therefore tests the behavior of the proposed rules; it does not demonstrate that the limits are safe, profitable or beneficial to a lender.
+Each record preserves input dates, currency, event and model versions, settings, intermediate amounts, constraints and change reasons. The base case assumes full cash eligibility, no additional 60-day debt payment, zero facility exposure and a 1%-of-assets cap. Missing required inputs are excluded. With no actual limits, drawings, repayments, losses, prices or profits, sensitivity tests behavior rather than optimality, safety or lender benefit.

@@ -1,12 +1,10 @@
 # 3 Data and Target Definition
 
-The U.S. Securities and Exchange Commission (SEC) oversees US securities markets and corporate reporting by public issuers. Companies submit periodic financial reports and reports of important events through its Electronic Data Gathering, Analysis, and Retrieval system (EDGAR). These public filings contain accounting values, filing dates and information about disclosed corporate events.
-
-This chapter describes how SEC data are used to construct the accounting predictors and disclosure labels for the primary model experiment. The data were created for regulatory reporting rather than credit scoring, so not every reported value is complete, economically comparable or suitable for the model. The observation is a company at a monthly decision date.
+This chapter constructs monthly company observations, accounting predictors and disclosure labels from SEC filings. Because the data were created for regulatory reporting rather than credit scoring, reported values are not always complete or comparable.
 
 ## 3.1 Study Population and Observation Unit
 
-The inventory for the primary model experiment contains 20,443 company-facts files. Each company is linked to its submissions history through its Central Index Key, or CIK. The screen requires at least one domestic periodic filing, complete referenced historical archives and a known current SIC code outside 6000–6999.
+The inventory contains 20,443 Company Facts files linked to submissions by Central Index Key (CIK). Screening requires a domestic periodic filing, complete referenced archives and a known current SIC outside 6000–6999.
 
 | Inventory screen | Companies |
 |---|---:|
@@ -20,15 +18,15 @@ The inventory for the primary model experiment contains 20,443 company-facts fil
 
 *Table 1. Company inventory screening.*
 
-The four inventory exclusions are mutually exclusive. SIC codes 6000–6999 broadly cover finance, insurance and real-estate companies. These companies are excluded because their balance sheets differ from those of ordinary operating companies: for example, deposits are normal business funding for banks, so leverage, liquidity and working-capital ratios have different meanings. Their assessment requires specialized measures that are not included among the twelve predictors. Further losses reflect missing or stale financial information and unavailable outcome windows. [SEC SIC code list](https://www.sec.gov/search-filings/standard-industrial-classification-sic-code-list).
+The exclusions are mutually exclusive. SIC 6000–6999 broadly covers finance, insurance and real estate, whose balance sheets require specialized measures absent from the twelve predictors. Further losses reflect unusable financial data or outcome windows. [SEC SIC code list](https://www.sec.gov/search-filings/standard-industrial-classification-sic-code-list).
 
-The unit is a company at the first day of a month. Decision dates run from January 2011 through December 2025. The completed panel has 565,222 labeled company-month observations before chronological purging. It contains 1,052 positive rows associated with 573 disclosure episodes in 487 companies.
+For example, customer deposits are ordinary operating funding for banks, so leverage, liquidity and working-capital ratios have meanings unlike those for industrial companies. Applying the same feature definitions would make cross-company comparisons misleading.
 
-Current ticker status is not required. The inventory nevertheless does not reconstruct a complete historical listing universe, and current SIC may differ from a company's historical classification.
+The unit is a company on the first day of a month from January 2011 through December 2025. Before chronological purging, the panel has 565,222 labeled observations and 1,052 positive rows associated with 573 episodes in 487 companies. Ticker status is irrelevant, but the inventory is not a complete historical listing universe and current SIC may differ from historical classification.
 
 ## 3.2 Sources and Information Availability
 
-This study combines three SEC sources in one monthly company panel: Company Facts, Financial Statement and Notes data, and submissions. Company Facts and Financial Statement and Notes data supply accounting information from corporate filings, while submissions provide the filing history used to define disclosure outcomes and reporting follow-up. The Central Index Key (CIK) identifies the company, while the accession number identifies an individual filing.
+The panel combines Company Facts, Financial Statement and Notes data, and submissions. CIK identifies a company and accession number a filing.
 
 | Source | Information used in this study | Role in the panel |
 |---|---|---|
@@ -40,48 +38,46 @@ This study combines three SEC sources in one monthly company panel: Company Fact
 
 ### 3.2.1 Understanding Company Facts and Overlapping Filings
 
-Company Facts is an SEC dataset that organizes individual accounting values from a company's filings into one history. A record contains the accounting tag, value, unit, reporting period, filing date, form and accession number. It is therefore not a separate financial statement: it is a collection of values taken from statements filed over time.
+Company Facts organizes tagged values, units, reporting periods, filing dates, forms and accession numbers from 10-K, 10-Q and amended filings. Filings overlap: later reports may repeat comparative balances, and flow values may cover cumulative periods.
 
-The dataset includes annual Forms 10-K, quarterly Forms 10-Q and their amendments. These filings can overlap. A later filing may repeat an earlier balance for comparison, while quarterly revenue, income and cash-flow amounts may cover cumulative parts of a year. Such records cannot simply be added together.
+It is therefore a history of individual reported facts rather than a set of ready-made financial statements. A single economic amount may appear under several tags or in several filings, while an annual and a year-to-date flow can share the same end date but represent different durations. Selecting facts requires both filing metadata and the underlying reporting period.
 
-For each monthly decision date, the study uses only filings that were already public; a value becomes usable on the day after filing. For each accounting item, the extractor first selects the latest eligible reporting period and then the latest filing version available for that period. If an amendment is filed later, it can change later monthly observations but cannot rewrite earlier ones. Conflicting values from the same selected filing date remain missing rather than being chosen arbitrarily.
+Only public information is used. A value becomes available the day after filing. The extractor chooses the latest eligible reporting period and then its latest available filing version. Later amendments affect only later decisions, and conflicting values remain missing.
 
-The panel has one decision date per month, but companies normally publish financial statements only quarterly or annually. Fresh accounting data are therefore not available every month. The latest known value is carried forward until a newer filing becomes available, so the same assets, liabilities or cash value may appear in several consecutive monthly observations. This is intentional: it represents what a lender could have known at each date instead of inventing monthly updates. Balance-sheet values can come from annual or quarterly filings, while revenue, net income and operating cash flow are restricted to periods covering approximately a full year. Quarterly and cumulative year-to-date flows are not added together.
+This treatment prevents restatements from rewriting the information available to an earlier lender. It also means that two observations with the same reporting period may legitimately differ if an amendment became public between their decision dates.
 
-For example, after a company files a 10-Q, the project can use its newer quarter-end assets for subsequent monthly decisions. However, it continues to use the latest complete annual revenue and operating cash flow instead of combining the overlapping quarterly amounts.
+Because statements are quarterly or annual, the latest known value is carried forward between monthly decisions. Balance-sheet items may use annual or quarterly filings. Revenue, income and operating cash flow must cover approximately a full year, and overlapping quarterly or year-to-date flows are never added.
+
+For example, a newly filed 10-Q can update quarter-end assets and cash for later monthly decisions while annual revenue and operating cash flow remain those from the latest eligible full-year period. Carry-forward represents the available information set. It does not claim that the underlying company was unchanged.
 
 ### 3.2.2 Why Both Accounting Sources Are Needed
 
-The two accounting sources provide different parts of the same picture. Company Facts works like a standardized summary of a company's reported numbers. It makes values easier to follow over time and records when each value was reported. However, it does not preserve the complete financial statement and may miss an amount when a company reports it under a different name. [SEC, EDGAR API documentation](https://www.sec.gov/search-filings/edgar-application-programming-interfaces).
+Company Facts provides standardized histories and availability dates but may omit values reported under custom names. [SEC, EDGAR API documentation](https://www.sec.gov/search-filings/edgar-application-programming-interfaces). Financial Statement and Notes data retain statement rows and calculation relationships. This allows a missing total, notably **total liabilities**, to be identified under a custom label or recovered from complete, non-duplicated components. Values must match the same filing and reporting date. Reporting errors can remain. [SEC, Financial Statement and Notes dataset documentation](https://www.sec.gov/dera/data/fsnds.pdf).
 
-The Financial Statement and Notes data are closer to the original statements. They retain the names of statement rows and information about how amounts form a total. For example, Company Facts may not show a standard total for liabilities even though the balance sheet reports that total under another name or lists the parts needed to calculate it. The detailed statement data help identify the correct amount without adding the same item twice.
-
-Using both sources combines the advantages of each one. Company Facts provides the consistent history, while the Financial Statement and Notes data help explain, check or fill values that are missing or unclear. A value is used only when it can be linked to the same filing and reporting date and passes the checks described below. Both sources can still contain reporting errors or inconsistencies. [SEC, Financial Statement and Notes dataset documentation](https://www.sec.gov/dera/data/fsnds.pdf).
-
-A concrete example is **total liabilities**. When Company Facts does not contain a usable standard value for total liabilities, the detailed statement data can provide the reported total under a custom name or the complete balance-sheet components needed to recover it. This recovered value can then be used to calculate ratios that compare liabilities with assets or cash flow.
+The detailed data are used conservatively. A custom row is not accepted merely because its label resembles a desired concept, and a calculated total is accepted only when every required component is present and the recorded relationship balances. This prioritizes traceability over coverage.
 
 ### 3.2.3 Combining the Sources in One Panel
 
-Each monthly observation starts with Company Facts. When Company Facts contains a usable value, that value is preferred. The Financial Statement and Notes data are used only to fill or check missing balance-sheet values, such as total liabilities.
+Company Facts is preferred. Detailed statements fill or check missing balance-sheet values. Reconstructed totals require every component and a balanced calculation, otherwise they remain missing. Annual revenue, income and operating cash flow come from Company Facts because it supplies exact period dates. Narrative notes are unused, and each accepted value retains its provenance.
 
-Before a statement value is accepted, it must belong to the same company, filing and reporting date. If a total is calculated from smaller parts, all required parts must be present and the calculation must balance. Unclear or conflicting values remain missing rather than being guessed.
-
-Annual revenue, net income and operating cash flow come from Company Facts because it provides their exact annual start and end dates. Narrative text from the notes is not used by the model. The source and calculation of every accepted value are recorded so that the result can be checked later.
+This precedence rule avoids choosing opportunistically between sources after observing model outcomes. Provenance records include the accession, reporting date, filing date, tag or statement row and any calculation used.
 
 
 ## 3.3 Outcome and Prediction Horizon
 
-For every company-month, the model asks a simple question: **will the company make a new qualifying distress disclosure within the next 60 days?** A disclosure within this period produces a positive label (`1`). A negative label (`0`) means that no qualifying disclosure was observed during the period and that enough later SEC reporting exists to observe the complete 60 days.
+For each company-month, the target asks whether a **new qualifying distress disclosure occurs within 60 days**. A negative label also requires sufficient later SEC reporting to observe the whole window.
 
-Two types of Form 8-K disclosure can qualify. Item 1.03 reports bankruptcy or receivership matters, including some reorganizations. It may concern the company or its parent, and the filing date is not necessarily the date on which the financial problem began. Item 2.04 covers events that can accelerate or increase a financial obligation. An Item 2.04-only filing is included here only when its review finds clear evidence of a missed principal or interest payment. [SEC, Form 8-K, Item 1.03](https://www.sec.gov/files/form8-k.pdf).
+Item 1.03 bankruptcy or receivership filings qualify. Item 2.04-only filings qualify only when an automated review finds clear evidence of missed principal or interest. Filing dates need not equal event dates. Reviews used language models through OpenAI Batch. Cases describing only acceleration or enforcement, lacking review or remaining unclear are unresolved. Without independent human validation, review confidence is not a measured accuracy rate. [SEC, Form 8-K](https://www.sec.gov/files/form8-k.pdf).
 
-The Item 2.04 reviews were produced by language models through OpenAI Batch. Filings that mention only acceleration or enforcement, lack a review, or remain unclear are treated as unresolved. The model's confidence description is not a measured accuracy rate because no separate human validation sample was recorded. Appendix A provides the reproduction and review details.
+Item 1.03 may concern an issuer or its parent and includes different bankruptcy or receivership circumstances. Item 2.04 covers events that can accelerate or increase an obligation, but such events do not always arise from non-payment. Requiring explicit missed-payment evidence narrows the latter category while retaining the uncertainty of automated document interpretation.
 
-Several related filings may describe the same financial problem. Qualifying disclosures no more than 90 days apart are therefore grouped into one episode. Company-months during that episode and for 90 days after its last disclosure are not used to predict another event. This prevents follow-up filings about an already known problem from being counted as new events. The 90-day rule is a practical assumption, not proof that the company recovered afterward.
+Disclosures no more than 90 days apart form one episode. Company-months within an episode and the 90 days after its last filing are excluded from new-event prediction, preventing follow-up filings from becoming new events. The gap is operational, not evidence of recovery.
 
-A negative label requires evidence that the company continued filing with the SEC until at least the end of the 60-day window. The evidence can be a later Form 10-K, 10-Q or 8-K, including an amendment. If the decision date falls after the company's final qualifying filing, there is not enough reporting history to determine whether no event occurred, so the row is left unlabeled. This confirms observable SEC follow-up, not that the company was free from financial distress.
+Without episode grouping, several filings about one restructuring could be counted as repeated independent failures and inflate apparent performance. Conversely, the chosen gap may join distinct problems or separate a prolonged one. It is a transparent rule rather than a clinical definition of resolution.
 
-Labels are used only after their complete 60-day window can be observed. A negative label becomes available on the day after the first qualifying follow-up filing at or beyond the end of that window. All labels must be available before the study cutoff and, for an earlier modeling stage, before the next chronological stage begins. These rules prevent the model from using future information.
+A negative label requires a later 10-K, 10-Q or 8-K at or beyond the window's end. It confirms observable follow-up, not absence of distress. The label becomes available only after that filing and must precede the study cutoff and the next modeling stage, preventing future information from entering earlier decisions.
+
+Rows after an issuer's final observed filing cannot safely be labeled negative because silence may reflect deregistration, reporting disruption or an unobserved event. The follow-up rule reduces this error at the cost of excluding some otherwise financially usable observations.
 
 The labeling rules reduce 611,705 financially usable company-months to 565,222 labeled observations:
 
@@ -94,57 +90,55 @@ The labeling rules reduce 611,705 financially usable company-months to 565,222 l
 
 *Table 3. Company-months removed by the outcome-labeling rules.*
 
-These rows are excluded because their outcomes cannot be labeled reliably. However, a disclosure already known on the decision date can still stop the credit policy from offering a limit.
+These outcomes are unreliable and excluded, although a disclosure already known on the decision date can still trigger a policy hard stop.
 
 ## 3.4 Feature Construction
 
-The predictive experiment uses twelve features covering liquidity, leverage, financial change, profitability, cash generation and size. In the formulas below, $$CA$$ is current assets, $$CL$$ current liabilities, $$TA$$ total assets, $$L$$ total liabilities, $$Cash$$ cash and cash equivalents, $$NI$$ net income and $$OCF$$ operating cash flow. Values at $$t$$ are the latest known at the monthly decision date; $$t-12$$ denotes the closest comparable balance about one year earlier; and $$a$$ denotes the latest complete annual period. Average assets and liabilities use the beginning and end of that period.
+The predictive experiment uses twelve features covering liquidity, leverage, financial change, profitability, cash generation and size. In the formulas below, $$CA$$ is current assets, $$CL$$ current liabilities, $$TA$$ total assets, $$L$$ total liabilities, $$Cash$$ cash and cash equivalents, $$NI$$ net income and $$OCF$$ operating cash flow. Values at $$t$$ are the latest known at the monthly decision date. The notation $$t-12$$ denotes the closest comparable balance about one year earlier, and $$a$$ denotes the latest complete annual period. Average assets and liabilities use the beginning and end of that period.
 
 | Feature | Formula | Interpretation and expected relationship with risk |
 |---|---|---|
-| Current ratio | $$CA_t/CL_t$$ | Short-term resources relative to obligations; lower values can indicate payment pressure, although inventory and receivable quality matter. |
-| Cash to assets | $$Cash_t/TA_t$$ | Immediate liquidity buffer; higher values generally suggest lower risk unless cash is restricted or operationally necessary. |
-| Liabilities to assets | $$L_t/TA_t$$ | Overall obligations and equity buffer; higher values generally suggest greater risk, subject to industry differences. |
+| Current ratio | $$CA_t/CL_t$$ | Short-term resources relative to obligations. Lower values can indicate payment pressure, although inventory and receivable quality matter. |
+| Cash to assets | $$Cash_t/TA_t$$ | Immediate liquidity buffer. Higher values generally suggest lower risk unless cash is restricted or operationally necessary. |
+| Liabilities to assets | $$L_t/TA_t$$ | Overall obligations and equity buffer. Higher values generally suggest greater risk, subject to industry differences. |
 | Asset growth, 12 months | $$(TA_t-TA_{t-12})/TA_{t-12}$$ | Captures expansion, contraction, acquisitions or asset sales. Either rapid growth or contraction can be adverse, so no single direction is assumed. |
-| Change in liabilities to assets | $$L_t/TA_t-L_{t-12}/TA_{t-12}$$ | Measures the change in leverage; an increase generally suggests higher risk. |
-| Working capital to assets | $$(CA_t-CL_t)/TA_t$$ | Short-term surplus or shortage relative to company size; larger positive values generally suggest lower risk. |
-| Return on average assets | $$NI_a/\overline{TA}_a$$ | Accounting profitability; low or negative returns generally suggest higher risk, but profit need not imply cash generation. |
-| Operating cash flow to average assets | $$OCF_a/\overline{TA}_a$$ | Operating cash generation relative to assets; low or negative values can indicate cash pressure. |
-| Operating cash flow to average liabilities | $$OCF_a/\overline{L}_a$$ | Cash generation relative to obligations; this is not debt-service coverage because scheduled principal and interest are unavailable. |
-| Negative income | $$\mathbb{1}(NI_a<0)$$ | Captures the loss threshold separately from return on assets; a value of one generally suggests higher risk. |
+| Change in liabilities to assets | $$L_t/TA_t-L_{t-12}/TA_{t-12}$$ | Measures the change in leverage. An increase generally suggests higher risk. |
+| Working capital to assets | $$(CA_t-CL_t)/TA_t$$ | Short-term surplus or shortage relative to company size. Larger positive values generally suggest lower risk. |
+| Return on average assets | $$NI_a/\overline{TA}_a$$ | Accounting profitability. Low or negative returns generally suggest higher risk, but profit need not imply cash generation. |
+| Operating cash flow to average assets | $$OCF_a/\overline{TA}_a$$ | Operating cash generation relative to assets. Low or negative values can indicate cash pressure. |
+| Operating cash flow to average liabilities | $$OCF_a/\overline{L}_a$$ | Cash generation relative to obligations. This is not debt-service coverage because scheduled principal and interest are unavailable. |
+| Negative income | $$\mathbb{1}(NI_a<0)$$ | Captures the loss threshold separately from return on assets. A value of one generally suggests higher risk. |
 | Negative operating cash flow | $$\mathbb{1}(OCF_a<0)$$ | Identifies operations that consume cash, while allowing that one negative year may reflect temporary working-capital investment. |
-| Log assets | $$\ln(TA_t)$$ | Controls for company size on a compressed scale; larger firms may have diversification and funding advantages, but are not necessarily safer. |
+| Log assets | $$\ln(TA_t)$$ | Controls for company size on a compressed scale. Larger firms may have diversification and funding advantages, but are not necessarily safer. |
 
 *Table 4. Accounting predictors, definitions and expected relationships with risk.*
 
-These expected relationships are economic priors rather than causal claims. Models determine whether the features are useful in the study data and can capture combinations that differ from the expected direction.
+Expected directions are economic priors, not causal claims. Ratio components use compatible dates and periods. Quarterly cumulative values are not added and missing values are not zeroed. Interest coverage is excluded because SEC tags did not support a consistent calculation. Industry and reporting age are audit fields, not predictors.
 
-All ratio components are matched to compatible reporting dates and periods. Balance-sheet values refer to the same date, annual flows cover the same period, and change features use the closest comparable balance about one year earlier. Quarterly cumulative values are not added and missing amounts are not treated as zero.
-
-Interest coverage is not included because the available SEC tags could not support a sufficiently reliable and consistent calculation. Industry and reporting age are retained for auditing but are not model features.
+Average assets and liabilities use the beginning and end of the relevant annual period. Twelve-month changes use the closest sufficiently comparable prior balance rather than assuming every company files on identical calendar dates. Denominators that are zero or economically invalid produce missing ratios instead of extreme artificial values.
 
 ## 3.5 Data Quality and Preprocessing
 
-SEC filings do not provide every accounting value for every company and period. The study therefore applies clear rules for deciding which monthly observations can be used and how missing feature values are handled.
+Eligibility and missing-value rules address incomplete SEC reporting.
 
 ### 3.5.1 Which Company-Months Are Included
 
 A company-month enters the labeled dataset only when:
 
-- the company is still within its observed SEC reporting history;
-- total assets are available and greater than zero;
-- annual operating cash flow is available;
-- the latest balance sheet is no more than 180 days old;
-- the latest annual cash-flow period ended no more than 540 days earlier; and
+- the company is still within its observed SEC reporting history
+- total assets are available and greater than zero
+- annual operating cash flow is available
+- the latest balance sheet is no more than 180 days old
+- the latest annual cash-flow period ended no more than 540 days earlier
 - the 60-day outcome can be determined using the rules in Section 3.3.
 
-These age limits prevent the model from relying on financial statements that are too old. Whether information was public at the decision date is determined from its filing date, as explained in Section 3.2.
+The age limits exclude stale statements. Sequential filters produce the following counts:
 
-The filters reduce the initial monthly grid as follows. They are applied in order, so every removed observation appears in only one row.
+They are applied in order, so every removed row appears once. The reporting-history screen is separate from financial freshness: a company can remain an SEC filer yet lack the required recent accounting inputs.
 
 | Filter | Rows removed | Rows remaining |
 |---|---:|---:|
-| Initial company-month grid | — | 1,958,220 |
+| Initial company-month grid | Not applicable | 1,958,220 |
 | Remove months outside each company's observed reporting history | 1,014,086 | 944,134 |
 | Remove months without usable and sufficiently recent required financial data | 332,429 | 611,705 |
 | Remove months whose 60-day outcome cannot be labeled reliably | 46,483 | 565,222 |
@@ -155,7 +149,7 @@ The filters reduce the initial monthly grid as follows. They are applied in orde
 
 ### 3.5.2 Missing Feature Values
 
-An included company-month does not need to have all twelve model features. For example, assets and annual operating cash flow may be available while liabilities or a comparable balance from the previous year are missing. A ratio is also missing when its denominator is zero or negative.
+Included rows may still lack individual predictors. Ratios are also missing when denominators are non-positive.
 
 | Feature | Missing rows | Share of 565,222 labeled rows |
 |---|---:|---:|
@@ -176,29 +170,23 @@ An included company-month does not need to have all twelve model features. For e
 
 *A company-month can be missing more than one feature, so these counts must not be added together.*
 
-Leverage change has the most missing values because it requires both assets and liabilities at two comparable dates about one year apart. Log assets and the negative-operating-cash-flow indicator have no missing values because assets and annual operating cash flow are required before a company-month can enter the dataset.
+Leverage change has most missingness because it needs assets and liabilities at two dates. Training-sample medians replace missing predictors, missingness indicators preserve that fact, and the fitted medians are reused later. This enables modeling rather than estimating the missing accounting value. Negative amounts and extreme ratios are retained, leaving logistic models more sensitive to outliers.
 
-The model pipeline requires a numeric value for every feature. During training, each missing value is therefore replaced with the median observed in the relevant training data. The model also receives a separate yes-or-no indicator showing that the original value was missing. The same training median is then used for later observations, so evaluation data cannot influence preprocessing. This procedure makes modeling possible; it does not estimate the company's actual missing accounting value.
-
-Negative working capital, income and operating cash flow are kept because they can be important warning signs. Very large or small ratios are also kept rather than capped or removed. This preserves reported information but leaves the models, especially logistic regression, more sensitive to unusual values.
+Re-estimating a median on later data would leak distributional information across time, so every chronological fold fits its own preprocessing. Missingness indicators also allow a model to distinguish an observed median-like value from an imputed one, although they may capture reporting conventions rather than financial condition.
 
 ### 3.5.3 Data Required for the Credit-Limit Policy
 
 The credit-limit calculation has stricter requirements than the prediction model. It needs observed values for:
 
-- total assets;
-- annual revenue;
-- annual operating cash flow; and
+- total assets
+- annual revenue
+- annual operating cash flow
 - cash.
 
-These values directly determine a monetary limit, so missing amounts are not replaced with medians or zeros. Assets must be positive, revenue and cash cannot be negative, and all four values must be valid numbers. Operating cash flow may be negative because this can reflect genuine financial weakness.
+Because these inputs determine money, none is imputed. Assets must be positive. Revenue and cash must be non-negative, while operating cash flow may be negative. The policy sample can include a company whose known disclosure triggers a zero limit even though it is ineligible for new-event prediction.
 
-The policy evaluation can also include a company with a disclosure already known at the decision date. Such a case is not used to predict a new event, but the known disclosure activates a rule that prevents the policy from offering credit. The policy sample therefore differs from the labeled model sample; Chapter 7 reports it separately.
+This stricter rule makes the policy sample smaller and different from the modeling sample. Substituting a median or zero would create a fictitious dollar capacity, whereas retaining negative operating cash flow is necessary for genuine weak-company cases.
 
 ## 3.6 Data Limitations
 
-The panel is monthly, but companies normally report only quarterly or annually. Financial values are therefore repeated until a new filing appears, and the model cannot observe changes occurring between filings.
-
-Accounting formats also differ across companies. This thesis combines Company Facts with Financial Statement and Notes data to recover some missing balance-sheet values, but missing, conflicting or incorrectly reported amounts can remain.
-
-The outcome is an SEC disclosure proxy, not a verified default. Item 1.03 covers different situations, Item 2.04 reviews were automated without a separate human validation sample, and some cases remain unresolved. Companies with disrupted reporting may also be excluded. The results should therefore be interpreted as predictions of the defined disclosure outcome, not exact default probabilities.
+Quarterly or annual values repeat between monthly decisions, hiding interim changes. Accounting differences and reporting errors remain despite statement reconciliation. The outcome is a disclosure proxy, Item 1.03 is heterogeneous, Item 2.04 review lacks independent validation, and disrupted reporters may be excluded. Results therefore concern the defined disclosure, not exact default probability.

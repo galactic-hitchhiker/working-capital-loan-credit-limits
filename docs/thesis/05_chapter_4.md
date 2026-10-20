@@ -1,39 +1,35 @@
 # 4 Risk Modeling and Validation Methodology
 
-This chapter explains how the models are trained, compared and evaluated. Every model uses the same accounting features, outcome definition and information-timing rules. Appendix A records the exact software settings and parameter grids.
+All models use the same features, outcome and timing rules. Appendix A gives exact settings.
 
 ## 4.1 Modeling Framework
 
-Each observation represents a company at a monthly decision date. Models use the twelve accounting features and 60-day outcome defined in Chapter 3, but not company names, identifiers, industry codes, future information or policy results. Missing features are replaced with fitting-sample medians and accompanied by missingness indicators; logistic inputs are also scaled. These fitted transformations are applied unchanged to later observations.
+Models use the twelve Chapter 3 features but exclude identifiers, industry, future information and policy results. Fitting-sample medians and missingness indicators handle missing predictors. Logistic inputs are also scaled. Transformations remain fixed later. There is no synthetic oversampling or outlier capping, and monetary-policy inputs are never imputed with model medians.
 
-The study does not create synthetic companies or outcomes and does not duplicate rare events through oversampling. Unusually large ratios are retained rather than capped. Missing inputs needed for the monetary credit-limit calculation are handled separately and are never filled with model medians.
+Keeping a common feature set makes family comparisons interpretable. Excluding company identifiers prevents direct memorization, although repeated financial patterns from the same issuer can still appear across stages as part of the monitoring design.
 
 ## 4.2 Models and Constant Benchmark
 
-The constant benchmark assigns every observation the event rate from the original training period. It does not distinguish between companies. A useful model should provide more information than this simple prediction.
+The constant benchmark assigns every observation the original training event rate. Logistic regression, L2 logistic regression, random forest and XGBoost are compared. The tree models can capture nonlinearities and interactions. Scaled, pre-calibration logistic coefficients are associations rather than causal or percentage-point effects, and a convergence warning stops fitting.
 
-Four model families are compared: logistic regression, L2-regularized logistic regression, random forest and XGBoost. The first two provide linear benchmarks; the tree ensembles can capture nonlinearities and interactions.
-
-Both logistic models use the same preprocessing. Their scaled, pre-calibration coefficients describe associations, not causal effects or direct percentage-point probability changes. A convergence warning stops fitting.
+The constant is a demanding probability benchmark for a rare outcome because assigning a small rate to every row can achieve a low Brier score. A candidate must therefore add ranking information without degrading probability error.
 
 ## 4.3 Model Tuning
 
-Several settings are tested for each model family. Logistic regression contributes two candidates, L2 logistic regression six, random forest eight and XGBoost eight, for 24 candidates in total. These counts include versions fitted with and without balanced class weights. Appendix A lists the exact settings.
+The search contains 24 candidates including weighted and unweighted versions: two logistic, six L2 logistic, eight random-forest and eight XGBoost settings.
 
 Candidate settings are compared using two expanding yearly tests:
 
 1. Fit on 2011–2016 and evaluate on 2017.
 2. Add eligible 2017 observations, refit, and evaluate on 2018.
 
-Only labels available before the beginning of a yearly evaluation are used for fitting. Missing-value replacement and scaling are also recalculated inside each fold.
+Each fold uses only labels then available and refits preprocessing. Candidates rank first by mean annual **average-precision lift** over the event rate, then by **Brier skill** relative to the fitting-sample rate and a fixed tie order. The winner within each family is refitted on combined training and tuning data.
 
-Candidates are ranked by **average-precision lift** over the year's event rate and **Brier skill** relative to the corresponding fitting-sample event rate. Values above one and zero, respectively, indicate improvement over these baselines.
-
-The candidate with the highest mean annual average-precision lift wins within its family. Mean annual Brier skill and a fixed candidate order break ties. The winning setting is then fitted again using the combined training and tuning observations.
+Lift and skill normalize each year against its own prevalence, limiting the influence of changes in the event rate. Expanding folds preserve temporal order and expose candidates to two distinct forward tests before a family setting is fixed.
 
 ## 4.4 Chronological Validation and Information Timing
 
-A random split would mix observations from different dates and could allow future information to influence earlier predictions. The study therefore uses five ordered stages:
+Five ordered stages prevent future information from entering earlier predictions:
 
 | Stage | Nominal decision dates | Purpose |
 |---|---|---|
@@ -45,33 +41,27 @@ A random split would mix observations from different dates and could allow futur
 
 *Table 7. Chronological model-development and evaluation stages.*
 
-These are nominal date ranges. An observation is removed from an earlier stage when its complete 60-day label was not available before the next stage began. The data cutoff is 7 September 2026. Chapter 3 explains when positive and negative labels become available, and Chapter 6 reports the retained observations.
+Rows whose complete label was unavailable before the next stage are purged. The data cutoff is 7 September 2026. Companies may span stages and contribute repeated months, reflecting monitoring rather than a separate borrower sample. One episode may create several positive rows, so rows, episodes and companies are reported separately. Although excluded from final model development, 2023–2025 was examined during earlier work. Evaluation is retrospective, not untouched external validation.
 
-The same company can appear in several stages because the study evaluates continued monitoring, not a separate borrower population. Companies can contribute repeated months based on carried-forward statements, so row-level measures give more influence to issuers with more eligible months. The bootstrap in Section 4.6 keeps each company's observations together.
-
-One disclosure episode can produce positive labels for more than one monthly decision. Results therefore report positive rows, distinct episodes and event companies separately.
-
-The 2023–2025 period is excluded from the reported model's fitting, tuning, calibration and selection. However, these years were examined during earlier project development. The later evaluation is therefore retrospective and is not presented as untouched external validation.
+Repeated company-months also mean that ordinary row-level intervals would understate dependence. The cluster bootstrap keeps a sampled company's full history together, while chronological stages address time ordering. Neither device removes dependence caused by market-wide shocks.
 
 ## 4.5 Rare Outcomes and the Alert Threshold
 
-Because the outcome is rare, balanced fitting weights can give the two classes equal total influence:
+Balanced fitting weights can give the rare and common classes equal total influence:
 
 $$ w_c=\frac{N}{2N_c}, \tag{4} $$
 
 where $$N$$ is the number of fitting observations, $$N_c$$ is the number in class $$c$$, and $$w_c$$ is the weight for that class. The weights are calculated separately in each fitting sample. Calibration and evaluation keep the observed event distribution.
 
-Weighting is a tuning choice because it may improve event detection while distorting raw probabilities. Raw and corrected probabilities are both evaluated.
+Weighting is tuned because it can improve detection while distorting probabilities. Each family's 2020–2022 threshold maximizes F1, with ties favoring recall and then the higher threshold, and is frozen for 2023–2025. Thresholds only report alerts. The policy uses continuous probability and is not an approval rule.
 
-A threshold converts a probability into a yes-or-no alert. For each model family, the threshold is chosen on the 2020–2022 selection period by maximizing F1. Ties favor higher recall and then the higher threshold. The chosen value is fixed and applied unchanged to 2023–2025, preventing later outcomes from influencing the alert rule.
-
-The threshold is used only to report classification performance. It is not based on lending costs and does not determine credit approval. The credit-limit policy uses the continuous predicted probability.
+Balanced weights are recalculated inside each fitting sample. Evaluation always retains the observed class distribution, avoiding artificially favorable precision or calibration results.
 
 ## 4.6 Performance Measures and Uncertainty
 
-The study evaluates both ranking and probability accuracy.
+**ROC-AUC** measures how often an event observation ranks above a non-event observation. A value of 0.5 indicates no useful ranking and 1 indicates perfect ranking. **Average precision** summarizes precision and recall across thresholds and is compared with the event share, its no-skill baseline.
 
-**ROC-AUC** measures how often an event observation ranks above a non-event observation; 0.5 indicates no useful ranking and 1 perfect ranking. **Average precision** summarizes precision and recall across thresholds and is compared with the event share, its no-skill baseline.
+ROC-AUC uses the full score distribution, whereas average precision focuses more directly on the rare positive class. Reporting both reduces the risk of treating a strong global ranking as sufficient evidence at the operationally relevant high-risk end.
 
 **Brier score** measures the squared difference between predicted probabilities and observed outcomes:
 
@@ -87,39 +77,28 @@ $$ \operatorname{Precision}=\frac{TP}{TP+FP},\qquad \operatorname{Recall}=\frac{
 
 $$ F_1=\frac{2\,\operatorname{Precision}\,\operatorname{Recall}}{\operatorname{Precision}+\operatorname{Recall}}. \tag{7} $$
 
-The study also reports the confusion matrix, event share, number of observations and number of distinct episodes detected. Precision or recall is set to zero when its denominator is zero.
-
 Uncertainty is estimated with 500 company-cluster bootstrap repetitions. Companies are sampled with replacement, and all monthly observations for each sampled company remain together. The 2.5th and 97.5th percentiles form the reported 95% interval. Repetitions containing only one outcome class are excluded and counted.
 
-These intervals preserve dependence within a company but do not capture shared economic shocks, model-selection uncertainty, changes in sample construction or errors in the disclosure labels. They are conditional on the fitted models and the constructed dataset.
+These are conditional empirical intervals around the frozen fitted model, not guarantees about another population or future economic regime.
+The study also reports confusion matrices and episode detection. Bootstrap intervals preserve within-company dependence but exclude shared shocks, model-selection and sample-construction uncertainty, and label errors.
 
 ## 4.7 Probability Calibration
 
-Calibration asks whether predicted probabilities match observed event rates.
+With each fitted model frozen, a sigmoid correction is learned on 2019 data. Raw and corrected probabilities are compared on 2020–2022 by Brier score, with ties favoring raw output. Later equal-width and quantile diagnostics compare predicted and observed rates without changing the model.
 
-Each family first produces a **raw probability**. The fitted model is then frozen, and a sigmoid correction is learned from the 2019 calibration observations. This correction changes the probability scale but does not refit the underlying logistic coefficients or decision trees.
-
-The raw and corrected probabilities are compared on the 2020–2022 selection period. The version with the lower Brier score is retained; an exact tie favors the raw probability. This allows calibration to help when needed without forcing an unnecessary adjustment.
-
-Later evaluation compares predicted probabilities with observed rates using ten equal-width groups and probability quantiles, which help when rare-event estimates occupy a narrow range. These diagnostics do not change the model.
+Separating calibration from model fitting prevents the correction sample from influencing coefficients or tree structure. Quantile groups remain informative when rare-event probabilities occupy only a small part of the zero-to-one range.
 
 ## 4.8 Model Interpretation and Error Analysis
 
-Logistic coefficients show associations after feature scaling, not causal effects. Missing-value indicators are reported separately because missing accounting data may reflect reporting coverage rather than the company's financial condition.
+Scaled logistic coefficients are associative. For the selected model, each original feature is permuted 20 times in the selection period. The Brier increase measures reliance, although correlated features can share importance. Later error analysis reports false alerts, missed events, annual performance and episode detection without redesigning the model.
 
-For the selected model, each original feature is randomly rearranged 20 times in the selection period. The increase in Brier score shows how much the model relied on that feature during that period. Features can contain overlapping information, so a low importance value does not prove that the underlying financial concept is irrelevant.
-
-Later error analysis reports false alerts, missed events, annual performance and distinct episode detection. It describes the frozen model's limitations and is not used to redesign the model after seeing later outcomes.
+Permutation is applied to original features after the full prediction pipeline, so it measures the fitted system rather than an isolated tree split. It remains a global diagnostic and does not explain any individual limit decision.
 
 ## 4.9 Final Model Selection and Connection to the Policy
 
 A model family can qualify only when, on the 2020–2022 selection period:
 
-- its average precision is higher than the observed event share; and
+- its average precision is higher than the observed event share
 - its Brier score is lower than the constant prediction based on the original training event rate.
 
-These requirements demand improvement in both ranking and probability error. Among qualifying families, the model with the lowest Brier score is selected. An exact tie favors the simpler family in this order: logistic regression, L2 logistic regression, random forest and XGBoost.
-
-The final choice is saved before predictions for 2023–2025 are generated. The rule does not require the highest average precision and does not prove that the selected family is statistically superior. Chapter 6 therefore reports all model families.
-
-The selected probability enters the credit-limit rule in Chapter 5 without refitting on later outcomes. Credit-policy coefficients are separate scenario assumptions and are not optimized using the later evaluation results.
+Among qualifying families, the lowest Brier score wins. Exact ties favor logistic, L2 logistic, random forest, then XGBoost. The choice is saved before 2023–2025 prediction, does not imply statistical superiority and need not maximize average precision. The selected probability enters the policy without later refitting. Policy coefficients are separate assumptions.

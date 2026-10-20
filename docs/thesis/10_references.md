@@ -2,6 +2,8 @@
 
 Altman, E. I. (1968). Financial ratios, discriminant analysis and the prediction of corporate bankruptcy. *The Journal of Finance, 23*(4), 589–609. [Original article](https://doi.org/10.1111/j.1540-6261.1968.tb00843.x).
 
+Basel Committee on Banking Supervision. (2020). *Basel Framework: IRB approach, risk components and treatment of expected losses and provisions* (CRE32 and CRE35). [Risk components](https://www.bis.org/committees/bcbs/basel-framework/standard/cre/32/inforce/2023-01-01/published/2020-03-27) and [expected losses and provisions](https://www.bis.org/committees/bcbs/basel-framework/standard/cre/35/inforce/2023-01-01/published/2020-03-27). Accessed 21 October 2026.
+
 Breiman, L. (2001). Random forests. *Machine Learning, 45*, 5–32. [Original article](https://doi.org/10.1023/A:1010933404324).
 
 Brier, G. W. (1950). Verification of forecasts expressed in terms of probability. *Monthly Weather Review, 78*(1), 1–3. [Original article](https://doi.org/10.1175/1520-0493(1950)078%3C0001:VOFEIT%3E2.0.CO;2).

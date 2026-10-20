@@ -1,10 +1,10 @@
 # 7 Credit-Limit Policy Results
 
-The policy replay applies the Chapter 5 rules to historical SEC financial information from 2023–2025. It combines observed accounting values, the selected random forest's 60-day disclosure probabilities and assumptions about a hypothetical credit facility. The results show how the proposed rules behave; they are not observed lending decisions.
+The 2023–2025 replay combines SEC accounts, random-forest probabilities and hypothetical facility assumptions. It tests rule behavior, not observed lending decisions.
 
 ## 7.1 Replay Sample and Reference Assumptions
 
-The replay starts with 141,460 company-months from 2023–2025. Unlike model evaluation, it requires no future label, only valid financial inputs and a probability available on the decision date.
+The replay requires valid point-in-time financial inputs and probability, but no future label:
 
 | Policy-sample step | Company-months |
 |---|---:|
@@ -15,9 +15,9 @@ The replay starts with 141,460 company-months from 2023–2025. Unlike model eva
 
 *Table 18. Construction of the policy-replay sample.*
 
-The replay includes 99,619 company-months from 3,869 companies; 29.6% of candidates lack required values, which are not replaced with zero.
+The 99,619 included rows cover 3,869 companies. Among candidates, 29.6% lack required, non-imputed values. The included rows form 5,176 consecutive-month segments. After a gap, a new segment begins as a hypothetical initial assessment, only as a replay convention.
 
-The included observations form 5,176 continuous company segments. A segment is a sequence of consecutive monthly observations for one company. If a month is missing, the next observation starts a new segment and is treated as a new hypothetical initial assessment. This reset is a replay convention, not evidence that a real lender would reopen a facility.
+This sample differs from later model evaluation because policy calculation does not require an outcome observable 60 days afterward. It instead requires the financial amounts needed to assign money, which explains why its inclusion rules and row count are reported separately.
 
 The reference, or base, scenario uses the following assumptions:
 
@@ -35,7 +35,7 @@ The reference, or base, scenario uses the following assumptions:
 
 *Table 19. Reference policy assumptions.*
 
-Revenue, operating cash flow, cash and assets are observed. Cash eligibility, near-term debt payments, the cap and facility exposure are assumptions. The reference scenario is a comparison point, not an established or optimal standard.
+Revenue, cash flow, cash and assets are observed. Cash eligibility, debt payments, cap and facility exposure are assumptions. The reference is not an optimal standard.
 
 ## 7.2 Reference-Scenario Results
 
@@ -53,13 +53,9 @@ The reference policy produces the following results:
 
 *Table 20. Reference-scenario credit-limit results.*
 
-The mean exceeds the median because a few very large public companies have large limits. Neither amount represents a typical smaller private borrower.
+Large public companies raise the mean above the median, so neither represents a typical small private borrower. The 0.668% figure averages row-level limit/assets ratios. Zeros arise from capacity, hard stops or non-reopening. The 262 hard-stop rows are not distinct companies or episodes. The 1%-of-assets cap binds in 53.42% of rows.
 
-The 0.668% result is the average of each company-month's assigned limit divided by its reported assets. It is not the total of all assigned limits divided by the total of all assets.
-
-A zero may reflect no capacity, a known disclosure or a prior zero that cannot reopen automatically. The 262 hard-stop rows are observations, not necessarily distinct companies or episodes.
-
-The 1%-of-assets cap determines the preliminary limit in 53.42% of observations, making it the immediate constraint in more than half of the replay.
+Frequent cap binding also explains why probability changes have a modest aggregate effect: when the cap is already below risk-adjusted capacity, a small movement in probability leaves the preliminary limit unchanged. Probability matters more where capacity rather than the cap binds.
 
 The replay contains 94,443 transitions between consecutive months within the same company segment:
 
@@ -71,11 +67,13 @@ The replay contains 94,443 transitions between consecutive months within the sam
 
 *Table 21. Monthly transitions under the reference policy.*
 
-Most limits remain unchanged because accounting values are carried forward between SEC reports and a new month often contains no new financial information. Missing-month gaps are not counted as monthly transitions.
+Most limits are unchanged because statements are carried forward. Gaps are not transitions.
+
+The remaining changes can reflect a new financial filing, a probability update, a change in the asset cap or state carried by the monthly rules. Counting only consecutive observations avoids treating a post-gap initial assessment as an ordinary monthly movement.
 
 ## 7.3 Sensitivity to Policy Assumptions
 
-Each sensitivity scenario uses the same historical financial observations and changes one assumption while keeping the remaining reference settings unchanged.
+Each sensitivity changes one assumption on the same observations.
 
 | Scenario | Meaning | Mean limit / assets | Zero-limit share |
 |---|---|---:|---:|
@@ -90,15 +88,11 @@ Each sensitivity scenario uses the same historical financial observations and ch
 
 *Table 22. Sensitivity of policy results to alternative assumptions.*
 
-Removing the probability reduction raises mean limit/assets from 0.6678% to 0.6751%. Most probabilities are low and the cap often binds, although high-risk companies with a non-binding cap can receive larger reductions.
+Removing probability reduction raises mean limit/assets only from 0.6678% to 0.6751%, as probabilities are low and the cap often binds. By contrast, no eligible cash raises zero limits to 48.30%, and a debt deduction of 0.5% of assets raises them to 36.48%. Cap changes also have large effects. These are sensitivities to unobserved assumptions, not borrower facts. Alternative model probabilities barely change the mean. The values are 0.6678% for random forest, 0.6658% for XGBoost and 0.6669% for logistic, although individual limits may differ.
 
-Cash and debt assumptions have larger effects. With no eligible cash, the zero-limit share rises to 48.30%; deducting debt payments equal to 0.5% of assets raises it to 36.48%. These scenarios show sensitivity to unobserved inputs, not that companies actually face those conditions.
+The comparison identifies which inputs would merit the strongest evidence in a real application. Cash eligibility and contractual payment schedules must be measured borrower by borrower. An aggregate similarity across probability models cannot compensate for uncertainty in those capacity inputs.
 
-Changing the exposure cap also has a large effect. A lower cap directly limits otherwise supported amounts, while a 2%-of-assets cap allows more observations to be determined by the capacity proxy. Capacity assumptions and caps therefore have a larger effect on the aggregate results than the model-based risk adjustment in these scenarios.
-
-Using probabilities from another fitted model changes the aggregate mean little: random forest gives 0.6678% of assets, XGBoost 0.6658% and either logistic model 0.6669%. Similar averages do not mean that the models assign the same limit to every company.
-
-Figure 3 compares the average assigned limit under the reference policy and the alternative assumptions discussed above. Every scenario uses the same historical financial observations.
+Figure 3 compares scenarios on identical historical observations.
 
 ![Policy sensitivity](figures/policy_sensitivity.png)
 
@@ -106,7 +100,7 @@ Figure 3 compares the average assigned limit under the reference policy and the 
 
 ## 7.4 Effect of the Monthly Update Rules
 
-Two additional benchmarks show the effect of the monthly safeguards:
+Two benchmarks isolate monthly safeguards:
 
 | Monthly-rule version | Mean limit / assets | Mean absolute monthly change / assets |
 |---|---:|---:|
@@ -116,14 +110,10 @@ Two additional benchmarks show the effect of the monthly safeguards:
 
 *Table 23. Effect of alternative monthly update rules.*
 
-The fixed-initial benchmark keeps the amount assigned at the beginning of each continuous segment, subject only to the current asset cap and a known-disclosure hard stop. It produces fewer changes, but the retained amount exceeds the current preliminary limit in 19.80% of observations. A static limit can therefore remain above the amount supported by the current calculation.
+Keeping each segment's initial limit reduces movement but exceeds the current preliminary limit in 19.80% of rows. Applying each preliminary limit directly increases movement and can reopen after zero. The reference instead phases in increases, applies reductions immediately and bars automatic reopening.
 
-The unsmoothed benchmark applies each month's preliminary limit directly. It produces larger monthly movements and can reopen after a zero when the current preliminary limit becomes positive. The reference policy instead phases in supported increases, applies reductions immediately and requires a new initial assessment before reopening from zero within a continuous segment.
+These benchmarks show the trade-off between stability and responsiveness. Fewer changes are not inherently safer if the retained limit exceeds current support, while immediate application can create operationally costly increases and decreases.
 
 ## 7.5 Scope of the Evidence
 
-The reported limits are conditional outputs from an assumed policy. The base replay treats all reported cash as eligible, assumes no additional 60-day debt payment, sets the exposure cap to 1% of assets and assumes that the hypothetical facility has no outstanding balance. Because outstanding exposure is zero, assigned limit and available credit are equal in this replay. This would not generally be true for an operating facility with existing drawings.
-
-A zero limit prevents additional credit under the policy but does not remove or repay an existing balance. The source data contain no actual commitments, utilization, repayments, losses, pricing, profits, approval decisions or customer effects. The model probability refers to an SEC bankruptcy or payment-failure disclosure episode, not verified default on the hypothetical facility.
-
-The replay shows how the proposed formulas and monthly rules behave when applied to historical SEC information. It does not demonstrate that the calculated limits would reduce losses, increase profit or be suitable for actual borrowers.
+Results are conditional on full cash eligibility, no additional 60-day debt payment, a 1%-of-assets cap and zero facility exposure. Thus, assigned limit equals available credit only in this replay. A zero blocks new credit but does not repay existing exposure. The replay has no actual commitments, utilization, repayments, losses, pricing, decisions or customer effects. It also uses a disclosure rather than facility-default target. It therefore cannot establish suitability, loss reduction or profit.

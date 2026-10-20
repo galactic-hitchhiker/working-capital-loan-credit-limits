@@ -2,7 +2,7 @@
 
 ## A.1 Primary Experiment and Evidence
 
-The accompanying project repository contains the source code, configuration files and saved evidence used in this thesis. The primary model experiment uses `configs/study.bankruptcy_or_payment_failure.json`; the policy uses `configs/policy.sec_disclosure.json`. The internal artifact directory is `results/run_006_full_statement_enrichment/`. The internal name is retained here so the reported results can be traced to the saved files.
+The accompanying project repository contains the source code, configuration files and saved evidence used in this thesis. The primary model experiment uses `configs/study.bankruptcy_or_payment_failure.json`. The policy uses `configs/policy.sec_disclosure.json`. The internal artifact directory is `results/run_006_full_statement_enrichment/`. The internal name is retained here so the reported results can be traced to the saved files.
 
 | Material | Location |
 |---|---|
@@ -23,10 +23,10 @@ All model families use median imputation fitted only on the relevant training da
 
 | Model family | Candidate settings |
 |---|---|
-| Logistic regression | No penalty; LBFGS; 5,000 maximum iterations |
+| Logistic regression | No penalty, LBFGS, 5,000 maximum iterations |
 | L2 logistic regression | $$C=0.1$$, $$1$$ or $$10$$ |
-| Random forest | 300 trees; depth 3 or unrestricted; minimum leaf size 5 or 20 |
-| XGBoost | 200 trees; depth 2 or 4; learning rate 0.05 or 0.1 |
+| Random forest | 300 trees, depth 3 or unrestricted, minimum leaf size 5 or 20 |
+| XGBoost | 200 trees, depth 2 or 4, learning rate 0.05 or 0.1 |
 
 *Table 25. Candidate settings by model family.*
 
@@ -67,6 +67,6 @@ The full dependency set is recorded in `requirements-lock.txt`. Sigmoid correcti
 
 ## A.5 Reproduction and Label-Review Limits
 
-The command sequence is documented in `docs/guides/workflow.md`. Tests cover information availability, restatements, period matching, conflicting facts, disclosure windows, chronological purging, preprocessing isolation, temporal folds, model selection and policy invariants. These tests verify implemented behavior; they do not establish that every filing fact is economically correct or that the policy is suitable for lending.
+The command sequence is documented in `docs/guides/workflow.md`. Tests cover information availability, restatements, period matching, conflicting facts, disclosure windows, chronological purging, preprocessing isolation, temporal folds, model selection and policy invariants. These tests verify implemented behavior. They do not establish that every filing fact is economically correct or that the policy is suitable for lending.
 
 Item 2.04-only filings were reviewed through an automated language-model workflow. A filing qualifies only when the saved review has high certainty, includes supporting quotations and explicitly identifies a missed principal or interest payment. Acceleration or enforcement alone does not qualify, and unresolved reviews remain excluded or censor affected outcomes. The saved classifications and hashes support reproduction, but no independent human-validation sample is available. A new automated review could produce different classifications.

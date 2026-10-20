@@ -1,12 +1,10 @@
 # 6 Empirical Results
 
-The primary model experiment selects a random forest with uncorrected, or raw, probabilities. Both tree models pass the selection requirements, but the random forest has the lowest probability error during the 2020–2022 selection period. In the later 2023–2025 evaluation, it continues to rank higher-risk observations reasonably well. However, its improvement in probability error is small, and its fixed alert threshold detects only a small share of the disclosure outcomes.
+The primary experiment selects raw random-forest probabilities for their lowest 2020–2022 probability error among qualifying models. Later ranking remains useful, but probability improvement and fixed-threshold detection are limited.
 
 ## 6.1 Sample and Chronological Design
 
-The labeled panel contains 565,222 company-months from 8,780 companies. It has 1,052 positive rows representing 573 disclosure episodes in 487 companies.
-
-The five modeling stages contain 531,344 observations after chronological purging:
+The labeled panel contains 565,222 company-months from 8,780 companies, with 1,052 positive rows representing 573 episodes in 487 companies. After purging, 531,344 observations enter five stages:
 
 | Stage | Calendar period | Observations | Positive rows | Episodes | Companies | Event companies |
 |---|---|---:|---:|---:|---:|---:|
@@ -20,11 +18,9 @@ The five modeling stages contain 531,344 observations after chronological purgin
 
 *Source: primary model experiment stage audit. Counts refer to observations retained after chronological purging.*
 
-The stages exclude 33,878 boundary observations whose complete 60-day outcome was unavailable when the next stage began, preventing future labels from entering earlier stages.
+The purge removes 33,878 boundary rows whose labels were not yet available. One episode can create several positive months. The later period's 318 positive rows represent 176 episodes in 165 companies. Although its outcomes do not enter final model development, that period was examined earlier, before the broader outcome definition, so evaluation is retrospective.
 
-A **positive row** is a company-month followed by an episode within 60 days; one episode can produce several positive monthly rows. The later evaluation's 318 positive rows represent 176 episodes in 165 companies.
-
-The reported experiment does not use 2023–2025 outcomes for fitting, tuning, calibration or model selection. However, these years were examined during earlier project development, and the broader outcome definition was specified after that work. The later evaluation is therefore retrospective rather than an untouched external validation.
+Figure 1 shows that both coverage and event prevalence vary through time. These changes reinforce the use of annual forward folds and period-specific baselines rather than a random split that assumes exchangeable observations.
 
 Figure 1 summarizes annual sample coverage and the share of positive labels before chronological purging.
 
@@ -34,7 +30,7 @@ Figure 1 summarizes annual sample coverage and the share of positive labels befo
 
 ## 6.2 Predictors and Tuning
 
-All models use the twelve predictors defined in Chapter 3 and the chronological tuning procedure defined in Chapter 4. Tuning selects one setting within each model family:
+Chronological tuning selects one setting per family:
 
 | Model family | Selected setting |
 |---|---|
@@ -45,13 +41,15 @@ All models use the twelve predictors defined in Chapter 3 and the chronological 
 
 *Table 13. Selected settings by model family.*
 
-Balanced weights give rare positives more influence without changing their number. Tuning selects them for the logistic but not the tree models. Appendix A records the full grid and software settings.
+Balanced weights are selected for logistic but not tree models. Appendix A gives the full grid.
+
+This pattern does not mean weighting is generally unsuitable for trees. It means that, under the predefined temporal tuning criterion and candidate grid, the unweighted tree settings transferred better across the two tuning years.
 
 ## 6.3 Probability Mapping and Model Selection
 
-Sigmoid probability correction greatly reduces the logistic models' raw Brier errors, so the corrected probabilities are retained for those models. Raw probabilities are retained for both tree models. For the random forest, sigmoid correction worsens the selection-period Brier score from 0.0016463 to 0.0017675.
+Sigmoid correction improves logistic Brier errors and is retained there. Raw outputs are retained for both trees. For the forest, correction worsens Brier score from 0.0016463 to 0.0017675.
 
-The constant benchmark has a selection-period event share of 0.1684% and a Brier score of 0.0016812. Average-precision lift compares average precision with that event share. Brier skill shows the percentage improvement in Brier error relative to the constant benchmark; a negative value means that the model is worse than the benchmark.
+The selection-period event share is 0.1684% and constant Brier score 0.0016812. AP lift uses that event share. Negative Brier skill means worse probability error than the constant.
 
 | Model and probability mapping | ROC-AUC | Average precision | AP lift | Brier score | Brier skill | Accepted |
 |---|---:|---:|---:|---:|---:|---|
@@ -62,13 +60,13 @@ The constant benchmark has a selection-period event share of 0.1684% and a Brier
 
 *Table 14. Model selection results for 2020–2022.*
 
-Both logistic models rank positive rows above the event-share baseline, but their corrected probabilities have more Brier error than the constant benchmark. They therefore fail the requirement for improvement in both ranking and probability error. Both tree models pass. The random forest has the lower Brier score and is selected according to the rule in Section 4.9, even though XGBoost has the higher ROC-AUC.
+Logistic models improve ranking but fail the Brier requirement. Both trees pass. The forest wins on Brier despite XGBoost's higher ROC-AUC. Its F1-maximizing threshold is 0.057971 and is frozen for later alert evaluation. Policy uses continuous probability.
 
-Maximizing F1 in 2020–2022 sets the forest's alert threshold at 0.057971 (about 5.8%). It is applied unchanged in 2023–2025 only to evaluate alerts; the credit policy uses the continuous probability.
+The selection rule therefore favors usable probability scale over the strongest ranking alone. The small difference in tree-model Brier scores should not be read as proof of general forest superiority, especially given the alternative-period result below.
 
 ## 6.4 Later Evaluation
 
-The first table reports ranking and probability quality for 2023–2025. Average precision is shown as a percentage, while AP lift compares it with the 0.2412% event share. Brier skill compares each model with the constant benchmark's Brier score of 0.0024070.
+For 2023–2025, AP lift uses the 0.2412% event share and Brier skill the constant score of 0.0024070.
 
 | Model | ROC-AUC | Average precision | AP lift | Brier score | Brier skill |
 |---|---:|---:|---:|---:|---:|
@@ -80,7 +78,7 @@ The first table reports ranking and probability quality for 2023–2025. Average
 
 *Table 15. Later-period ranking and probability performance.*
 
-The next table reports performance at each model's threshold fixed during the 2020–2022 selection stage:
+Frozen-threshold performance is:
 
 | Model | Precision | Recall |
 |---|---:|---:|
@@ -92,15 +90,13 @@ The next table reports performance at each model's threshold fixed during the 20
 
 *Table 16. Later-period performance at the frozen alert thresholds.*
 
-The forest's average precision is 10.77 times the event share, while its Brier error is only 0.95% below the benchmark. XGBoost ranks slightly better but has 5.34% more probability error, illustrating the distinction between ranking and probability accuracy.
+The forest's AP is 10.77 times the event share, but Brier error improves only 0.95%. Its mean probability is 0.284% against a 0.241% observed share. Of 515 alerts, 29 precede a positive row. The model misses 289 of 318 positive rows. At least one alert precedes 18 of 176 episodes (10.23%).
 
-Across the later period, the forest's mean predicted probability is 0.284%, compared with an observed positive-row share of 0.241%. The overall Brier improvement is small, so the probability scale should not be treated as precisely validated.
+Precision of 5.63% is much higher than prevalence but still means most alerts are false positives under the disclosure definition. Recall of 9.12% means most positive rows remain below the selection-period threshold. These metrics describe an alerting use case and do not determine the continuous policy adjustment.
 
-At the frozen threshold, 29 of 515 alerts are followed by a positive outcome; 486 are not, and 289 of 318 positive rows are missed. Thus roughly 6 in 100 alerts precede a disclosure and 9 in 100 positive rows are detected.
+Annual ROC-AUC is 0.8715, 0.8777 and 0.9329 in 2023–2025. AP is 2.793%, 2.927% and 2.904%. Company-cluster 95% intervals are 0.8668–0.9061 for ROC-AUC, 1.817%–4.378% for AP and 0.002040–0.002799 for Brier score, excluding model-selection uncertainty, shared shocks and label error.
 
-At the episode level, the forest produces at least one alert for 18 of 176 later-period disclosure episodes, corresponding to episode-level recall of 10.23%. Row-level and episode-level recall differ because several monthly observations can precede one episode.
-
-The forest's annual ROC-AUC is 0.8715 in 2023, 0.8777 in 2024 and 0.9329 in 2025. Annual average precision is 2.793%, 2.927% and 2.904%, respectively. Company-cluster 95% intervals for the full later period are 0.8668–0.9061 for ROC-AUC, 1.817%–4.378% for average precision and 0.002040–0.002799 for Brier score. These intervals keep each company's observations together, but they do not include model-selection uncertainty, shared economic shocks or possible errors in the disclosure labels.
+The annual results show that the aggregate ranking is not produced by a single weak or strong year. Nevertheless, only three later years are available, and their confidence intervals do not represent a new economic regime.
 
 Figure 2 summarizes the ranking and probability diagnostics for the 2023–2025 evaluation period.
 
@@ -110,7 +106,7 @@ Figure 2 summarizes the ranking and probability diagnostics for the 2023–2025 
 
 ## 6.5 Alternative-Period Sensitivity
 
-The selected model changes when different chronological periods are used:
+Changing chronological periods changes the selected model:
 
 | Experiment | Tuning period | Selection period | Selected model |
 |---|---|---|---|
@@ -119,14 +115,10 @@ The selected model changes when different chronological periods are used:
 
 *Table 17. Alternative-period model-selection sensitivity.*
 
-The alternative also changes training dates and excludes 2020–2022, so no single cause explains the different choice. It shows that selection is period-sensitive.
-
-The primary selection period overlaps the COVID-19 pandemic, which may have affected company finances and disclosure patterns. However, the alternative experiment does not isolate a pandemic effect. It was also conducted after the primary results were examined. It is therefore a sensitivity check, not independent validation or a replacement for the primary design.
+The alternative also changes training dates and excludes 2020–2022, so it establishes period sensitivity rather than a single cause or pandemic effect. Conducted after primary results were examined, it is not independent validation.
 
 ## 6.6 Interpretation
 
-The selected forest relies most strongly on company size measured by log assets. Working capital to assets, asset growth and liabilities to assets are the next most influential features. This means that randomly rearranging these features causes the largest increase in the fitted model's Brier error. It does not mean that changing a feature would cause disclosure risk to change. Related features can also share information, so a low importance value does not prove that the underlying financial measure is irrelevant.
+Permutation importance is highest for log assets, followed by working capital to assets, asset growth and liabilities to assets. This measures predictive reliance, not causation. Correlated features can share importance. Useful ranking does not make the threshold a stand-alone rule, since most events are missed and most alerts are false. The disclosure proxy also does not establish distress onset or facility default. Results support a reproducible signal and illustrative policy, not measured lending performance.
 
-The results show useful ranking information, but they do not support using the alert threshold as a stand-alone decision rule. Most positive rows are missed, and most alerts are not followed by the recorded outcome. The continuous probability also improves only slightly on the constant benchmark's probability error.
-
-The outcome combines Item 1.03 bankruptcy or receivership filings with reviewed Item 2.04 missed-payment disclosures. It does not establish when financial distress began or whether a company defaulted on the hypothetical facility. The results support a reproducible SEC disclosure-risk signal and an illustrative credit policy, not measured lending performance or loss reduction.
+Company size may proxy for reporting quality, financing access or other omitted differences, so its importance requires caution. Borrower-level deployment would need reason codes and stability checks beyond this global ranking of features.
