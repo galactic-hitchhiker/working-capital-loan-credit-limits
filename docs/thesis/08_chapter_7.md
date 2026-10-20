@@ -98,9 +98,11 @@ Changing the exposure cap also has a large effect. A lower cap directly limits o
 
 Using probabilities from another fitted model changes the aggregate mean little: random forest gives 0.6678% of assets, XGBoost 0.6658% and either logistic model 0.6669%. Similar averages do not mean that the models assign the same limit to every company.
 
+Figure 3 compares the average assigned limit under the reference policy and the alternative assumptions discussed above. Every scenario uses the same historical financial observations.
+
 ![Policy sensitivity](figures/policy_sensitivity.png)
 
-*Figure 3. Average assigned limit as a percentage of reported assets under the reference policy and selected alternative assumptions. Each scenario uses the same historical financial observations. Source: primary model experiment policy replay.*
+*Figure 3. Policy sensitivity.*
 
 ## 7.4 Effect of the Monthly Update Rules
 

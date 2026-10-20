@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 .venv/
+build/
 dataset/
 results/.matplotlib/
 results/.cache/

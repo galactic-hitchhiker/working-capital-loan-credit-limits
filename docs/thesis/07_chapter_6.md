@@ -26,9 +26,11 @@ A **positive row** is a company-month followed by an episode within 60 days; one
 
 The reported experiment does not use 2023–2025 outcomes for fitting, tuning, calibration or model selection. However, these years were examined during earlier project development, and the broader outcome definition was specified after that work. The later evaluation is therefore retrospective rather than an untouched external validation.
 
+Figure 1 summarizes annual sample coverage and the share of positive labels before chronological purging.
+
 ![Annual sample coverage and disclosure-label share](figures/sample_over_time.png)
 
-*Figure 1. Labeled panel before chronological purging. Positive rows are monthly prediction outcomes, not separate episodes. Source: primary model experiment panel audit and descriptive report.*
+*Figure 1. Sample coverage and positive-label share.*
 
 ## 6.2 Predictors and Tuning
 
@@ -100,9 +102,11 @@ At the episode level, the forest produces at least one alert for 18 of 176 later
 
 The forest's annual ROC-AUC is 0.8715 in 2023, 0.8777 in 2024 and 0.9329 in 2025. Annual average precision is 2.793%, 2.927% and 2.904%, respectively. Company-cluster 95% intervals for the full later period are 0.8668–0.9061 for ROC-AUC, 1.817%–4.378% for average precision and 0.002040–0.002799 for Brier score. These intervals keep each company's observations together, but they do not include model-selection uncertainty, shared economic shocks or possible errors in the disclosure labels.
 
+Figure 2 summarizes the ranking and probability diagnostics for the 2023–2025 evaluation period.
+
 ![Held-out ranking and probability diagnostics](figures/model_diagnostics.png)
 
-*Figure 2. Ranking and probability diagnostics for 2023–2025. Source: primary model experiment predictions and model report.*
+*Figure 2. Model diagnostics, 2023–2025.*
 
 ## 6.5 Alternative-Period Sensitivity
 

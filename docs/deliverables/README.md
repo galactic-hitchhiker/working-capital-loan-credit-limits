@@ -2,7 +2,7 @@
 
 The Word files in this directory were formatted from the supplied RAF thesis and report examples. The PDFs are LibreOffice verification renders of the same files.
 
-- `Djordje_Velickovic_Master_Thesis.docx` — formatted 47-page thesis with a page-accurate table of contents, list of figures, list of tables, 27 formatted tables, 3 figures and 16 numbered editable equations.
+- `Djordje_Velickovic_Master_Thesis.docx` — formatted 48-page thesis with the RAF reference cover, a page-accurate table of contents, list of figures, list of tables, 27 formatted data tables, 3 figures and 16 numbered editable equations.
 - `Djordje_Velickovic_Master_Thesis_Report.docx` — three-page draft report on the completed thesis, following the supplied memorandum and report structure.
 
 Before official submission, replace the following administrative placeholders:

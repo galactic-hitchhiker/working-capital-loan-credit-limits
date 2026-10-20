@@ -90,9 +90,9 @@ After synchronization, replace this Markdown index with or refresh the native Go
 
 # List of Figures
 
-- Figure 1. Labeled panel before chronological purging. Positive rows are monthly prediction outcomes, not separate episodes. Source: primary model experiment panel audit and descriptive report.
-- Figure 2. Ranking and probability diagnostics for 2023–2025. Source: primary model experiment predictions and model report.
-- Figure 3. Average assigned limit as a percentage of reported assets under the reference policy and selected alternative assumptions. Each scenario uses the same historical financial observations. Source: primary model experiment policy replay.
+- Figure 1. Sample coverage and positive-label share.
+- Figure 2. Model diagnostics, 2023–2025.
+- Figure 3. Policy sensitivity.
 
 # List of Tables
 

@@ -114,6 +114,29 @@ def marker_entry(prefix: str, level: int, title: str, page: int) -> str:
     return f"@{prefix}{level}@ {title} ¦ {page}"
 
 
+def bullet_number_ids(doc: Document) -> set[str]:
+    """Return numbering IDs whose level-zero format is a bullet."""
+
+    numbering = doc.part.numbering_part.element
+    bullet_abstract_ids: set[str] = set()
+    for abstract in numbering.findall(qn("w:abstractNum")):
+        abstract_id = abstract.get(qn("w:abstractNumId"))
+        for level in abstract.findall(qn("w:lvl")):
+            if level.get(qn("w:ilvl")) != "0":
+                continue
+            number_format = level.find(qn("w:numFmt"))
+            if number_format is not None and number_format.get(qn("w:val")) == "bullet":
+                bullet_abstract_ids.add(abstract_id)
+            break
+
+    result: set[str] = set()
+    for number in numbering.findall(qn("w:num")):
+        abstract = number.find(qn("w:abstractNumId"))
+        if abstract is not None and abstract.get(qn("w:val")) in bullet_abstract_ids:
+            result.add(number.get(qn("w:numId")))
+    return result
+
+
 def make_markdown(page_map: dict[str, int]) -> str:
     headings = parse_headings()
     figures, tables = parse_captions()
@@ -280,6 +303,113 @@ def right_align_equation_numbers(doc: Document) -> None:
         tabs.add_tab_stop(Cm(16.5), WD_TAB_ALIGNMENT.RIGHT)
 
 
+def replace_title_page_with_reference(doc: Document) -> None:
+    """Use the supplied RAF cover form as page one of the thesis."""
+
+    template = Document(THESIS_TEMPLATE)
+    if not template.tables:
+        raise RuntimeError(f"The thesis reference has no cover table: {THESIS_TEMPLATE}")
+
+    abstract = next(
+        (paragraph for paragraph in doc.paragraphs if paragraph.text.strip() == "Abstract"),
+        None,
+    )
+    if abstract is None:
+        raise RuntimeError("Could not locate the Abstract after the generated title page")
+
+    body = doc.element.body
+    # Remove the generated cover paragraphs and their standalone logo. The
+    # Abstract already has page-break-before, so it remains the first paragraph
+    # on page two after the reference cover table is inserted.
+    for child in list(body):
+        if child is abstract._p:
+            break
+        body.remove(child)
+    body.insert(body.index(abstract._p), deepcopy(template.tables[0]._tbl))
+
+    cover = doc.tables[0]
+    main_cell = cover.rows[-1].cells[0]
+    original_paragraphs = list(main_cell.paragraphs)
+    first_paragraph = original_paragraphs[0]
+    first_paragraph.clear()
+    for paragraph in original_paragraphs[1:]:
+        main_cell._tc.remove(paragraph._p)
+
+    def cover_paragraph(
+        parts: list[tuple[str, bool, bool, float]],
+        *,
+        alignment=WD_ALIGN_PARAGRAPH.LEFT,
+        after: float = 0,
+        first: bool = False,
+    ):
+        paragraph = first_paragraph if first else main_cell.add_paragraph()
+        paragraph.alignment = alignment
+        paragraph.paragraph_format.left_indent = Cm(0.33) if alignment == WD_ALIGN_PARAGRAPH.LEFT else None
+        paragraph.paragraph_format.right_indent = None
+        paragraph.paragraph_format.first_line_indent = None
+        paragraph.paragraph_format.line_spacing = 1.0
+        paragraph.paragraph_format.space_before = Pt(0)
+        paragraph.paragraph_format.space_after = Pt(after)
+        for value, bold, underline, size in parts:
+            run = paragraph.add_run(value)
+            set_run_font(run, size, bold=bold)
+            run.underline = underline
+        return paragraph
+
+    cover_paragraph([("UNION UNIVERSITY", True, False, 14)], after=10, first=True)
+    cover_paragraph([("SCHOOL OF COMPUTING BELGRADE, SERBIA", True, False, 14)], after=10)
+    cover_paragraph([("MASTER IN COMPUTATIONAL FINANCE", True, False, 14)], after=42)
+    cover_paragraph(
+        [("MASTER'S THESIS", True, False, 22)],
+        alignment=WD_ALIGN_PARAGRAPH.CENTER,
+        after=48,
+    )
+    cover_paragraph(
+        [("Student:", True, True, 14), (" Đorđe Veličković", True, False, 14)],
+        after=3,
+    )
+    cover_paragraph(
+        [
+            ("Student ID number:", True, True, 14),
+            (" [TO BE ENTERED]", True, False, 14),
+        ],
+        after=34,
+    )
+    cover_paragraph([("Title:", True, True, 14)], after=10)
+    for line, after in (
+        ("Dynamic Determination of Short-Term", 0),
+        ("Corporate Credit Limits Using", 0),
+        ("Machine Learning", 34),
+    ):
+        cover_paragraph(
+            [(line, True, False, 16)],
+            alignment=WD_ALIGN_PARAGRAPH.CENTER,
+            after=after,
+        )
+    cover_paragraph(
+        [
+            ("Supervisor:", True, True, 14),
+            (" Prof. Dr. Branko Urošević", True, False, 14),
+        ],
+        after=62,
+    )
+    cover_paragraph(
+        [("Belgrade, October 2026", True, False, 14)],
+        alignment=WD_ALIGN_PARAGRAPH.CENTER,
+    )
+
+    # Keep the complete reference form on page one. The original sample uses
+    # a taller minimum row that LibreOffice pushes to a second page.
+    main_row_pr = cover.rows[-1]._tr.get_or_add_trPr()
+    for height in main_row_pr.findall(qn("w:trHeight")):
+        main_row_pr.remove(height)
+    height = OxmlElement("w:trHeight")
+    height.set(qn("w:val"), "11000")
+    height.set(qn("w:hRule"), "atLeast")
+    main_row_pr.append(height)
+    set_row_no_split(cover.rows[-1])
+
+
 def apply_thesis_format(path: Path) -> None:
     doc = Document(path)
     section = doc.sections[0]
@@ -339,8 +469,47 @@ def apply_thesis_format(path: Path) -> None:
     caption_style.paragraph_format.space_before = Pt(4)
     caption_style.paragraph_format.space_after = Pt(8)
 
+    bullet_ids = bullet_number_ids(doc)
     pending_page_break = False
     for p in doc.paragraphs:
+        # Pandoc assigns the paragraph immediately after some headings to the
+        # FirstParagraph style, but that style is not defined in the reference
+        # DOCX. LibreOffice renders an undefined FirstParagraph paragraph that
+        # ends with a hyperlink with a stray "X". Normalize it to the regular
+        # thesis body style before applying any direct formatting.
+        p_style = p._p.pPr.pStyle if p._p.pPr is not None else None
+        if (
+            p_style is not None
+            and p_style.get(qn("w:val")) == "FirstParagraph"
+            and "Body Text" in styles
+        ):
+            p.style = styles["Body Text"]
+        explicit_bullet = False
+        num_ids = p._p.xpath("./w:pPr/w:numPr/w:numId")
+        if num_ids and num_ids[0].get(qn("w:val")) in bullet_ids:
+            # The Symbol-font bullets emitted by Pandoc disappear in
+            # LibreOffice. Use a literal Times New Roman bullet so lists are
+            # stable in both Word and LibreOffice/PDF rendering.
+            num_pr = p._p.pPr.numPr
+            p._p.pPr.remove(num_pr)
+            if "Body Text" in styles:
+                p.style = styles["Body Text"]
+            bullet_run = OxmlElement("w:r")
+            bullet_properties = OxmlElement("w:rPr")
+            bullet_fonts = OxmlElement("w:rFonts")
+            for font_key in ("ascii", "hAnsi", "eastAsia", "cs"):
+                bullet_fonts.set(qn(f"w:{font_key}"), "Times New Roman")
+            bullet_properties.append(bullet_fonts)
+            bullet_size = OxmlElement("w:sz")
+            bullet_size.set(qn("w:val"), str(BASE_FONT_SIZE * 2))
+            bullet_properties.append(bullet_size)
+            bullet_run.append(bullet_properties)
+            bullet_text = OxmlElement("w:t")
+            bullet_text.set(qn("xml:space"), "preserve")
+            bullet_text.text = "• "
+            bullet_run.append(bullet_text)
+            p._p.insert(1, bullet_run)
+            explicit_bullet = True
         text = p.text.strip()
         if text == "@PAGEBREAK@":
             pending_page_break = True
@@ -381,6 +550,8 @@ def apply_thesis_format(path: Path) -> None:
         if marker:
             kind, level_s, title, page = marker.groups()
             level = int(level_s)
+            if "Body Text" in styles:
+                p.style = styles["Body Text"]
             p.clear()
             title_run = p.add_run(title)
             p.add_run("\t")
@@ -403,7 +574,7 @@ def apply_thesis_format(path: Path) -> None:
             p.paragraph_format.first_line_indent = None
             p.paragraph_format.tab_stops.clear_all()
         if p.style.name in ("Normal", "Body Text", "Normal (Web)") and text:
-            is_list = bool(p._p.xpath("./w:pPr/w:numPr"))
+            is_list = explicit_bullet or bool(p._p.xpath("./w:pPr/w:numPr"))
             is_equation = bool(p._p.xpath(".//m:oMath"))
             p.paragraph_format.left_indent = None
             p.paragraph_format.right_indent = None
@@ -418,7 +589,9 @@ def apply_thesis_format(path: Path) -> None:
             elif is_list:
                 p.alignment = WD_ALIGN_PARAGRAPH.LEFT
                 p.paragraph_format.line_spacing = 1.15
-                p.paragraph_format.first_line_indent = None
+                p.paragraph_format.left_indent = Cm(0.7)
+                p.paragraph_format.first_line_indent = Cm(-0.4)
+                p.paragraph_format.space_after = Pt(2)
             else:
                 p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
                 p.paragraph_format.line_spacing = 1.15
@@ -531,6 +704,8 @@ def apply_thesis_format(path: Path) -> None:
             p.paragraph_format.space_after = Pt(0)
             p.paragraph_format.first_line_indent = None
             p.paragraph_format.keep_with_next = True
+
+    replace_title_page_with_reference(doc)
 
     # Replace template header/footer content (including page-number content
     # controls) with a single centered page field.
