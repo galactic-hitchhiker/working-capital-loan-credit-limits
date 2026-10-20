@@ -21,7 +21,7 @@ The candidate is enrolled in the Master in Computational Finance programme at th
 
 ## 2. Description of the master thesis
 
-The master’s thesis comprises 47 pages in the submitted Word edition and cites 14 sources. It contains an abstract, eight chapters, a reference list and a reproducibility appendix. The thesis examines how point-in-time accounting information and machine-learning estimates can be combined in a transparent framework for dynamic short-term corporate credit limits.
+The master’s thesis comprises 48 pages in the submitted Word edition and cites 14 sources. It contains an abstract, eight chapters, a reference list and a reproducibility appendix. The thesis examines how point-in-time accounting information and machine-learning estimates can be combined in a transparent framework for dynamic short-term corporate credit limits.
 
 The empirical study combines SEC Company Facts, Financial Statement and Notes data, and submissions in a monthly panel covering 2011–2025. The completed modeling panel contains 565,222 labeled company-month observations from 8,780 companies. Twelve accounting predictors describe liquidity, leverage, profitability, cash generation, growth and company size. The outcome is a new bankruptcy or reviewed payment-failure disclosure episode within 60 days; the candidate clearly distinguishes this disclosure proxy from verified default on a lending facility.
 
