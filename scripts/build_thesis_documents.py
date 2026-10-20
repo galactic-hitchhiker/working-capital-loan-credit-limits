@@ -575,7 +575,12 @@ def apply_thesis_format(path: Path) -> None:
             p.paragraph_format.tab_stops.clear_all()
         if p.style.name in ("Normal", "Body Text", "Normal (Web)") and text:
             is_list = explicit_bullet or bool(p._p.xpath("./w:pPr/w:numPr"))
-            is_equation = bool(p._p.xpath(".//m:oMath"))
+            # Inline math belongs to the surrounding prose and must not turn
+            # the whole paragraph into a centered display equation. Pandoc's
+            # numbered display equations have no prose text beyond "(n)".
+            is_equation = bool(p._p.xpath(".//m:oMath")) and bool(
+                re.fullmatch(r"\(\d+\)", text)
+            )
             p.paragraph_format.left_indent = None
             p.paragraph_format.right_indent = None
             p.paragraph_format.space_before = Pt(0)
